@@ -7,7 +7,8 @@
 #include <endian.h>
 #include <string.h>
 #include <math.h>
-#include <stdint.h> 
+#include <stdint.h>
+#include <ncurses.h> 
 
 #include "priorityqueue.h"
 #include "dijkstra.h"
