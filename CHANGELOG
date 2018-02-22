@@ -1,0 +1,21 @@
+1/18/2018: Wrote assignment1.01
+1/18/2018: Wrote Makefile
+1/19/2018: Bugfixed infinite loop errors in assignment1.01
+1/20/2018: Bugfixed array boundary erros in assignment1.01
+1/20/2018: Wrote CHANGELOG and README
+1/25/2018: Changed the dungeon struct to be a pointer
+1/26/2018: Changed the room_t struct to dynamically allocate space
+1/27/2018: Wrote the arguments and baseline for saving and loading dungeons
+1/29/2018: Finished writing and bugfixing saving and loading dungeons (assignment1.02)
+1/31/2018: Wrote priorityQueue.c and priorityQueue.h
+2/01/2018: Wrote hero struct, weight_dungeon, full_distance_graph, rooms_distance_graph, and print_distance_graph
+2/01/2018: Wrote dijkstra.c and dijkstra.h
+2/08/2018: Began bugfixing dijkstra.c and priorityQueue.c
+2/10/2018: Continued bugfixing dijkstra.c and priorityQueue.c
+2/11/2018: Continued bugfixing dijkstra.c and priorityQueue.c
+2/12/2018: Finished bugfixing dijkstra.c and priorityQueue.c (assignment1.03)
+2/15/2018: Created monster.c
+2/16/2018: Created character.c and hero.c
+2/18/2018: Created move_character in character.c
+2/19/2018: Created character.h, hero.h, monster.h, dungeon.h
+2/20/2018: Bugfixed and finished assignment1.04
