@@ -1036,59 +1036,100 @@ int move_character(dungeon_t *dungeon, characterQueue_t *characterQueue, int tur
 
 	  while(validPosition == 0)
 	    {
-        c = wgetch(stdscr);
+        c = getch(stdscr);
 
         switch(c)
         {
-          case
+          //If the user presses "y" or "7", move one up and one left
+          case 121:
+          case 55:
+            xPos = character.xPos - 1;
+            yPos = character.yPos - 1;
+            break;
+
+          //If the user presses "k" or "8", move one up
+          case 107:
+          case 56:
+            xPos = character.xPos;
+            yPos = character.yPos - 1;
+            break;
+
+          //If the user presses "u" or "9", move one up and one right
+          case 117:
+          case 57:
+            xPos = character.xPos + 1;
+            yPos = character.yPos - 1;
+            break;
+
+          //If the user presses "l" or "6", move one right
+          case 108:
+          case 54:
+            xPos = character.xPos + 1;
+            yPos = character.yPos;
+            break;
+
+          //If the user presses "n" or "3", move on down and one right
+          case 110:
+          case 51:
+            xPos = character.xPos + 1;
+            yPos = character.yPos + 1;
+            break;
+
+          //If the user presses "j" or "2", move one down
+          case 106:
+          case 50:
+            xPos = character.xPos;
+            yPos = character.yPos + 1;
+            break;
+
+          //If the user presses "b" or "1", move one down and one left
+          case 98:
+          case 49:
+            xPos = character.xPos - 1;
+            yPos = character.yPos + 1;
+            break;
+
+          //If the user presses "h" or "4", move one left
+          case 104:
+          case 52:
+            xPos = character.xPos - 1;
+            yPos = character.yPos;
+            break;
+
+          //If the user presses ">", attempt to go down stairs
+          case 62:
+            //Testing to see if hero is on downwards staircase
+            if(dungeon->dungeonArray[character.yPos][character.xPos].symbol == '>')
+            {
+              //This will be the return signal to go downstairs
+              return -2;
+            }
+            break;
+
+          //If the user presses "<", attempt to go up stairs
+          case 60:
+            //Testing to see if hero is on upwards staircase
+            if(dungeon->dungeonArray[character.yPos][character.xPos].symbol == '<')
+            {
+              //This will be the return signal to go upstairs
+              return -3;
+            }
+            break;
+
+          //If the user presses "5" or "Space", rest 1 turn
+          case 53:
+          case 32:
+            xPos = character.xPos;
+            yPos = character.yPos;
+            break;
+
+          //If the user presses "m", display monster list
+          case 109:
+            //Create display_monster_list as well as provide indicator that turn isn't done
+            display_monster_list(character_t *characterQueue, dungeon_t* dungeon);
+            break;
         }
 
-        /*
-	      randPos = rand() % 8;
-
-	      switch(randPos)
-		{
-
-		case 0:
-		  xPos = character.xPos;
-		  yPos = character.yPos - 1;
-		  break;
-
-		case 1:
-		  xPos = character.xPos + 1;
-		  yPos = character.yPos - 1;
-		  break;
-
-		case 2:
-		  xPos = character.xPos + 1;
-		  yPos = character.yPos;
-
-		case 3:
-		  xPos = character.xPos + 1;
-		  yPos = character.yPos + 1;
-		  break;
-
-		case 4:
-		  xPos = character.xPos;
-		  yPos = character.yPos + 1;
-		  break;
-
-		case 5:
-		  xPos = character.xPos - 1;
-		  yPos = character.yPos + 1;
-		  break;
-
-		case 6:
-		  xPos = character.xPos - 1;
-		  yPos = character.yPos;
-		  break;
-
-		case 7:
-		  xPos = character.xPos - 1;
-		  yPos = character.yPos - 1;
-		  break;
-		}
-    */
 	      if(xPos < 79 && yPos < 20 && xPos > 0 && yPos > 0)
 		{
 		  validPosition = 1;
