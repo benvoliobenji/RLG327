@@ -1004,11 +1004,12 @@ int init_character_queue(int numMonsters, characterQueue_t *characterQueue, dung
 int move_character(dungeon_t *dungeon, characterQueue_t *characterQueue, int turnNumber)
 {
   int i, found, randPos, xPos, yPos, j, validPosition, numRooms, updateX, updateY;
-  int corridorCheck, seenInCorridor, windowListen;
+  int corridorCheck, seenInCorridor, windowListen, checkMenu;
   character_t character;
 
   i = 0;
   found = 0;
+  checkMenu = 0;
 
   while(found == 0 && i < characterQueue->size)
     {
@@ -1037,6 +1038,8 @@ int move_character(dungeon_t *dungeon, characterQueue_t *characterQueue, int tur
 	  while(validPosition == 0)
 	    {
         c = getch(stdscr);
+
+        checkMenu = 0;
 
         switch(c)
         {
@@ -1125,12 +1128,16 @@ int move_character(dungeon_t *dungeon, characterQueue_t *characterQueue, int tur
 
           //If the user presses "m", display monster list
           case 109:
-            //Create display_monster_list as well as provide indicator that turn isn't done
-            display_monster_list(character_t *characterQueue, dungeon_t* dungeon);
+            view_monster_list(character_t *characterQueue, dungeon_t* dungeon);
+            checkMenu = 1;
             break;
+
+          case 81:
+            //This will be the return signal to quit
+            return -1;
         }
 
-	      if(xPos < 79 && yPos < 20 && xPos > 0 && yPos > 0)
+	      if(xPos < 79 && yPos < 20 && xPos > 0 && yPos > 0 && checkMenu == 0)
 		{
 		  validPosition = 1;
 		}
@@ -1923,6 +1930,216 @@ int select_closest_distance(dungeon_t *dungeon, character_t *character, int canT
   return 0;
 }
 
+int new_character_queue(int numMonsters, characterQueue_t *characterQueue, dungeon_t *dungeon)
+{
+  monster_t monster;
+  characterQueue->characterQueue[0].nextTurn = 0;
+  characterQueue->size = 1;
+
+  //printf("Placing monsters\n");
+  for(i = 0; i < numMonsters; i++)
+    {
+      //printf("Determining monster traits\n");
+      monster.traits = determine_traits();
+
+      //printf("Determined traits\n");
+      //character.hero = NULL;
+      character.monster = monster;
+      character.dead = 0;
+
+      //printf("Monster symbol\n");
+      switch(monster.traits){
+      case 0:
+	character.symbol = '0';
+	break;
+
+      case 1:
+	character.symbol = '1';
+	break;
+
+      case 2:
+	character.symbol = '2';
+	break;
+
+      case 3:
+	character.symbol = '3';
+	break;
+
+      case 4:
+	character.symbol = '4';
+	break;
+
+      case 5:
+	character.symbol = '5';
+	break;
+
+      case 6:
+	character.symbol = '6';
+	break;
+
+      case 7:
+	character.symbol = '7';
+	break;
+
+      case 8:
+	character.symbol = '8';
+	break;
+
+      case 9:
+	character.symbol = '9';
+	break;
+
+      case 10:
+	character.symbol = 'a';
+	break;
+
+      case 11:
+	character.symbol = 'b';
+	break;
+
+      case 12:
+	character.symbol = 'c';
+	break;
+
+      case 13:
+	character.symbol = 'd';
+	break;
+
+      case 14:
+	character.symbol = 'e';
+	break;
+
+      case 15:
+	character.symbol = 'f';
+	break;
+      }
+
+      //printf("Monster speed\n");
+      character.speed = (rand() % 16) + 5;
+
+      xPos = (rand() % 79) + 1;
+      yPos = (rand() % 20) + 1;
+
+      //printf("Determine xPos and yPos\n");
+      while(dungeon->dungeonArray[yPos][xPos].hardness != 0 && dungeon->dungeonArray[yPos][xPos].symbol != '.')
+	{
+	  //printf("Finding new xPos and yPos\n");
+	  xPos = (rand() % 79) + 1;
+	  yPos = (rand() % 20) + 1;
+
+	  //printf("xPos: %d yPos: %d\n", xPos, yPos);
+	}
+
+      character.xPos = xPos;
+      character.yPos = yPos;
+      character.nextTurn = 0;
+
+      //printf("Placing character in characterQueue\n");
+      characterQueue->characterQueue[characterQueue->size] = character;
+      characterQueue->size++;
+    }
+
+  return 0;
+}
+
+int view_monster_list(characterQueue_t *characterQueue, dungeon_t *dungeon)
+{
+  int ch, i, xRelative, yRelative;
+  character_t monster;
+
+  //Create a new window with height of 10, width of 40, and at row 5 col 20
+  WINDOW *monsterWindow = newwin(10, 40, 5, 20);
+
+  for(i = 1; i < characterQueue->size; i++)
+  {
+    //Finding the x and y position of the monster relative to the hero
+    xRelative = characterQueue->characterQueue[0].xPos - characterQueue->characterQueue[i].xPos;
+    yRelative = characterQueue->characterQueue[0].yPos - characterQueue->characterQueue[i].yPos;
+
+    //If the monster is south and east of the hero
+    if(xRelative < 0 && yRelative < 0)
+    {
+      xRelative = characterQueue->characterQueue[i].xPos - characterQueue->characterQueue[0].xPos;
+      yRelative = characterQueue->characterQueue[i].yPos - characterQueue->characterQueue[0].yPos;
+
+      mvwprintw(monsterWindow, i - 1, 0, "A %c is %d units East and %d units South", characterQueue->characterQueue[i].symbol, xRelative, yRelative);
+    }
+
+    //If the monster is south and west of the hero
+    else if(xRelative > 0 && yRelative < 0)
+    {
+      yRelative = characterQueue->characterQueue[i].yPos - characterQueue->characterQueue[0].yPos;
+      mvwprintw(monsterWindow, i - 1, 0, "A %c is %d units West and %d units South", characterQueue->characterQueue[i].symbol, xRelative, yRelative);
+    }
+
+    //If the monster is east of the hero
+    else if(xRelative < 0 && yRelative == 0)
+    {
+      xRelative = characterQueue->characterQueue[i].xPos - characterQueue->characterQueue[0].xPos;
+
+      mvwprintw(monsterWindow, i - 1, 0, "A %c is %d units East", characterQueue->characterQueue[i].symbol, xRelative);
+    }
+
+    //If the monster is west of the hero
+    else if(xRelative > 0 && yRelative == 0)
+    {
+      mvwprintw(monsterWindow, i - 1, 0, "A %c is %d units West", characterQueue->characterQueue[i].symbol, xRelative);
+    }
+
+    //If the monster is north and east of the hero
+    else if(xRelative < 0 && yRelative > 0)
+    {
+      xRelative = characterQueue->characterQueue[i].xPos - characterQueue->characterQueue[0].xPos;
+
+      mvwprintw(monsterWindow, i - 1, 0, "A %c is %d units East and %d units North", characterQueue->characterQueue[i].symbol, xRelative, yRelative);
+    }
+
+    //If the monster is north and west of the hero
+    else if(xRelative > 0 && yRelative > 0)
+    {
+      mvwprintw(monsterWindow, i - 1, 0, "A %c is %d units West and %d units North", characterQueue->characterQueue[i].symbol, xRelative, yRelative);
+    }
+
+    //If the monster is south of the hero
+    else if(xRelative == 0 && yRelative < 0)
+    {
+      yRelative = characterQueue->characterQueue[i].yPos - characterQueue->characterQueue[0].yPos;
+
+      mvwprintw(monsterWindow, i - 1, 0, "A %c is %d units South", characterQueue->characterQueue[i].symbol, yRelative);
+    }
+
+    //If the monster is north of the hero
+    else if(xRelative == 0 && yRelative > 0)
+    {
+      mvwprintw(monsterWindow, i - 1, 0, "A %c is %d units North", characterQueue->characterQueue[i].symbol, yRelative);
+    }
+  }
+
+  //Refresh window
+  wrefresh(monsterWindow);
+
+  while(1)
+  {
+    ch = getch(monsterWindow);
+
+    switch (ch) {
+      //If the user wants to scroll up
+      case 259:
+        wscrl(monsterWindow, 1);
+        break;
+
+      case 258:
+        wscrl(monsterWindow, -1);
+        break;
+
+      case 27:
+        delwin(monsterWindow);
+        return 0;
+    }
+
+    wrefresh(monsterWindow);
+  }
+}
 
 int main(int argc, char *argv[])
 {
@@ -2148,11 +2365,23 @@ int main(int argc, char *argv[])
 
       print_dungeon(&dungeon, &characterQueue);
       turnNum = move_character(&dungeon, &characterQueue, turnNum);
+
+      if(turnNum == -1)
+      {
+        printw("Sorry that you had to leave, didn't know our hero was a quitter\n");
+        return 0;
+      }
+      if(turnNum == -2 || turnNum == -3)
+      {
+        turnNum = 0;
+        dungeon = build_dungeon();
+        new_character_queue(numMon, &characterQueue, &dungeon);
+      }
       weight_dungeon(&dungeon);
       full_distance_graph(&dungeon, &characterQueue.characterQueue[0]);
       rooms_distance_graph(&dungeon, &characterQueue.characterQueue[0]);
       gameOver = check_win_condition(&characterQueue);
-      usleep(3);
+      refresh();
     }
 
   if(gameOver == -1)
