@@ -69,22 +69,22 @@ void print_dungeon(dungeon_t *dungeon, characterQueue_t *characterQueue)
 	    {
 	      if(characterQueue->characterQueue[k].xPos == j && characterQueue->characterQueue[k].yPos == i)
 		{
-		  printf("%c", characterQueue->characterQueue[k].symbol);
+		  mvwprintw(stdscr, i + 1, j,"%c", characterQueue->characterQueue[k].symbol);
 		  characterSymbol = 1;
 		}
 	    }
 
 	  if(characterSymbol == 0)
 	    {
-	      printf("%c", dungeon->dungeonArray[i][j].symbol);
+	      mvwprintw(stdscr, i + 1, j,"%c", dungeon->dungeonArray[i][j].symbol);
 	    }
 	}
 
-      printf("\n");
+      //printf("\n");
 
     }
 
-  printf("\n");
+  //printf("\n");
 }
 
 /*A method to weight the dungeon*/
@@ -2139,6 +2139,35 @@ int view_monster_list(characterQueue_t *characterQueue, dungeon_t *dungeon)
 
     wrefresh(monsterWindow);
   }
+}
+
+int place_staircase(dungeon_t *dungeon)
+{
+  int xPos, yPos;
+
+  xPos = rand() % 80;
+  yPos = rand() % 21;
+
+  while(dungeon->dungeonArray[yPos][xPos].hardness != 0)
+  {
+    xPos = rand() % 80;
+    yPos = rand() % 21;
+  }
+
+  dungeon->dungeonArray[yPos][xPos].symbol = '>';
+
+  xPos = rand() % 80;
+  yPos = rand() % 21;
+
+  while(dungeon->dungeonArray[yPos][xPos].hardness != 0)
+  {
+    xPos = rand() % 80;
+    yPos = rand() % 21;
+  }
+
+  dungeon->dungeonArray[yPos][xPos].symbol = '<';
+
+  return 0;
 }
 
 int main(int argc, char *argv[])

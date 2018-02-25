@@ -8,7 +8,7 @@
 #include <string.h>
 #include <math.h>
 #include <stdint.h>
-#include <ncurses.h> 
+#include <ncurses.h>
 
 #include "priorityqueue.h"
 #include "dijkstra.h"
@@ -63,6 +63,8 @@ int init_character_queue(int numMonsters, characterQueue_t *characterQueue, dung
 int move_character(dungeon_t *dungeon, characterQueue_t *characterQueue, int turnNumber);
 int check_win_condition(characterQueue_t *characterQueue);
 int select_closest_distance(dungeon_t *dungeon, character_t *character, int canTunnel);
+int new_character_queue(int numMonsters, characterQueue_t *characterQueue, dungeon_t *dungeon);
+int view_monster_list(characterQueue_t *characterQueue, dungeon_t *dungeon);
 int main(int argc, char *argv[]);
 
 
