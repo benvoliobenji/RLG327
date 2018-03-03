@@ -1,5 +1,5 @@
 dungeon: dungeon.o priorityqueue.o dijkstra.o hero.o monster.o character.o
-	gcc dungeon.o priorityqueue.o dijkstra.o hero.o monster.o character.o -o dungeon
+	gcc dungeon.o priorityqueue.o dijkstra.o hero.o monster.o character.o -o dungeon -lncurses
 
 dungeon.o: dungeon.c
 	gcc -Wall dungeon.c -c

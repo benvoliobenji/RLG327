@@ -17,9 +17,11 @@
 #define dungeon_width 80
 #define dungeon_height 21
 
+/*
 typedef int bool;
 #define true 1
 #define false 0
+*/
 /*
 typedef struct mapPiece {
   char symbol;
@@ -550,7 +552,7 @@ bool place_rooms(dungeon_t *dungeon)
 
   free(roomArray);
 
-  return true;
+  return TRUE;
 }
 
 /*This method moves through the dungeon map, placing the border around the
@@ -603,7 +605,7 @@ bool place_hardness(dungeon_t *dungeon)
 	    }
 	}
 
-  return true;
+  return TRUE;
 
 }
 
@@ -639,6 +641,7 @@ dungeon_t build_dungeon()
   connect_rooms(&dungeon);
 
   weight_dungeon(&dungeon);
+  place_staircase(&dungeon);
   //print_dungeon(&dungeon);
 
   return dungeon;
@@ -1003,8 +1006,8 @@ int init_character_queue(int numMonsters, characterQueue_t *characterQueue, dung
 //Handles the movement of the hero and monsters
 int move_character(dungeon_t *dungeon, characterQueue_t *characterQueue, int turnNumber)
 {
-  int i, found, randPos, xPos, yPos, j, validPosition, numRooms, updateX, updateY;
-  int corridorCheck, seenInCorridor, windowListen, checkMenu;
+  int i, found, randPos, xPos, yPos, j, validPosition, numRooms, updateX, updateY, c;
+  int corridorCheck, seenInCorridor, checkMenu;
   character_t character;
 
   i = 0;
@@ -1035,109 +1038,111 @@ int move_character(dungeon_t *dungeon, characterQueue_t *characterQueue, int tur
 	{
 	  validPosition = 0;
 
+	  printw("Your turn\n");
+
 	  while(validPosition == 0)
 	    {
-        c = getch(stdscr);
+	      c = getch();
 
-        checkMenu = 0;
+	      checkMenu = 0;
 
-        switch(c)
-        {
-          //If the user presses "y" or "7", move one up and one left
-          case 121:
-          case 55:
-            xPos = character.xPos - 1;
-            yPos = character.yPos - 1;
-            break;
+	      switch(c)
+		{
+		  //If the user presses "y" or "7", move one up and one left
+		case 121:
+		case 55:
+		  xPos = character.xPos - 1;
+		  yPos = character.yPos - 1;
+		  break;
 
-          //If the user presses "k" or "8", move one up
-          case 107:
-          case 56:
-            xPos = character.xPos;
-            yPos = character.yPos - 1;
-            break;
+		  //If the user presses "k" or "8", move one up
+		case 107:
+		case 56:
+		  xPos = character.xPos;
+		  yPos = character.yPos - 1;
+		  break;
 
-          //If the user presses "u" or "9", move one up and one right
-          case 117:
-          case 57:
-            xPos = character.xPos + 1;
-            yPos = character.yPos - 1;
-            break;
+		  //If the user presses "u" or "9", move one up and one right
+		case 117:
+		case 57:
+		  xPos = character.xPos + 1;
+		  yPos = character.yPos - 1;
+		  break;
+		  
+		  //If the user presses "l" or "6", move one right
+		case 108:
+		case 54:
+		  xPos = character.xPos + 1;
+		  yPos = character.yPos;
+		  break;
+		  
+		  //If the user presses "n" or "3", move on down and one right
+		case 110:
+		case 51:
+		  xPos = character.xPos + 1;
+		  yPos = character.yPos + 1;
+		  break;
+		  
+		  //If the user presses "j" or "2", move one down
+		case 106:
+		case 50:
+		  xPos = character.xPos;
+		  yPos = character.yPos + 1;
+		  break;
+		  
+		  //If the user presses "b" or "1", move one down and one left
+		case 98:
+		case 49:
+		  xPos = character.xPos - 1;
+		  yPos = character.yPos + 1;
+		  break;
 
-          //If the user presses "l" or "6", move one right
-          case 108:
-          case 54:
-            xPos = character.xPos + 1;
-            yPos = character.yPos;
-            break;
+		  //If the user presses "h" or "4", move one left
+		case 104:
+		case 52:
+		  xPos = character.xPos - 1;
+		  yPos = character.yPos;
+		  break;
 
-          //If the user presses "n" or "3", move on down and one right
-          case 110:
-          case 51:
-            xPos = character.xPos + 1;
-            yPos = character.yPos + 1;
-            break;
+		  //If the user presses ">", attempt to go down stairs
+		case 62:
+		  //Testing to see if hero is on downwards staircase
+		  if(dungeon->dungeonArray[character.yPos][character.xPos].symbol == '>')
+		    {
+		      //This will be the return signal to go downstairs
+		      return -2;
+		    }
+		  break;
 
-          //If the user presses "j" or "2", move one down
-          case 106:
-          case 50:
-            xPos = character.xPos;
-            yPos = character.yPos + 1;
-            break;
+		  //If the user presses "<", attempt to go up stairs
+		case 60:
+		  //Testing to see if hero is on upwards staircase
+		  if(dungeon->dungeonArray[character.yPos][character.xPos].symbol == '<')
+		    {
+		      //This will be the return signal to go upstairs
+		      return -3;
+		    }
+		  break;
 
-          //If the user presses "b" or "1", move one down and one left
-          case 98:
-          case 49:
-            xPos = character.xPos - 1;
-            yPos = character.yPos + 1;
-            break;
+		  //If the user presses "5" or "Space", rest 1 turn
+		case 53:
+		case 32:
+		  xPos = character.xPos;
+		  yPos = character.yPos;
+		  break;
 
-          //If the user presses "h" or "4", move one left
-          case 104:
-          case 52:
-            xPos = character.xPos - 1;
-            yPos = character.yPos;
-            break;
+		  //If the user presses "m", display monster list
+		case 109:
+		  view_monster_list(characterQueue, dungeon);
+		  checkMenu = 1;
+		  break;
+		  
+		case 81:
+		  //This will be the return signal to quit
+		  return -1;
+		}
 
-          //If the user presses ">", attempt to go down stairs
-          case 62:
-            //Testing to see if hero is on downwards staircase
-            if(dungeon->dungeonArray[character.yPos][character.xPos].symbol == '>')
-            {
-              //This will be the return signal to go downstairs
-              return -2;
-            }
-            break;
-
-          //If the user presses "<", attempt to go up stairs
-          case 60:
-            //Testing to see if hero is on upwards staircase
-            if(dungeon->dungeonArray[character.yPos][character.xPos].symbol == '<')
-            {
-              //This will be the return signal to go upstairs
-              return -3;
-            }
-            break;
-
-          //If the user presses "5" or "Space", rest 1 turn
-          case 53:
-          case 32:
-            xPos = character.xPos;
-            yPos = character.yPos;
-            break;
-
-          //If the user presses "m", display monster list
-          case 109:
-            view_monster_list(character_t *characterQueue, dungeon_t* dungeon);
-            checkMenu = 1;
-            break;
-
-          case 81:
-            //This will be the return signal to quit
-            return -1;
-        }
-
-	      if(xPos < 79 && yPos < 20 && xPos > 0 && yPos > 0 && checkMenu == 0)
+	      if(xPos < 79 && yPos < 20 && xPos > 0 && yPos > 0 && checkMenu == 0 && dungeon->dungeonArray[yPos][xPos].hardness == 0)
 		{
 		  validPosition = 1;
 		}
@@ -1933,6 +1938,8 @@ int select_closest_distance(dungeon_t *dungeon, character_t *character, int canT
 int new_character_queue(int numMonsters, characterQueue_t *characterQueue, dungeon_t *dungeon)
 {
   monster_t monster;
+  character_t character;
+  int i, xPos, yPos;
   characterQueue->characterQueue[0].nextTurn = 0;
   characterQueue->size = 1;
 
@@ -2045,7 +2052,6 @@ int new_character_queue(int numMonsters, characterQueue_t *characterQueue, dunge
 int view_monster_list(characterQueue_t *characterQueue, dungeon_t *dungeon)
 {
   int ch, i, xRelative, yRelative;
-  character_t monster;
 
   //Create a new window with height of 10, width of 40, and at row 5 col 20
   WINDOW *monsterWindow = newwin(10, 40, 5, 20);
@@ -2069,6 +2075,7 @@ int view_monster_list(characterQueue_t *characterQueue, dungeon_t *dungeon)
     else if(xRelative > 0 && yRelative < 0)
     {
       yRelative = characterQueue->characterQueue[i].yPos - characterQueue->characterQueue[0].yPos;
+
       mvwprintw(monsterWindow, i - 1, 0, "A %c is %d units West and %d units South", characterQueue->characterQueue[i].symbol, xRelative, yRelative);
     }
 
@@ -2134,6 +2141,7 @@ int view_monster_list(characterQueue_t *characterQueue, dungeon_t *dungeon)
 
       case 27:
         delwin(monsterWindow);
+	refresh();
         return 0;
     }
 
@@ -2183,9 +2191,9 @@ int main(int argc, char *argv[])
   numMon = 10;
 
   //Initializes the window
-  initscr(void);
-  raw(void);
-  noecho(void);
+  initscr();
+  raw();
+  noecho();
   curs_set(0);
   keypad(stdscr, TRUE);
 
@@ -2382,11 +2390,11 @@ int main(int argc, char *argv[])
 
   init_character_queue(numMon, &characterQueue, &dungeon);
 
-  printf("Doing full distance graph\n");
+  //printf("Doing full distance graph\n");
 
   full_distance_graph(&dungeon, &characterQueue.characterQueue[0]);
 
-  printf("Doing rooms distance graph\n");
+  //printf("Doing rooms distance graph\n");
   rooms_distance_graph(&dungeon, &characterQueue.characterQueue[0]);
 
   while(gameOver == 0)
@@ -2416,11 +2424,13 @@ int main(int argc, char *argv[])
   if(gameOver == -1)
     {
       printf("You Lost\n");
+      //endwin();
     }
 
   else
     {
       printf("You Won!\n");
+      //endwin();
     };
 
 
