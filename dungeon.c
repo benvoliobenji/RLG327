@@ -862,12 +862,12 @@ int init_character_queue(int numMonsters, characterQueue_t *characterQueue, dung
   //monster = malloc(sizeof(monster_t));
   //hero = malloc(sizeof(hero_t));
 
-  printf("Allocating memory for CharacterQueue\n");
+  //printf("Allocating memory for CharacterQueue\n");
   //Allocating memory for the characterQueue
   characterQueue->characterQueue = (character_t *) calloc(numMonsters + 1, sizeof(character_t));
   characterQueue->size = 0;
 
-  printf("Placing hero\n");
+  //printf("Placing hero\n");
 
   character.hero = hero;
   character.speed = 10;
@@ -893,18 +893,18 @@ int init_character_queue(int numMonsters, characterQueue_t *characterQueue, dung
 
   characterQueue->size++;
 
-  printf("Placing monsters\n");
+  //printf("Placing monsters\n");
   for(i = 0; i < numMonsters; i++)
     {
-      printf("Determining monster traits\n");
+      //printf("Determining monster traits\n");
       monster.traits = determine_traits();
 
-      printf("Determined traits\n");
+      //printf("Determined traits\n");
       //character.hero = NULL;
       character.monster = monster;
       character.dead = 0;
 
-      printf("Monster symbol\n");
+      //printf("Monster symbol\n");
       switch(monster.traits){
       case 0:
 	character.symbol = '0';
@@ -971,27 +971,27 @@ int init_character_queue(int numMonsters, characterQueue_t *characterQueue, dung
 	break;
       }
 
-      printf("Monster speed\n");
+      //printf("Monster speed\n");
       character.speed = (rand() % 16) + 5;
 
       xPos = (rand() % 79) + 1;
       yPos = (rand() % 20) + 1;
 
-      printf("Determine xPos and yPos\n");
+      //printf("Determine xPos and yPos\n");
       while(dungeon->dungeonArray[yPos][xPos].hardness != 0 && dungeon->dungeonArray[yPos][xPos].symbol != '.')
 	{
-	  printf("Finding new xPos and yPos\n");
+	  //printf("Finding new xPos and yPos\n");
 	  xPos = (rand() % 79) + 1;
 	  yPos = (rand() % 20) + 1;
 
-	  printf("xPos: %d yPos: %d\n", xPos, yPos);
+	  //printf("xPos: %d yPos: %d\n", xPos, yPos);
 	}
 
       character.xPos = xPos;
       character.yPos = yPos;
       character.nextTurn = 0;
 
-      printf("Placing character in characterQueue\n");
+      //printf("Placing character in characterQueue\n");
       characterQueue->characterQueue[characterQueue->size] = character;
       characterQueue->size++;
     }
@@ -2120,7 +2120,7 @@ int view_monster_list(characterQueue_t *characterQueue, dungeon_t *dungeon)
 
   while(1)
   {
-    ch = getch(monsterWindow);
+    ch = wgetch(monsterWindow);
 
     switch (ch) {
       //If the user wants to scroll up
