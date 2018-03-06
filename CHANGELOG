@@ -19,3 +19,11 @@
 2/18/2018: Created move_character in character.c
 2/19/2018: Created character.h, hero.h, monster.h, dungeon.h
 2/20/2018: Bugfixed and finished assignment1.04
+2/27/2018: Initialized screen and inputs for integration with ncurses
+2/27/2018: Changed printf statements within print_dungeon() to printw statements
+3/01/2018: Wrote keybinds for hero movement as well as staircase methods
+3/01/2018: Created method to view monster list and exit without movement
+3/04/2018: Worked on keybinds and methods to scroll the monster list
+3/05/2018: Fixed issue where list wouldn't scroll and update
+3/05/2018: Fixed issue where dungeon wouldn't build after --nummon was specified
+3/05/2018: Finalized and submitted implementation of ncurses and staircases (assignment1.05)

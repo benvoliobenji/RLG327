@@ -5,6 +5,7 @@
 #include <string.h>
 #include <math.h>
 #include <stdint.h>
+#include <ncurses.h>
 
 #include "priorityqueue.h"
 #include "dijkstra.h"
@@ -16,9 +17,11 @@
 #define dungeon_width 80
 #define dungeon_height 21
 
+/*
 typedef int bool;
 #define true 1
 #define false 0
+*/
 /*
 typedef struct mapPiece {
   char symbol;
@@ -68,22 +71,22 @@ void print_dungeon(dungeon_t *dungeon, characterQueue_t *characterQueue)
 	    {
 	      if(characterQueue->characterQueue[k].xPos == j && characterQueue->characterQueue[k].yPos == i)
 		{
-		  printf("%c", characterQueue->characterQueue[k].symbol);
+		  mvwprintw(stdscr, i + 1, j,"%c", characterQueue->characterQueue[k].symbol);
 		  characterSymbol = 1;
 		}
 	    }
 
 	  if(characterSymbol == 0)
 	    {
-	      printf("%c", dungeon->dungeonArray[i][j].symbol);
+	      mvwprintw(stdscr, i + 1, j,"%c", dungeon->dungeonArray[i][j].symbol);
 	    }
 	}
 
-      printf("\n");
+      //printf("\n");
 
     }
 
-  printf("\n");
+  //printf("\n");
 }
 
 /*A method to weight the dungeon*/
@@ -112,7 +115,7 @@ int weight_dungeon(dungeon_t *dungeon)
 	      dungeon->dungeonWeight[i][j] = ((dungeon->dungeonArray[i][j].hardness) / 85) + 1;
 	    }
 	}
-    }  
+    }
 
   return 0;
 }
@@ -144,7 +147,7 @@ int full_distance_graph(dungeon_t *dungeon, character_t *hero)
 	      addVertex.priority = 0;
 
 	    }
-	  
+
 	  //Else the vertex is treated here
 	  else
 	    {
@@ -156,14 +159,14 @@ int full_distance_graph(dungeon_t *dungeon, character_t *hero)
 	      addVertex.visited = 0;
 	      addVertex.priority = 255;
 	    }
-	  
+
 	  vertexArray[count] = addVertex;
-	  
+
 	  count++;
-	  
+
 	}
     }
- 
+
   //Do dijkstra
   dijkstra(vertexArray, count);
 
@@ -231,13 +234,13 @@ int rooms_distance_graph(dungeon_t *dungeon, character_t *hero)
 	      addVertex.visited = 0;
 	      addVertex.priority = 255;
 	    }
-	  
+
 	  vertexArray[count - 1] = addVertex;
-	  
+
 	  count++;
-	  
+
 	  vertexArray = realloc(vertexArray, count * sizeof(vertex_t));
-	  
+
 	}
     }
 
@@ -263,7 +266,7 @@ int rooms_distance_graph(dungeon_t *dungeon, character_t *hero)
 int print_distance_graph(dungeon_t *dungeon, character_t *hero)
 {
   int i, j;
-  
+
   for(i = 0; i < dungeon_height; i++)
     {
       for(j = 0; j < dungeon_width; j++)
@@ -324,7 +327,7 @@ void connect_rooms(dungeon_t *dungeon)
   int y, x, roomNum, i, j;
 
   roomNum = 0;
-  
+
   //As long as there are rooms to connect in the room array, the method will repeat
   while(roomNum < (dungeon->numRooms) - 1)
     {
@@ -439,13 +442,13 @@ bool place_rooms(dungeon_t *dungeon)
       numRooms = 5;
 
       roomArray = realloc(roomArray, numRooms * sizeof(room_t));
-      
+
       roomArray[0] = room1;
       roomArray[1] = room2;
       roomArray[2] = room3;
       roomArray[3] = room4;
       roomArray[4] = room5;
-      
+
       canBePlaced = true;
 
       /*This set of for loops will go through each room in the room array and
@@ -460,7 +463,7 @@ bool place_rooms(dungeon_t *dungeon)
 	      free(roomArray);
 	      return false;
 	    }
-	  
+
 	  for(j = testRoom.yPos; j < (testRoom.yPos + testRoom.ySize); j++)
 	    {
 	      for(k = testRoom.xPos; k < (testRoom.xPos + testRoom.xSize); k++)
@@ -468,7 +471,7 @@ bool place_rooms(dungeon_t *dungeon)
 		  /*If it does find a conflict, it resets the dungeon, breaks the
 		    loop, and tries again */
 		  if(dungeon->dungeonArray[j][k].hardness == 0 || dungeon->dungeonArray[j][k].hardness == 255)
-		    {		     
+		    {
 		      free(roomArray);
 		      return false;
 		    }
@@ -483,7 +486,7 @@ bool place_rooms(dungeon_t *dungeon)
 	    }
 
 	}
-      firstTest = true; 
+      firstTest = true;
     }
 
 
@@ -496,7 +499,7 @@ bool place_rooms(dungeon_t *dungeon)
 
       newRoom = generate_new_room();
       canBePlaced = true;
-      
+
       //This will test to see if a room can be placed inside the dungeon
       for(i = newRoom.yPos; i < newRoom.yPos + newRoom.ySize; i++)
 	{
@@ -525,7 +528,7 @@ bool place_rooms(dungeon_t *dungeon)
 	    }
 
 	  roomArray = realloc(roomArray, (numRooms + 1) * sizeof(room_t));
-	  
+
 	  //Add the room to the roomArray
 	  roomArray[numRooms] = newRoom;
 	  numRooms++;
@@ -546,10 +549,10 @@ bool place_rooms(dungeon_t *dungeon)
     }
 
   dungeon->numRooms = numRooms;
-  
+
   free(roomArray);
 
-  return true;
+  return TRUE;
 }
 
 /*This method moves through the dungeon map, placing the border around the
@@ -565,7 +568,7 @@ bool place_hardness(dungeon_t *dungeon)
 	  dungeon->dungeonArray[i][0].symbol = ' ';
 	  dungeon->dungeonArray[i][0].hardness = 255;
 	}
-  
+
       //This makes the right border of the dungeon an immutable wall
       for(i = 0; i < dungeon_height; i++)
 	{
@@ -595,14 +598,14 @@ bool place_hardness(dungeon_t *dungeon)
 	    {
 	      //This will give me a random number between 1-254
 	      randHardness = (rand() % 254) + 1;
-	  
+
 	      dungeon->dungeonArray[i][j].symbol = ' ';
 	      dungeon->dungeonArray[i][j].hardness = randHardness;
 
 	    }
 	}
 
-  return true;
+  return TRUE;
 
 }
 
@@ -627,7 +630,7 @@ dungeon_t build_dungeon()
 	  dungeon.dungeonArray[i][j] = starter;
 	}
     }
-  
+
   while(!roomsPlaced)
     {
       place_hardness(&dungeon);
@@ -638,10 +641,11 @@ dungeon_t build_dungeon()
   connect_rooms(&dungeon);
 
   weight_dungeon(&dungeon);
+  place_staircase(&dungeon);
   //print_dungeon(&dungeon);
 
   return dungeon;
- 
+
 }
 
 /*Given a dungeon parameter, saves the dungeon to a binary file in a specific format.*/
@@ -661,7 +665,7 @@ int save_dungeon(dungeon_t dungeon)
   unsigned char*  mapHardness = (char*) malloc(dungeon_width * dungeon_height * sizeof(char));
 
   length = strlen(getenv("HOME")) + strlen("/.rlg327/dungeon") + 1;
-  
+
   char *file = (char*) malloc(length * sizeof(char));
 
   strcpy(file, getenv("HOME"));
@@ -712,7 +716,7 @@ int save_dungeon(dungeon_t dungeon)
       fwrite(&xPos, sizeof(char), 1, f);
       fwrite(&ySize, sizeof(char), 1, f);
       fwrite(&xSize, sizeof(char), 1, f);
-      
+
     }
 
   //Free's the allocated memory of mapHardness
@@ -743,7 +747,7 @@ dungeon_t load_dungeon()
   unsigned char* mapHardness = (char*)malloc(dungeon_height * dungeon_width * sizeof(char));
 
   length = strlen(getenv("HOME")) + strlen("/.rlg327/dungeon") + 1;
-  
+
   char *file = (char*) malloc(length * sizeof(char));
 
   strcpy(file, getenv("HOME"));
@@ -776,7 +780,7 @@ dungeon_t load_dungeon()
   //Converting version and size back from big endian
   version = be32toh(version);
   size = be32toh(size);
-  
+
   /*Defining the number of rooms by subtracting the 12 char values of the name, the two 1 byte version
     and size, and the 80 * 21 1 byte hardness map and dividing by the number of values per room to get
     the number of rooms */
@@ -847,7 +851,7 @@ dungeon_t load_dungeon()
   fclose(f);
 
   return dungeon;
-  
+
 }
 
 //Initializes the character queue where the hero and monsters are
@@ -861,12 +865,12 @@ int init_character_queue(int numMonsters, characterQueue_t *characterQueue, dung
   //monster = malloc(sizeof(monster_t));
   //hero = malloc(sizeof(hero_t));
 
-  printf("Allocating memory for CharacterQueue\n");
+  //printf("Allocating memory for CharacterQueue\n");
   //Allocating memory for the characterQueue
   characterQueue->characterQueue = (character_t *) calloc(numMonsters + 1, sizeof(character_t));
   characterQueue->size = 0;
 
-  printf("Placing hero\n");
+  //printf("Placing hero\n");
 
   character.hero = hero;
   character.speed = 10;
@@ -892,18 +896,18 @@ int init_character_queue(int numMonsters, characterQueue_t *characterQueue, dung
 
   characterQueue->size++;
 
-  printf("Placing monsters\n");
+  //printf("Placing monsters\n");
   for(i = 0; i < numMonsters; i++)
     {
-      printf("Determining monster traits\n");
+      //printf("Determining monster traits\n");
       monster.traits = determine_traits();
 
-      printf("Determined traits\n");
+      //printf("Determined traits\n");
       //character.hero = NULL;
       character.monster = monster;
       character.dead = 0;
-      
-      printf("Monster symbol\n");
+
+      //printf("Monster symbol\n");
       switch(monster.traits){
       case 0:
 	character.symbol = '0';
@@ -970,51 +974,52 @@ int init_character_queue(int numMonsters, characterQueue_t *characterQueue, dung
 	break;
       }
 
-      printf("Monster speed\n");
+      //printf("Monster speed\n");
       character.speed = (rand() % 16) + 5;
 
       xPos = (rand() % 79) + 1;
       yPos = (rand() % 20) + 1;
 
-      printf("Determine xPos and yPos\n");
+      //printf("Determine xPos and yPos\n");
       while(dungeon->dungeonArray[yPos][xPos].hardness != 0 && dungeon->dungeonArray[yPos][xPos].symbol != '.')
 	{
-	  printf("Finding new xPos and yPos\n");
+	  //printf("Finding new xPos and yPos\n");
 	  xPos = (rand() % 79) + 1;
 	  yPos = (rand() % 20) + 1;
 
-	  printf("xPos: %d yPos: %d\n", xPos, yPos);
+	  //printf("xPos: %d yPos: %d\n", xPos, yPos);
 	}
 
       character.xPos = xPos;
       character.yPos = yPos;
       character.nextTurn = 0;
 
-      printf("Placing character in characterQueue\n");
+      //printf("Placing character in characterQueue\n");
       characterQueue->characterQueue[characterQueue->size] = character;
       characterQueue->size++;
     }
 
   return 0;
-  
+
 }
 
 //Handles the movement of the hero and monsters
 int move_character(dungeon_t *dungeon, characterQueue_t *characterQueue, int turnNumber)
 {
-  int i, found, randPos, xPos, yPos, j, validPosition, numRooms, updateX, updateY;
-  int corridorCheck, seenInCorridor;
+  int i, found, randPos, xPos, yPos, j, validPosition, numRooms, updateX, updateY, c;
+  int corridorCheck, seenInCorridor, validMovement;
   character_t character;
 
   i = 0;
   found = 0;
-  
+  validMovement = 0;
+
   while(found == 0 && i < characterQueue->size)
     {
       character = characterQueue->characterQueue[i];
       //printf("Next Turn: %d\n", character.nextTurn);
       //printf("Dead: %d\n", character.dead);
-      
+
       if(character.nextTurn <= turnNumber && character.dead == 0)
 	{
 	  //printf("Found\n");
@@ -1033,54 +1038,119 @@ int move_character(dungeon_t *dungeon, characterQueue_t *characterQueue, int tur
 	{
 	  validPosition = 0;
 
+	  //printw("Your turn\n");
+
 	  while(validPosition == 0)
 	    {
-	      randPos = rand() % 8;
+	      c = getch();
 
-	      switch(randPos)
+	      validMovement = 0;
+
+	      switch(c)
 		{
+		  //If the user presses "y" or "7", move one up and one left
+		case 121:
+		case 55:
+		  xPos = character.xPos - 1;
+		  yPos = character.yPos - 1;
+		  break;
 
-		case 0:
+		  //If the user presses "k" or "8", move one up
+		case 107:
+		case 56:
 		  xPos = character.xPos;
 		  yPos = character.yPos - 1;
 		  break;
 
-		case 1:
+		  //If the user presses "u" or "9", move one up and one right
+		case 117:
+		case 57:
 		  xPos = character.xPos + 1;
 		  yPos = character.yPos - 1;
 		  break;
-
-		case 2:
+		  
+		  //If the user presses "l" or "6", move one right
+		case 108:
+		case 54:
 		  xPos = character.xPos + 1;
 		  yPos = character.yPos;
-
-		case 3:
+		  break;
+		  
+		  //If the user presses "n" or "3", move on down and one right
+		case 110:
+		case 51:
 		  xPos = character.xPos + 1;
 		  yPos = character.yPos + 1;
 		  break;
-
-		case 4:
+		  
+		  //If the user presses "j" or "2", move one down
+		case 106:
+		case 50:
 		  xPos = character.xPos;
 		  yPos = character.yPos + 1;
 		  break;
-
-		case 5:
+		  
+		  //If the user presses "b" or "1", move one down and one left
+		case 98:
+		case 49:
 		  xPos = character.xPos - 1;
 		  yPos = character.yPos + 1;
 		  break;
 
-		case 6:
+		  //If the user presses "h" or "4", move one left
+		case 104:
+		case 52:
 		  xPos = character.xPos - 1;
 		  yPos = character.yPos;
 		  break;
 
-		case 7:
-		  xPos = character.xPos - 1;
-		  yPos = character.yPos - 1;
+		  //If the user presses ">", attempt to go down stairs
+		case 62:
+		  //Testing to see if hero is on downwards staircase
+		  if(dungeon->dungeonArray[character.yPos][character.xPos].symbol == '>')
+		    {
+		      //This will be the return signal to go downstairs
+		      return -2;
+		    }
+		  else
+		    {
+		      validMovement = 1;
+		    }
 		  break;
+
+		  //If the user presses "<", attempt to go up stairs
+		case 60:
+		  //Testing to see if hero is on upwards staircase
+		  if(dungeon->dungeonArray[character.yPos][character.xPos].symbol == '<')
+		    {
+		      //This will be the return signal to go upstairs
+		      return -3;
+		    }
+		  else
+		    {
+		      validMovement = 1;
+		    }
+		  break;
+
+		  //If the user presses "5" or "Space", rest 1 turn
+		case 53:
+		case 32:
+		  xPos = character.xPos;
+		  yPos = character.yPos;
+		  break;
+
+		  //If the user presses "m", display monster list
+		case 109:
+		  view_monster_list(characterQueue, dungeon);
+		  validMovement = 1;
+		  break;
+		  
+		case 113:
+		  //This will be the return signal to quit
+		  return -1;
 		}
 
-	      if(xPos < 79 && yPos < 20 && xPos > 0 && yPos > 0)
+	      if(xPos < 79 && yPos < 20 && xPos > 0 && yPos > 0 && validMovement == 0 && dungeon->dungeonArray[yPos][xPos].hardness == 0)
 		{
 		  validPosition = 1;
 		}
@@ -1113,7 +1183,7 @@ int move_character(dungeon_t *dungeon, characterQueue_t *characterQueue, int tur
 	    }
 
 	  character.nextTurn = character.nextTurn + (1000 / character.speed);
-	  
+
 
 	  characterQueue->characterQueue[0] = character;
 	}
@@ -1257,7 +1327,7 @@ int move_character(dungeon_t *dungeon, characterQueue_t *characterQueue, int tur
 			    }
 			}
 		    }
-		  
+
 		  else
 		    {
 		      for(corridorCheck = character.yPos; corridorCheck <= characterQueue->characterQueue[0].yPos; corridorCheck++)
@@ -1473,7 +1543,7 @@ int move_character(dungeon_t *dungeon, characterQueue_t *characterQueue, int tur
 			    }
 			}
 		    }
-		  
+
 		  else
 		    {
 		      for(corridorCheck = character.yPos; corridorCheck <= characterQueue->characterQueue[0].yPos; corridorCheck++)
@@ -1560,17 +1630,17 @@ int move_character(dungeon_t *dungeon, characterQueue_t *characterQueue, int tur
 				{
 				  character.xPos--;
 				}
-			      
+
 			      if(characterQueue->characterQueue[0].xPos - character.xPos > 0)
 				{
 				  character.xPos++;
 				}
-			      
+
 			      if(character.yPos - characterQueue->characterQueue[0].yPos > 0)
 				{
 				  character.yPos--;
 				}
-			      
+
 			      if(character.yPos - characterQueue->characterQueue[0].yPos < 0)
 				{
 				  character.yPos++;
@@ -1622,17 +1692,17 @@ int move_character(dungeon_t *dungeon, characterQueue_t *characterQueue, int tur
 			    {
 			      character.xPos--;
 			    }
-			      
+
 			  if(characterQueue->characterQueue[0].xPos - character.xPos > 0)
 			    {
 			      character.xPos++;
 			    }
-			      
+
 			  if(character.yPos - characterQueue->characterQueue[0].yPos > 0)
 			    {
 			      character.yPos--;
 			    }
-			      
+
 			  if(character.yPos - characterQueue->characterQueue[0].yPos < 0)
 			    {
 			      character.yPos++;
@@ -1695,7 +1765,7 @@ int move_character(dungeon_t *dungeon, characterQueue_t *characterQueue, int tur
 
 	    //printf("Updating nextTurn\n");
 	    character.nextTurn = character.nextTurn + (1000 / character.speed);
-	  
+
 	    //printf("Putting character back into characterQueue\n");
 	    characterQueue->characterQueue[i] = character;
 	}
@@ -1731,7 +1801,7 @@ int check_win_condition(characterQueue_t *characterQueue)
 int select_closest_distance(dungeon_t *dungeon, character_t *character, int canTunnel)
 {
   int minDistance;
-  
+
   if(canTunnel == 1)
     {
       minDistance = dungeon->distanceTunnelMap[character->yPos][character->xPos];
@@ -1739,7 +1809,7 @@ int select_closest_distance(dungeon_t *dungeon, character_t *character, int canT
       if(dungeon->distanceTunnelMap[character->yPos -1][character->xPos] < minDistance)
 	{
 	  minDistance = dungeon->distanceTunnelMap[character->yPos - 1][character->xPos];
-	  
+
 	  character->yPos = character->yPos - 1;
 	  character->xPos = character->xPos;
 	}
@@ -1755,31 +1825,31 @@ int select_closest_distance(dungeon_t *dungeon, character_t *character, int canT
       if(dungeon->distanceTunnelMap[character->yPos][character->xPos + 1] < minDistance)
 	{
 	  minDistance = dungeon->distanceTunnelMap[character->yPos][character->xPos + 1];
-	  
+
 	  character->yPos = character->yPos;
 	  character->xPos = character->xPos + 1;
 	}
-      
+
       if(dungeon->distanceTunnelMap[character->yPos + 1][character->xPos + 1] < minDistance)
 	{
 	  minDistance = dungeon->distanceTunnelMap[character->yPos + 1][character->xPos + 1];
-	  
+
 	  character->yPos = character->yPos + 1;
 	  character->xPos = character->xPos + 1;
 	}
-      
+
       if(dungeon->distanceTunnelMap[character->yPos + 1][character->xPos] < minDistance)
 	{
 	  minDistance = dungeon->distanceTunnelMap[character->yPos + 1][character->xPos];
-	  
+
 	  character->yPos = character->yPos + 1;
 	  character->xPos = character->xPos;
 	}
-      
+
       if(dungeon->distanceTunnelMap[character->yPos + 1][character->xPos - 1] < minDistance)
 	{
 	  minDistance = dungeon->distanceTunnelMap[character->yPos + 1][character->xPos - 1];
-	  
+
 	  character->yPos = character->yPos + 1;
 	  character->xPos = character->xPos - 1;
 	}
@@ -1787,15 +1857,15 @@ int select_closest_distance(dungeon_t *dungeon, character_t *character, int canT
       if(dungeon->distanceTunnelMap[character->yPos][character->xPos - 1] < minDistance)
 	{
 	  minDistance = dungeon->distanceTunnelMap[character->yPos][character->xPos - 1];
-	  
+
 	  character->yPos = character->yPos;
 	  character->xPos = character->xPos - 1;
 	}
-      
+
       if(dungeon->distanceTunnelMap[character->yPos -1][character->xPos - 1] < minDistance)
 	{
 	  minDistance = dungeon->distanceTunnelMap[character->yPos - 1][character->xPos - 1];
-	  
+
 	  character->yPos = character->yPos - 1;
 	  character->xPos = character->xPos - 1;
 	}
@@ -1808,7 +1878,7 @@ int select_closest_distance(dungeon_t *dungeon, character_t *character, int canT
       if(dungeon->distanceMap[character->yPos -1][character->xPos] < minDistance)
 	{
 	  minDistance = dungeon->distanceMap[character->yPos - 1][character->xPos];
-	  
+
 	  character->yPos = character->yPos - 1;
 	  character->xPos = character->xPos;
 	}
@@ -1824,31 +1894,31 @@ int select_closest_distance(dungeon_t *dungeon, character_t *character, int canT
       if(dungeon->distanceMap[character->yPos][character->xPos + 1] < minDistance)
 	{
 	  minDistance = dungeon->distanceMap[character->yPos][character->xPos + 1];
-	  
+
 	  character->yPos = character->yPos;
 	  character->xPos = character->xPos + 1;
 	}
-      
+
       if(dungeon->distanceMap[character->yPos + 1][character->xPos + 1] < minDistance)
 	{
 	  minDistance = dungeon->distanceMap[character->yPos + 1][character->xPos + 1];
-	  
+
 	  character->yPos = character->yPos + 1;
 	  character->xPos = character->xPos + 1;
 	}
-      
+
       if(dungeon->distanceMap[character->yPos + 1][character->xPos] < minDistance)
 	{
 	  minDistance = dungeon->distanceMap[character->yPos + 1][character->xPos];
-	  
+
 	  character->yPos = character->yPos + 1;
 	  character->xPos = character->xPos;
 	}
-      
+
       if(dungeon->distanceMap[character->yPos + 1][character->xPos - 1] < minDistance)
 	{
 	  minDistance = dungeon->distanceMap[character->yPos + 1][character->xPos - 1];
-	  
+
 	  character->yPos = character->yPos + 1;
 	  character->xPos = character->xPos - 1;
 	}
@@ -1856,15 +1926,15 @@ int select_closest_distance(dungeon_t *dungeon, character_t *character, int canT
       if(dungeon->distanceMap[character->yPos][character->xPos - 1] < minDistance)
 	{
 	  minDistance = dungeon->distanceMap[character->yPos][character->xPos - 1];
-	  
+
 	  character->yPos = character->yPos;
 	  character->xPos = character->xPos - 1;
 	}
-      
+
       if(dungeon->distanceMap[character->yPos -1][character->xPos - 1] < minDistance)
 	{
 	  minDistance = dungeon->distanceMap[character->yPos - 1][character->xPos - 1];
-	  
+
 	  character->yPos = character->yPos - 1;
 	  character->xPos = character->xPos - 1;
 	}
@@ -1873,6 +1943,297 @@ int select_closest_distance(dungeon_t *dungeon, character_t *character, int canT
   return 0;
 }
 
+int new_character_queue(int numMonsters, characterQueue_t *characterQueue, dungeon_t *dungeon)
+{
+  monster_t monster;
+  character_t character;
+  int i, xPos, yPos;
+  characterQueue->characterQueue[0].nextTurn = 0;
+  characterQueue->size = 1;
+
+  xPos = (rand() % 79) + 1;
+  yPos = (rand() % 20) + 1;
+
+  //printf("Determine xPos and yPos\n");
+  while(dungeon->dungeonArray[yPos][xPos].hardness != 0 && dungeon->dungeonArray[yPos][xPos].symbol != '.')
+    {
+      //printf("Finding new xPos and yPos\n");
+      xPos = (rand() % 79) + 1;
+      yPos = (rand() % 20) + 1;
+
+      //printf("xPos: %d yPos: %d\n", xPos, yPos);
+    }
+  characterQueue->characterQueue[0].xPos = xPos;
+  characterQueue->characterQueue[0].yPos = yPos;
+
+  //printf("Placing monsters\n");
+  for(i = 0; i < numMonsters; i++)
+    {
+      //printf("Determining monster traits\n");
+      monster.traits = determine_traits();
+
+      //printf("Determined traits\n");
+      //character.hero = NULL;
+      character.monster = monster;
+      character.dead = 0;
+
+      //printf("Monster symbol\n");
+      switch(monster.traits){
+      case 0:
+	character.symbol = '0';
+	break;
+
+      case 1:
+	character.symbol = '1';
+	break;
+
+      case 2:
+	character.symbol = '2';
+	break;
+
+      case 3:
+	character.symbol = '3';
+	break;
+
+      case 4:
+	character.symbol = '4';
+	break;
+
+      case 5:
+	character.symbol = '5';
+	break;
+
+      case 6:
+	character.symbol = '6';
+	break;
+
+      case 7:
+	character.symbol = '7';
+	break;
+
+      case 8:
+	character.symbol = '8';
+	break;
+
+      case 9:
+	character.symbol = '9';
+	break;
+
+      case 10:
+	character.symbol = 'a';
+	break;
+
+      case 11:
+	character.symbol = 'b';
+	break;
+
+      case 12:
+	character.symbol = 'c';
+	break;
+
+      case 13:
+	character.symbol = 'd';
+	break;
+
+      case 14:
+	character.symbol = 'e';
+	break;
+
+      case 15:
+	character.symbol = 'f';
+	break;
+      }
+
+      //printf("Monster speed\n");
+      character.speed = (rand() % 16) + 5;
+
+      xPos = (rand() % 79) + 1;
+      yPos = (rand() % 20) + 1;
+
+      //printf("Determine xPos and yPos\n");
+      while(dungeon->dungeonArray[yPos][xPos].hardness != 0 && dungeon->dungeonArray[yPos][xPos].symbol != '.')
+	{
+	  //printf("Finding new xPos and yPos\n");
+	  xPos = (rand() % 79) + 1;
+	  yPos = (rand() % 20) + 1;
+
+	  //printf("xPos: %d yPos: %d\n", xPos, yPos);
+	}
+
+      character.xPos = xPos;
+      character.yPos = yPos;
+      character.nextTurn = 0;
+
+      //printf("Placing character in characterQueue\n");
+      characterQueue->characterQueue[characterQueue->size] = character;
+      characterQueue->size++;
+    }
+
+  return 0;
+}
+
+int view_monster_list(characterQueue_t *characterQueue, dungeon_t *dungeon)
+{
+  int ch, i, xRelative, yRelative, endWindow, startNum;
+
+  //Create a new window with height of 10, width of 40, and at row 5 col 20
+  WINDOW *monsterWindow = newwin(5, 40, 5, 20);
+
+  keypad(monsterWindow, TRUE);
+  scrollok(monsterWindow, TRUE);
+
+  //Refresh window
+  wrefresh(monsterWindow);
+  refresh();
+
+  if(characterQueue-> size <= 5)
+    {
+      endWindow = characterQueue->size - 1;
+    }
+  else
+    {
+      endWindow = 5;
+    }
+
+  startNum = 1;
+
+  while(1)
+  {
+    for(i = startNum; i <= endWindow; i++)
+      {
+	//Finding the x and y position of the monster relative to the hero
+	xRelative = characterQueue->characterQueue[0].xPos - characterQueue->characterQueue[i].xPos;
+	yRelative = characterQueue->characterQueue[0].yPos - characterQueue->characterQueue[i].yPos;
+
+	//If the monster is south and east of the hero
+	if(xRelative < 0 && yRelative < 0)
+	  {
+	    xRelative = characterQueue->characterQueue[i].xPos - characterQueue->characterQueue[0].xPos;
+	    yRelative = characterQueue->characterQueue[i].yPos - characterQueue->characterQueue[0].yPos;
+
+	    mvwprintw(monsterWindow, i - startNum, 0, "A %c is %d units East and %d units South", characterQueue->characterQueue[i].symbol, xRelative, yRelative);
+	  }
+
+	//If the monster is south and west of the hero
+	else if(xRelative > 0 && yRelative < 0)
+	  {
+	    yRelative = characterQueue->characterQueue[i].yPos - characterQueue->characterQueue[0].yPos;
+
+	    mvwprintw(monsterWindow, i - startNum, 0, "A %c is %d units West and %d units South", characterQueue->characterQueue[i].symbol, xRelative, yRelative);
+	  }
+
+	//If the monster is east of the hero
+	else if(xRelative < 0 && yRelative == 0)
+	  {
+	    xRelative = characterQueue->characterQueue[i].xPos - characterQueue->characterQueue[0].xPos;
+
+	    mvwprintw(monsterWindow, i - startNum, 0, "A %c is %d units East", characterQueue->characterQueue[i].symbol, xRelative);
+	  }
+
+	//If the monster is west of the hero
+	else if(xRelative > 0 && yRelative == 0)
+	  {
+	    mvwprintw(monsterWindow, i - startNum, 0, "A %c is %d units West", characterQueue->characterQueue[i].symbol, xRelative);
+	  }
+
+	//If the monster is north and east of the hero
+	else if(xRelative < 0 && yRelative > 0)
+	  {
+	    xRelative = characterQueue->characterQueue[i].xPos - characterQueue->characterQueue[0].xPos;
+
+	    mvwprintw(monsterWindow, i - startNum, 0, "A %c is %d units East and %d units North", characterQueue->characterQueue[i].symbol, xRelative, yRelative);
+	  }
+
+	//If the monster is north and west of the hero
+	else if(xRelative > 0 && yRelative > 0)
+	  {
+	    mvwprintw(monsterWindow, i - startNum, 0, "A %c is %d units West and %d units North", characterQueue->characterQueue[i].symbol, xRelative, yRelative);
+	  }
+
+	//If the monster is south of the hero
+	else if(xRelative == 0 && yRelative < 0)
+	  {
+	    yRelative = characterQueue->characterQueue[i].yPos - characterQueue->characterQueue[0].yPos;
+
+	    mvwprintw(monsterWindow, i - startNum, 0, "A %c is %d units South", characterQueue->characterQueue[i].symbol, yRelative);
+	  }
+
+	//If the monster is north of the hero
+	else if(xRelative == 0 && yRelative > 0)
+	  {
+	    mvwprintw(monsterWindow, i - startNum, 0, "A %c is %d units North", characterQueue->characterQueue[i].symbol, yRelative);
+	  }
+      }
+
+    wrefresh(monsterWindow);
+    refresh();
+    ch = wgetch(monsterWindow);
+    //ch = getch();
+    
+    switch (ch) {
+      //If the user wants to scroll up
+      case 259:
+	if(startNum > 1)
+	  {
+	    wclear(monsterWindow);
+	    startNum--;
+	    endWindow--;
+	    wscrl(monsterWindow, -1);
+	  }
+        break;
+
+      //If the user wants to scroll down
+      case 258:
+	if(endWindow < characterQueue->size - 1)
+	  {
+	    wclear(monsterWindow);
+	    startNum++;
+	    endWindow++;
+	    wscrl(monsterWindow, 1);
+	  }
+        break;
+
+      //If the user wants to exit
+      case 27:
+	wrefresh(monsterWindow);
+        delwin(monsterWindow);
+	print_dungeon(dungeon, characterQueue);
+	refresh();
+        return 0;
+    }
+    refresh();
+    wrefresh(monsterWindow);
+  }
+}
+
+int place_staircase(dungeon_t *dungeon)
+{
+  int xPos, yPos;
+
+  xPos = rand() % 80;
+  yPos = rand() % 21;
+
+  while(dungeon->dungeonArray[yPos][xPos].hardness != 0)
+  {
+    xPos = rand() % 80;
+    yPos = rand() % 21;
+  }
+
+  dungeon->dungeonArray[yPos][xPos].symbol = '>';
+
+  xPos = rand() % 80;
+  yPos = rand() % 21;
+
+  while(dungeon->dungeonArray[yPos][xPos].hardness != 0)
+  {
+    xPos = rand() % 80;
+    yPos = rand() % 21;
+  }
+
+  dungeon->dungeonArray[yPos][xPos].symbol = '<';
+
+  return 0;
+}
 
 int main(int argc, char *argv[])
 {
@@ -1880,11 +2241,18 @@ int main(int argc, char *argv[])
 
   dungeon_t dungeon;
   characterQueue_t characterQueue;
-  int gameOver, turnNum, numMon, i;
+  int gameOver, turnNum, numMon, i, ch;
 
   gameOver = 0;
   turnNum = 0;
   numMon = 10;
+
+  //Initializes the window
+  initscr();
+  raw();
+  noecho();
+  curs_set(0);
+  keypad(stdscr, TRUE);
 
   //If there are no save or load arguments, just work normally
   if(argc != 2 && argc != 3 && argc != 4 && argc != 5)
@@ -1966,6 +2334,7 @@ int main(int argc, char *argv[])
       else if(argv[1][0] == '-' && argv[1][1] == '-' && argv[1][2] == 'n')
 	{
 	  numMon = atoi(argv[2]);
+	  dungeon = build_dungeon();
 	}
 
       else
@@ -2043,7 +2412,7 @@ int main(int argc, char *argv[])
 	    fprintf(stderr, "Incorrect argument.\n");
 	    return -1;
 	  }
-    }  
+    }
   //If there are all three arguments, it tests to see if they are formatted correctly, then runs both save, load, and placing monsters
   else
     {
@@ -2079,41 +2448,58 @@ int main(int argc, char *argv[])
 
   init_character_queue(numMon, &characterQueue, &dungeon);
 
-  printf("Doing full distance graph\n");
+  //printf("Doing full distance graph\n");
 
   full_distance_graph(&dungeon, &characterQueue.characterQueue[0]);
 
-  printf("Doing rooms distance graph\n");
+  //printf("Doing rooms distance graph\n");
   rooms_distance_graph(&dungeon, &characterQueue.characterQueue[0]);
 
   while(gameOver == 0)
     {
 
       print_dungeon(&dungeon, &characterQueue);
-      turnNum = move_character(&dungeon, &characterQueue, turnNum); 
+      turnNum = move_character(&dungeon, &characterQueue, turnNum);
+
+      if(turnNum == -1)
+      {
+        printw("Sorry that you had to leave, didn't know our hero was a quitter\n");
+	free(dungeon.roomArray);
+	free(characterQueue.characterQueue);
+	getch();
+	endwin();
+        return 0;
+      }
+      if(turnNum == -2 || turnNum == -3)
+      {
+        turnNum = 0;
+        dungeon = build_dungeon();
+        new_character_queue(numMon, &characterQueue, &dungeon);
+      }
       weight_dungeon(&dungeon);
       full_distance_graph(&dungeon, &characterQueue.characterQueue[0]);
       rooms_distance_graph(&dungeon, &characterQueue.characterQueue[0]);
       gameOver = check_win_condition(&characterQueue);
-      usleep(3);
+      refresh();
     }
 
   if(gameOver == -1)
     {
-      printf("You Lost\n");
+      printf("You Lost! press any button to continue\n");
+      ch = getch();
+      endwin();
     }
 
   else
     {
-      printf("You Won!\n");
+      printf("You Won! Press any button to continue\n");
+      ch = getch();
+      endwin();
     };
-  
+
 
   free(dungeon.roomArray);
   free(characterQueue.characterQueue);
 
   return 0;
 }
-
-
-  
