@@ -1,23 +1,42 @@
-dungeon: dungeon.o priorityqueue.o dijkstra.o hero.o monster.o character.o
-	gcc dungeon.o priorityqueue.o dijkstra.o hero.o monster.o character.o -o dungeon -lncurses
+CC = gcc
+CXX = g++
+ECHO = echo
+RM = rm -f
 
-dungeon.o: dungeon.c
-	gcc -Wall dungeon.c -c
+CFLAGS = -Wall -Werror -ggdb -funroll-loops
+CXXFLAGS = -Wall -Werror -ggdb -funroll-loops                                   
+LDFLAGS = -lncurses
 
-prorityqueue.o: priorityqueue.c
-	gcc -Wall priorityqueue.c -c
+BIN = rlg327
+OBJS = rlg327.o heap.o dungeon.o path.o utils.o character.o event.o \
+       pc.o npc.o move.o io.o
 
-dijkstra.o: dijkstra.c
-	gcc -Wall dijkstra.c -c
+all: $(BIN) etags
 
-hero.o: hero.c
-	gcc -Wall hero.c -c
+$(BIN): $(OBJS)
+	@$(ECHO) Linking $@
+	@$(CC) $^ -o $@ $(LDFLAGS)
 
-monster.o: monster.c
-	gcc -Wall monster.c -c
+-include $(OBJS:.o=.d)
 
-character.o: character.c
-	gcc -Wall character.c -c
+%.o: %.c
+	@$(ECHO) Compiling $<
+	@$(CC) $(CFLAGS) -MMD -MF $*.d -c $<
+
+%.o: %.cpp
+	@$(ECHO) Compiling $<
+	@$(CXX) $(CXXFLAGS) -MMD -MF $*.d -c $<
+
+.PHONY: all clean clobber etags
 
 clean:
-	rm -f dungeon *.o
+	@$(ECHO) Removing all generated files
+	@$(RM) *.o $(BIN) *.d TAGS core vgcore.* gmon.out
+
+clobber: clean
+	@$(ECHO) Removing backup files
+	@$(RM) *~ \#* *pgm
+
+etags:
+	@$(ECHO) Updating TAGS
+	@etags *.[ch]

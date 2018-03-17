@@ -1,73 +1,91 @@
 #ifndef DUNGEON_H
-#define DUNGEON_H
+# define DUNGEON_H
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <time.h>
-#include <endian.h>
-#include <string.h>
-#include <math.h>
-#include <stdint.h>
-#include <ncurses.h>
+# include "heap.h"
+# include "macros.h"
+# include "dims.h"
+# include "character.h"
 
-#include "priorityqueue.h"
-#include "dijkstra.h"
-#include "hero.h"
-#include "monster.h"
-#include "character.h"
+#define DUNGEON_X              80
+#define DUNGEON_Y              21
+#define MIN_ROOMS              5
+#define MAX_ROOMS              9
+#define ROOM_MIN_X             4
+#define ROOM_MIN_Y             2
+#define ROOM_MAX_X             14
+#define ROOM_MAX_Y             8
+#define VISUAL_RANGE           15
+#define PC_SPEED               10
+#define MAX_MONSTERS           12
+#define SAVE_DIR               ".rlg327"
+#define DUNGEON_SAVE_FILE      "dungeon"
+#define DUNGEON_SAVE_SEMANTIC  "RLG327-S2018"
+#define DUNGEON_SAVE_VERSION   0U
 
-#define dungeon_width 80
-#define dungeon_height 21
+#define mappair(pair) (d->map[pair[dim_y]][pair[dim_x]])
+#define mapxy(x, y) (d->map[y][x])
+#define hardnesspair(pair) (d->hardness[pair[dim_y]][pair[dim_x]])
+#define hardnessxy(x, y) (d->hardness[y][x])
+#define charpair(pair) (d->character[pair[dim_y]][pair[dim_x]])
+#define charxy(x, y) (d->character[y][x])
 
-/*
-typedef int bool;
-#define true 1
-#define false 0
-*/
-
-typedef struct mapPiece {
-  char symbol;
-  int hardness;
-} mapPiece_t;
+typedef enum __attribute__ ((__packed__)) terrain_type {
+  ter_debug,
+  ter_wall,
+  ter_wall_immutable,
+  ter_floor,
+  ter_floor_room,
+  ter_floor_hall,
+  ter_stairs,
+  ter_stairs_up,
+  ter_stairs_down
+} terrain_type_t;
 
 typedef struct room {
-  int xPos;
-  int yPos;
-  int xSize;
-  int ySize;
+  pair_t position;
+  pair_t size;
 } room_t;
 
-typedef struct dungeon{
-  int numRooms;
-  room_t *roomArray;
-  mapPiece_t dungeonArray[dungeon_height][dungeon_width];
-  int dungeonWeight[dungeon_height][dungeon_width];
-  int distanceTunnelMap[dungeon_height][dungeon_width];
-  vertex_t vertexTunnelMap[dungeon_height][dungeon_width];
-  vertex_t vertexMap[dungeon_height][dungeon_width];
-  int distanceMap[dungeon_height][dungeon_width];
+typedef struct dungeon {
+  uint32_t num_rooms;
+  room_t *rooms;
+  terrain_type_t map[DUNGEON_Y][DUNGEON_X];
+  /* Since hardness is usually not used, it would be expensive to pull it *
+   * into cache every time we need a map cell, so we store it in a        *
+   * parallel array, rather than using a structure to represent the       *
+   * cells.  We may want a cell structure later, but from a performanace  *
+   * perspective, it would be a bad idea to ever have the map be part of  *
+   * that structure.  Pathfinding will require efficient use of the map,  *
+   * and pulling in unnecessary data with each map cell would add a lot   *
+   * of overhead to the memory system.                                    */
+  uint8_t hardness[DUNGEON_Y][DUNGEON_X];
+  uint8_t pc_distance[DUNGEON_Y][DUNGEON_X];
+  uint8_t pc_tunnel[DUNGEON_Y][DUNGEON_X];
+  character_t *character[DUNGEON_Y][DUNGEON_X];
+  character_t pc;
+  heap_t events;
+  uint16_t num_monsters;
+  uint16_t max_monsters;
+  uint32_t character_sequence_number;
+  /* Game time isn't strictly necessary.  It's implicit in the turn number *
+   * of the most recent thing removed from the event queue; however,       *
+   * including it here--and keeping it up to date--provides a measure of   *
+   * convenience, e.g., the ability to create a new event without explicit *
+   * information from the current event.                                   */
+  uint32_t time;
+  uint32_t is_new;
+  uint32_t quit;
 } dungeon_t;
 
-
-void print_dungeon(dungeon_t *dungeon, characterQueue_t *characterQueue);
-int weight_dungeon(dungeon_t *dungeon);
-int full_distance_graph(dungeon_t *dungeon, character_t *hero);
-int rooms_distance_graph(dungeon_t *dungeon, character_t *hero);
-int print_distance_graph(dungeon_t *dungeon, character_t *hero);
-void connect_rooms(dungeon_t *dungeon);
-room_t generate_new_room();
-bool place_rooms(dungeon_t *dungeon);
-bool place_hardness(dungeon_t *dungeon);
-dungeon_t build_dungeon();
-int save_dungeon(dungeon_t dungeon);
-dungeon_t load_dungeon();
-int init_character_queue(int numMonsters, characterQueue_t *characterQueue, dungeon_t *dungeon);
-int move_character(dungeon_t *dungeon, characterQueue_t *characterQueue, int turnNumber);
-int check_win_condition(characterQueue_t *characterQueue);
-int select_closest_distance(dungeon_t *dungeon, character_t *character, int canTunnel);
-int new_character_queue(int numMonsters, characterQueue_t *characterQueue, dungeon_t *dungeon);
-int view_monster_list(characterQueue_t *characterQueue, dungeon_t *dungeon);
-int main(int argc, char *argv[]);
-
+void init_dungeon(dungeon_t *d);
+void new_dungeon(dungeon_t *d);
+void delete_dungeon(dungeon_t *d);
+int gen_dungeon(dungeon_t *d);
+void render_dungeon(dungeon_t *d);
+int write_dungeon(dungeon_t *d, char *file);
+int read_dungeon(dungeon_t *d, char *file);
+int read_pgm(dungeon_t *d, char *pgm);
+void render_distance_map(dungeon_t *d);
+void render_tunnel_distance_map(dungeon_t *d);
 
 #endif

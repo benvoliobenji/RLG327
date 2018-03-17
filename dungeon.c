@@ -1,2505 +1,1000 @@
 #include <stdio.h>
-#include <stdlib.h>
-#include <time.h>
-#include <endian.h>
-#include <string.h>
-#include <math.h>
 #include <stdint.h>
-#include <ncurses.h>
+#include <endian.h>
+#include <sys/stat.h>
+#include <sys/time.h>
+#include <limits.h>
+#include <errno.h>
 
-#include "priorityqueue.h"
-#include "dijkstra.h"
-#include "hero.h"
-#include "monster.h"
-#include "character.h"
 #include "dungeon.h"
-
-#define dungeon_width 80
-#define dungeon_height 21
-
-/*
-typedef int bool;
-#define true 1
-#define false 0
-*/
-/*
-typedef struct mapPiece {
-  char symbol;
-  int hardness;
-} mapPiece_t;
-
-typedef struct room {
-  int xPos;
-  int yPos;
-  int xSize;
-  int ySize;
-} room_t;
-
-typedef struct dungeon{
-  int numRooms;
-  room_t *roomArray;
-  mapPiece_t dungeonArray[dungeon_height][dungeon_width];
-  int dungeonWeight[dungeon_height][dungeon_width];
-  int distanceTunnelMap[dungeon_height][dungeon_width];
-  vertex_t *vertexTunnelMap[dungeon_height][dungeon_width];
-  vertex_t *vertexMap[dungeon_height][dungeon_width];
-  int distanceMap[dungeon_height][dungeon_width];
-} dungeon_t;
-*/
-
-/*
-typedef struct hero{
-  char symbol;
-  int xPos;
-  int yPos;
-  int speed = 10;
-} hero_t;
-*/
-
-
-//This method prints the dungeon to the terminal
-void print_dungeon(dungeon_t *dungeon, characterQueue_t *characterQueue)
-{
-  int i, j, k, characterSymbol;
-  for(i = 0; i < dungeon_height; i++)
-    {
-      for(j = 0; j < dungeon_width; j++)
-	{
-	  characterSymbol = 0;
-
-	  for(k = 0; k < characterQueue->size; k++)
-	    {
-	      if(characterQueue->characterQueue[k].xPos == j && characterQueue->characterQueue[k].yPos == i)
-		{
-		  mvwprintw(stdscr, i + 1, j,"%c", characterQueue->characterQueue[k].symbol);
-		  characterSymbol = 1;
-		}
-	    }
-
-	  if(characterSymbol == 0)
-	    {
-	      mvwprintw(stdscr, i + 1, j,"%c", dungeon->dungeonArray[i][j].symbol);
-	    }
-	}
-
-      //printf("\n");
-
-    }
-
-  //printf("\n");
-}
-
-/*A method to weight the dungeon*/
-int weight_dungeon(dungeon_t *dungeon)
-{
-  int i, j;
-  for(i = 0; i < dungeon_height; i++)
-    {
-      for(j = 0; j< dungeon_width; j++)
-	{
-	  //If the xPos and yPos are edges, the weight is infinity
-	  if(dungeon->dungeonArray[i][j].hardness == 255)
-	    {
-	      dungeon->dungeonWeight[i][j] = 255;
-	    }
-
-	  //If the xPos and yPos are rooms or corridors, the weight is only 1
-	  else if(dungeon->dungeonArray[i][j].hardness == 0)
-	    {
-	      dungeon ->dungeonWeight[i][j] = 1;
-	    }
-
-	  //Else, the weight is the hardness divided by 85 and adding 1
-	  else
-	    {
-	      dungeon->dungeonWeight[i][j] = ((dungeon->dungeonArray[i][j].hardness) / 85) + 1;
-	    }
-	}
-    }
-
-  return 0;
-}
-
-/*The program to run dijkstra on monsters who can tunnel */
-int full_distance_graph(dungeon_t *dungeon, character_t *hero)
-{
-  int i, j;
-  int count = 0;
-  vertex_t addVertex;
-  vertex_t *vertexArray = (vertex_t*) calloc(dungeon_width * dungeon_height, sizeof(vertex_t));
-
-  //printf("Adding vertex to vertexArray\n");
-
-
-  for(i = 0; i < dungeon_height; i++)
-    {
-      for(j = 0; j < dungeon_width; j++)
-	{
-	  //If it is a hero, change vertex accordingly
-	  if(i == hero->yPos && j == hero->xPos)
-	    {
-	      addVertex.xPos = j;
-	      addVertex.yPos = i;
-	      addVertex.weight = 0;
-	      addVertex.prev = NULL;
-	      addVertex.distance = 0;
-	      addVertex.visited = 0;
-	      addVertex.priority = 0;
-
-	    }
-
-	  //Else the vertex is treated here
-	  else
-	    {
-	      addVertex.xPos = j;
-	      addVertex.yPos = i;
-	      addVertex.weight = dungeon->dungeonWeight[i][j];
-	      addVertex.prev = NULL;
-	      addVertex.distance = 255;
-	      addVertex.visited = 0;
-	      addVertex.priority = 255;
-	    }
-
-	  vertexArray[count] = addVertex;
-
-	  count++;
-
-	}
-    }
-
-  //Do dijkstra
-  dijkstra(vertexArray, count);
-
-  //Update the distance map with the new distances
-  for(i = 0; i < dungeon_height; i++)
-    {
-      for(j = 0; j < dungeon_width; j++)
-	{
-	  dungeon->distanceTunnelMap[i][j] = vertexArray[i * dungeon_width + j].distance;
-	  dungeon->vertexTunnelMap[i][j] = vertexArray[i * dungeon_width + j];
-	}
-    }
-
-  free(vertexArray);
-
-  return 0;
-}
-
-/*The program to run dijkstra for the monsters who cannot tunnel */
-int rooms_distance_graph(dungeon_t *dungeon, character_t *hero)
-{
-  int i, j;
-  int count = 1;
-  vertex_t addVertex;
-  vertex_t *vertexArray = (vertex_t*) calloc(count, sizeof(vertex_t));
-
-
-  for(i = 0; i < dungeon_height; i++)
-    {
-      for(j = 0; j < dungeon_width; j++)
-	{
-	  //If it is a hero, update the vertex accordingly
-	  if(i == hero->yPos && j == hero->xPos)
-	    {
-	      addVertex.xPos = j;
-	      addVertex.yPos = i;
-	      addVertex.weight = dungeon->dungeonWeight[i][j];
-	      addVertex.prev = NULL;
-	      addVertex.distance = 0;
-	      addVertex.visited = 0;
-	      addVertex.priority = 0;
-
-	    }
-
-	  //If it is a room or corridor, keep the weight as normal
-	  else if(dungeon->dungeonArray[i][j].hardness == 0)
-	    {
-	      addVertex.xPos = j;
-	      addVertex.yPos = i;
-	      addVertex.weight = dungeon->dungeonWeight[i][j];
-	      addVertex.prev = NULL;
-	      addVertex.distance = 255;
-	      addVertex.visited = 0;
-	      addVertex.priority = 255;
-	    }
-
-	  //Else, make it infinitely weighted
-	  else
-	    {
-	      addVertex.xPos = j;
-	      addVertex.yPos = i;
-	      addVertex.weight = 255;
-	      addVertex.prev = NULL;
-	      addVertex.distance = 255;
-	      addVertex.visited = 0;
-	      addVertex.priority = 255;
-	    }
-
-	  vertexArray[count - 1] = addVertex;
-
-	  count++;
-
-	  vertexArray = realloc(vertexArray, count * sizeof(vertex_t));
-
-	}
-    }
-
-  //Performing dijkstra's algorithm
-  dijkstra(vertexArray, count);
-
-  //Mapping the updated distances to the distance map
-  for(i = 0; i < dungeon_height; i++)
-    {
-      for(j = 0; j < dungeon_width; j++)
-	{
-	  dungeon->distanceMap[i][j] = vertexArray[i * dungeon_width + j].distance;
-	  dungeon->vertexMap[i][j] = vertexArray[ i * dungeon_width + j];
-	}
-    }
-
-  free(vertexArray);
-
-  return 0;
-}
-
-/*This function takes the distance graphs and prints both of them to the screen */
-int print_distance_graph(dungeon_t *dungeon, character_t *hero)
-{
-  int i, j;
-
-  for(i = 0; i < dungeon_height; i++)
-    {
-      for(j = 0; j < dungeon_width; j++)
-	{
-
-	  if(dungeon->distanceTunnelMap[i][j] == 255)
-	    {
-	      printf("%c", dungeon->dungeonArray[i][j].symbol);
-	    }
-
-	  else if(i == hero->yPos && j == hero->xPos)
-	    {
-	      printf("%c", hero->symbol);
-	    }
-
-	  else
-	    {
-	      printf("%d", dungeon->distanceTunnelMap[i][j] % 10);
-	    }
-	}
-
-      printf("\n");
-    }
-
-  printf("\n");
-
-  for(i = 0; i < dungeon_height; i++)
-    {
-      for(j = 0; j < dungeon_width; j++)
-	{
-	  if(dungeon->distanceMap[i][j] == 255)
-	    {
-	      printf("%c", dungeon->dungeonArray[i][j].symbol);
-	    }
-
-	  else if(i == hero->yPos && j == hero->xPos)
-	    {
-	      printf("%c", hero->symbol);
-	    }
-
-	  else
-	    {
-	      printf("%d", dungeon->distanceMap[i][j] % 10);
-	    }
-	}
-
-      printf("\n");
-    }
-
-  printf("\n");
-}
-
-/*This function connects the rooms together. As of writing this, I chose the linear route
-  for the sake of time, but may add dijkstra's algorithm later if I can */
-void connect_rooms(dungeon_t *dungeon)
-{
-  room_t room, roomConnect;
-  int y, x, roomNum, i, j;
-
-  roomNum = 0;
-
-  //As long as there are rooms to connect in the room array, the method will repeat
-  while(roomNum < (dungeon->numRooms) - 1)
-    {
-      room = dungeon->roomArray[roomNum];
-      roomConnect = dungeon->roomArray[roomNum + 1];
-
-      x = room.xPos;
-      y = roomConnect.yPos;
-
-      //This room moves linearly down or up to the y position of the room to connect to
-      if(room.yPos > y)
-	{
-	  for(i = room.yPos; i > y; i--)
-	    {
-	      if(dungeon->dungeonArray[i][x].hardness != 0)
-		{
-		  dungeon->dungeonArray[i][x].symbol = '#';
-		  dungeon->dungeonArray[i][x].hardness = 0;
-		}
-
-	    }
-	}
-      else
-	{
-	  for(i = room.yPos; i < y; i++)
-	    {
-	      if(dungeon->dungeonArray[i][x].hardness != 0)
-		{
-		  dungeon->dungeonArray[i][x].symbol = '#';
-		  dungeon->dungeonArray[i][x].hardness = 0;
-		}
-	    }
-
-	}
-
-      if(x > roomConnect.xPos)
-	{
-	  for(j = x; j > roomConnect.xPos; j--)
-	    {
-	      if(dungeon->dungeonArray[y][j].hardness != 0)
-		{
-		  dungeon->dungeonArray[y][j].symbol = '#';
-		  dungeon->dungeonArray[y][j].hardness = 0;
-		}
-	    }
-	}
-      else
-	{
-	  for(j = x; j < roomConnect.xPos; j++)
-	    {
-	      if(dungeon->dungeonArray[y][j].hardness != 0)
-		{
-		  dungeon->dungeonArray[y][j].symbol = '#';
-		  dungeon->dungeonArray[y][j].hardness = 0;
-		}
-	    }
-	}
-
-      roomNum++;
-    }
-}
-
-//This method generates and returns a new room for the dungeon
-room_t generate_new_room()
-{
-
-  int randNum;
-
-  room_t newRoom;
-
-  randNum = rand();
-  //This will give me a random x-position between 1-79
-  newRoom.xPos = (randNum % 79) + 1;
-
-  randNum = rand();
-  //This will give me a random y-position between 1-20
-  newRoom.yPos = (randNum % 20) + 1;
-
-  //This generates a room width below 12 units and above the minimum units
-  randNum = (rand() % 10) + 3;
-  newRoom.xSize = randNum;
-
-  //This generates a room height below 6 units and above the minimum units
-  randNum = (rand() % 5) + 2;
-  newRoom.ySize = randNum;
-
-  return newRoom;
-}
-
-bool place_rooms(dungeon_t *dungeon)
-{
-  int failedAttempts = 0;
-  int  numRooms, i , j, k, areaOpen;
-  bool firstTest, canBePlaced;
-  room_t room1, room2, room3, room4, room5, newRoom, testRoom;
-
-  //Purposefully designed the array to be much larger than possible to fill in this context
-  room_t *roomArray = (room_t *) calloc(numRooms, sizeof(room_t));
-
-  firstTest = false;
-  areaOpen = 0;
-
-  /*This first loop is designed to test the first 5 generated rooms to see if any overlap*/
-  while(!firstTest)
-    {
-      room1 = generate_new_room();
-      room2 = generate_new_room();
-      room3 = generate_new_room();
-      room4 = generate_new_room();
-      room5 = generate_new_room();
-
-      numRooms = 5;
-
-      roomArray = realloc(roomArray, numRooms * sizeof(room_t));
-
-      roomArray[0] = room1;
-      roomArray[1] = room2;
-      roomArray[2] = room3;
-      roomArray[3] = room4;
-      roomArray[4] = room5;
-
-      canBePlaced = true;
-
-      /*This set of for loops will go through each room in the room array and
-	check to see if it overlaps with an outer wall or another room*/
-      for(i = 0; i < numRooms; i++)
-	{
-	  testRoom = roomArray[i];
-
-	  //This test is to make sure that all rooms are within the dungeon boundaries
-	  if(testRoom.xPos + testRoom.xSize > 80 || testRoom.yPos + testRoom.ySize > 20)
-	    {
-	      free(roomArray);
-	      return false;
-	    }
-
-	  for(j = testRoom.yPos; j < (testRoom.yPos + testRoom.ySize); j++)
-	    {
-	      for(k = testRoom.xPos; k < (testRoom.xPos + testRoom.xSize); k++)
-		{
-		  /*If it does find a conflict, it resets the dungeon, breaks the
-		    loop, and tries again */
-		  if(dungeon->dungeonArray[j][k].hardness == 0 || dungeon->dungeonArray[j][k].hardness == 255)
-		    {
-		      free(roomArray);
-		      return false;
-		    }
-
-		  if(canBePlaced)
-		    {
-		      dungeon->dungeonArray[j][k].symbol = '.';
-		      dungeon->dungeonArray[j][k].hardness = 0;
-		      areaOpen++;
-		    }
-		}
-	    }
-
-	}
-      firstTest = true;
-    }
-
-
-  canBePlaced = true;
-
-  /*This loop will attempt to add a new room into the dungeon until it fails to
-    place the room 2000 times or rooms cover 200 units  of the dungeon */
-  while(failedAttempts < 2000 && areaOpen < 200)
-    {
-
-      newRoom = generate_new_room();
-      canBePlaced = true;
-
-      //This will test to see if a room can be placed inside the dungeon
-      for(i = newRoom.yPos; i < newRoom.yPos + newRoom.ySize; i++)
-	{
-	  for(j = newRoom.xPos; j < newRoom.xPos + newRoom.xSize; j++)
-	    {
-	      if(dungeon->dungeonArray[i][j].hardness == 0 || dungeon->dungeonArray[i][j].hardness == 255)
-		{
-		  canBePlaced = false;
-		}
-	    }
-	}
-
-      //If the room can be placed without conflict, place the room
-      if(canBePlaced)
-	{
-	  failedAttempts = 0;
-
-	  for(i = newRoom.yPos; i < newRoom.yPos + newRoom.ySize; i++)
-	    {
-	      for(j = newRoom.xPos; j < newRoom.xPos + newRoom.xSize; j++)
-		{
-		  dungeon->dungeonArray[i][j].symbol = '.';
-		  dungeon->dungeonArray[i][j].hardness = 0;
-		  areaOpen++;
-		}
-	    }
-
-	  roomArray = realloc(roomArray, (numRooms + 1) * sizeof(room_t));
-
-	  //Add the room to the roomArray
-	  roomArray[numRooms] = newRoom;
-	  numRooms++;
-	}
-
-      else
-       {
-	failedAttempts++;
-       }
-
-    }
-
-  dungeon->roomArray = realloc(dungeon->roomArray, numRooms * sizeof(room_t));
-
-  for(i = 0; i < numRooms; i++)
-    {
-      dungeon->roomArray[i] = roomArray[i];
-    }
-
-  dungeon->numRooms = numRooms;
-
-  free(roomArray);
-
-  return TRUE;
-}
-
-/*This method moves through the dungeon map, placing the border around the
-  dungeon and then placing rock with random hardness within the map itself */
-bool place_hardness(dungeon_t *dungeon)
-{
-
-  int i, j;
-  int randHardness = 0;
-        //This makes the left border of the dungeon an immutable wall
-      for(i = 0; i < dungeon_height; i++)
-	{
-	  dungeon->dungeonArray[i][0].symbol = ' ';
-	  dungeon->dungeonArray[i][0].hardness = 255;
-	}
-
-      //This makes the right border of the dungeon an immutable wall
-      for(i = 0; i < dungeon_height; i++)
-	{
-	  dungeon->dungeonArray[i][dungeon_width - 1].symbol = ' ';
-	  dungeon->dungeonArray[i][dungeon_width - 1].hardness = 255;
-	}
-
-      //This makes the top border of the dungeon an immutable wall
-      for(j = 0; j < dungeon_width; j++)
-	{
-	  dungeon->dungeonArray[0][j].symbol = ' ';
-	  dungeon->dungeonArray[0][j].hardness = 255;
-	}
-
-      //This make the bottom border of the dungeon an immutable wall
-      for(j = 0; j < dungeon_width; j++)
-	{
-	  dungeon->dungeonArray[dungeon_height - 1][j].symbol = ' ';
-	  dungeon->dungeonArray[dungeon_height - 1][j].hardness = 255;
-	}
-
-      /*This method moves through the rest of the array and assigns a random
-	hardness to the rock inside the dungeon currently */
-      for(i = 1; i < dungeon_height - 1; i++)
-	{
-	  for(j = 1; j < dungeon_width - 1; j++)
-	    {
-	      //This will give me a random number between 1-254
-	      randHardness = (rand() % 254) + 1;
-
-	      dungeon->dungeonArray[i][j].symbol = ' ';
-	      dungeon->dungeonArray[i][j].hardness = randHardness;
-
-	    }
-	}
-
-  return TRUE;
-
-}
-
-/*This method is designed to create the raw dungeon, and then  build the dungeon */
-dungeon_t build_dungeon()
-{
-
-  dungeon_t dungeon;
-  mapPiece_t starter;
-  int i, j;
-  bool roomsPlaced = false;
-
-  dungeon.roomArray = (room_t *) calloc(5, sizeof(room_t));
-
-  starter.symbol = ' ';
-  starter.hardness = 255;
-
-  for(i = 0; i < dungeon_height; i++)
-    {
-      for(j = 0; j < dungeon_width; j++)
-	{
-	  dungeon.dungeonArray[i][j] = starter;
-	}
-    }
-
-  while(!roomsPlaced)
-    {
-      place_hardness(&dungeon);
-      roomsPlaced = place_rooms(&dungeon);
-    }
-
-  weight_dungeon(&dungeon);
-  connect_rooms(&dungeon);
-
-  weight_dungeon(&dungeon);
-  place_staircase(&dungeon);
-  //print_dungeon(&dungeon);
-
-  return dungeon;
-
-}
-
-/*Given a dungeon parameter, saves the dungeon to a binary file in a specific format.*/
-int save_dungeon(dungeon_t dungeon)
-{
-  FILE *f;
-  int version = 0;
-  int size = (1700 + (dungeon.numRooms * 4));
-  int i, j, length;
-  char name[] = "RLG327-S2018";
-
-  //This allows me to have 1 byte integers
-  unsigned char xPos, yPos, xSize, ySize;
-
-  //In order to have the integer hardness to be one byte, it must be an unsigned char
-  //I also dynamically allocated the array, but that shouldn't be needed due to the nature of the dungeon size
-  unsigned char*  mapHardness = (char*) malloc(dungeon_width * dungeon_height * sizeof(char));
-
-  length = strlen(getenv("HOME")) + strlen("/.rlg327/dungeon") + 1;
-
-  char *file = (char*) malloc(length * sizeof(char));
-
-  strcpy(file, getenv("HOME"));
-  strcat(file, "/.rlg327/dungeon");
-
-  f = fopen(file, "wb");
-
-  free(file);
-
-  //Tests to see if the file was sucessfully created/opened
-  if(f == NULL)
-    {
-      fprintf(stderr, "File could not be created or opened.\n");
-      return -1;
-    }
-
-  //Translates the integer hardness in the dungeon to an unsigned char array in mapHardness
-  for(i = 0; i < dungeon_height; i++)
-    {
-      for(j = 0; j < dungeon_width; j++)
-	{
-	  mapHardness[i * dungeon_width + j] = (unsigned char) dungeon.dungeonArray[i][j].hardness;
-	}
-    }
-
-  //Changes the version and size of the file to big endian
-  version = htobe32(version);
-  size = htobe32(size);
-
-  //Writes the name, version, and size to the file
-  fwrite(name, sizeof(char), 12, f);
-  fwrite(&version, sizeof(int), 1, f);
-  fwrite(&size, sizeof(int), 1, f);
-
-  //Writes the hardness map to the file
-  fwrite(mapHardness, sizeof(char), dungeon_width * dungeon_height, f);
-
-  /*Steps through each room in the roomArray, changing each int value into unsigned char values and
-    writes those values into the file */
-  for(i = 0; i < dungeon.numRooms; i++)
-    {
-      yPos = (unsigned char) dungeon.roomArray[i].yPos;
-      xPos = (unsigned char) dungeon.roomArray[i].xPos;
-      ySize = (unsigned char) dungeon.roomArray[i].ySize;
-      xSize = (unsigned char) dungeon.roomArray[i].xSize;
-
-      fwrite(&yPos, sizeof(char), 1, f);
-      fwrite(&xPos, sizeof(char), 1, f);
-      fwrite(&ySize, sizeof(char), 1, f);
-      fwrite(&xSize, sizeof(char), 1, f);
-
-    }
-
-  //Free's the allocated memory of mapHardness
-  free(mapHardness);
-
-  //Closes the file
-  fclose(f);
-
-  return 0;
-}
-
-
-/*This program loads the dungeon from the dungeon binary file and displays it on the screen*/
-dungeon_t load_dungeon()
-{
-  dungeon_t dungeon;
-  FILE* f;
-  int version;
-  int size;
-  int length;
-  int i, j, k, hardness;
-
-  //Just like in save_dungeon, I used unsigned char in order to get integers into 1 byte
-  unsigned char xPos, yPos, xSize, ySize;
-
-  //Dynamically allocated, but relatively unnecessary
-  char* name = (char*) calloc(12, sizeof(char));
-  unsigned char* mapHardness = (char*)malloc(dungeon_height * dungeon_width * sizeof(char));
-
-  length = strlen(getenv("HOME")) + strlen("/.rlg327/dungeon") + 1;
-
-  char *file = (char*) malloc(length * sizeof(char));
-
-  strcpy(file, getenv("HOME"));
-  strcat(file, "/.rlg327/dungeon");
-
-  f = fopen(file, "rb");
-
-  free(file);
-
-  //Testing to see if the file existed in the address defined above
-  if(f == NULL)
-    {
-      fprintf(stderr, "File could not be open.\n");
-      return dungeon;
-    }
-
-  fread(name, sizeof(char), 12, f);
-
-  //Tests to see if the name of the file is correct
-  if(strcmp(name, "RLG327-S2018"))
-    {
-      fprintf(stderr, "Incorrect file, cannot be read.\n");
-      return dungeon;
-    }
-
-  //Reading in version and size
-  fread(&version, sizeof(int), 1, f);
-  fread(&size, sizeof(int), 1, f);
-
-  //Converting version and size back from big endian
-  version = be32toh(version);
-  size = be32toh(size);
-
-  /*Defining the number of rooms by subtracting the 12 char values of the name, the two 1 byte version
-    and size, and the 80 * 21 1 byte hardness map and dividing by the number of values per room to get
-    the number of rooms */
-  dungeon.numRooms = (size - 1700) / 4;
-
-  //Reading in the hardness map
-  fread(mapHardness, sizeof(char), dungeon_width * dungeon_height, f);
-
-  for(i = 0; i < dungeon_height; i++)
-    {
-      for(j = 0; j < dungeon_width; j++)
-	{
-	  //Casting the hardness map unsigned char to an int
-	  hardness = (int) mapHardness[i * dungeon_width + j];
-
-	  //Assigning the hardness value into the hardness value of the dungeonArray
-	  dungeon.dungeonArray[i][j].hardness = hardness;
-
-	  dungeon.dungeonArray[i][j].symbol = ' ';
-	}
-    }
-
-  //Dynamically allocating room for the roomArray based on the number of rooms and the size of room_t
-  dungeon.roomArray = (room_t*)calloc(dungeon.numRooms, sizeof(room_t));
-
-  //Changing each 1 byte unsigned char to integers and then assigning them to a specific room in roomArray
-  for(i = 0; i < dungeon.numRooms; i++)
-    {
-      fread(&yPos, sizeof(char), 1, f);
-      fread(&xPos, sizeof(char), 1, f);
-      fread(&ySize, sizeof(char), 1, f);
-      fread(&xSize, sizeof(char), 1, f);
-
-      dungeon.roomArray[i].yPos = (int) yPos;
-      dungeon.roomArray[i].xPos = (int) xPos;
-      dungeon.roomArray[i].ySize = (int) ySize;
-      dungeon.roomArray[i].xSize = (int) xSize;
-
-      for(j = yPos; j < yPos + ySize; j++)
-	{
-	  for(k = xPos; k < xPos + xSize; k++)
-	    {
-	      dungeon.dungeonArray[j][k].hardness = 0;
-	      dungeon.dungeonArray[j][k].symbol = '.';
-	    }
-	}
-    }
-
-  /* This then tests to see if any remaining cells in dungeonArray have a hardness of zero and don't have
-     a symbol that indicates that they are a room. If those conditions are true, then the only thing that
-     the cell can be is a corridor, and so the symbol is updated accordingly*/
-  for(i = 0; i < dungeon_height; i++)
-    {
-      for(j = 0; j < dungeon_width; j++)
-	{
-	  if(dungeon.dungeonArray[i][j].hardness == 0 && dungeon.dungeonArray[i][j].symbol != '.')
-	    {
-	      dungeon.dungeonArray[i][j].symbol = '#';
-	    }
-	}
-    }
-
-  //Freeing name and mapHardnesss
-  free(name);
-  free(mapHardness);
-
-  //Closing the file
-  fclose(f);
-
-  return dungeon;
-
-}
-
-//Initializes the character queue where the hero and monsters are
-int init_character_queue(int numMonsters, characterQueue_t *characterQueue, dungeon_t *dungeon)
-{
-  character_t character;
-  hero_t hero;
-  monster_t monster;
-  int xPos, yPos, i;
-
-  //monster = malloc(sizeof(monster_t));
-  //hero = malloc(sizeof(hero_t));
-
-  //printf("Allocating memory for CharacterQueue\n");
-  //Allocating memory for the characterQueue
-  characterQueue->characterQueue = (character_t *) calloc(numMonsters + 1, sizeof(character_t));
-  characterQueue->size = 0;
-
-  //printf("Placing hero\n");
-
-  character.hero = hero;
-  character.speed = 10;
-  //character.monster = NULL;
-
-  xPos = (rand() % 79) + 1;
-  yPos = (rand() % 20) + 1;
-
-  while(dungeon->dungeonArray[yPos][xPos].hardness != 0 || dungeon->dungeonArray[yPos][xPos].symbol == '#')
-    {
-      xPos = (rand() % 79) + 1;
-      yPos = (rand() % 20) + 1;
-    }
-
-  character.xPos = xPos;
-  character.yPos = yPos;
-  character.nextTurn = 0;
-  character.dead = 0;
-
-  character.symbol = '@';
-
-  characterQueue->characterQueue[characterQueue->size] = character;
-
-  characterQueue->size++;
-
-  //printf("Placing monsters\n");
-  for(i = 0; i < numMonsters; i++)
-    {
-      //printf("Determining monster traits\n");
-      monster.traits = determine_traits();
-
-      //printf("Determined traits\n");
-      //character.hero = NULL;
-      character.monster = monster;
-      character.dead = 0;
-
-      //printf("Monster symbol\n");
-      switch(monster.traits){
-      case 0:
-	character.symbol = '0';
-	break;
-
-      case 1:
-	character.symbol = '1';
-	break;
-
-      case 2:
-	character.symbol = '2';
-	break;
-
-      case 3:
-	character.symbol = '3';
-	break;
-
-      case 4:
-	character.symbol = '4';
-	break;
-
-      case 5:
-	character.symbol = '5';
-	break;
-
-      case 6:
-	character.symbol = '6';
-	break;
-
-      case 7:
-	character.symbol = '7';
-	break;
-
-      case 8:
-	character.symbol = '8';
-	break;
-
-      case 9:
-	character.symbol = '9';
-	break;
-
-      case 10:
-	character.symbol = 'a';
-	break;
-
-      case 11:
-	character.symbol = 'b';
-	break;
-
-      case 12:
-	character.symbol = 'c';
-	break;
-
-      case 13:
-	character.symbol = 'd';
-	break;
-
-      case 14:
-	character.symbol = 'e';
-	break;
-
-      case 15:
-	character.symbol = 'f';
-	break;
-      }
-
-      //printf("Monster speed\n");
-      character.speed = (rand() % 16) + 5;
-
-      xPos = (rand() % 79) + 1;
-      yPos = (rand() % 20) + 1;
-
-      //printf("Determine xPos and yPos\n");
-      while(dungeon->dungeonArray[yPos][xPos].hardness != 0 && dungeon->dungeonArray[yPos][xPos].symbol != '.')
-	{
-	  //printf("Finding new xPos and yPos\n");
-	  xPos = (rand() % 79) + 1;
-	  yPos = (rand() % 20) + 1;
-
-	  //printf("xPos: %d yPos: %d\n", xPos, yPos);
-	}
-
-      character.xPos = xPos;
-      character.yPos = yPos;
-      character.nextTurn = 0;
-
-      //printf("Placing character in characterQueue\n");
-      characterQueue->characterQueue[characterQueue->size] = character;
-      characterQueue->size++;
-    }
-
-  return 0;
-
-}
-
-//Handles the movement of the hero and monsters
-int move_character(dungeon_t *dungeon, characterQueue_t *characterQueue, int turnNumber)
-{
-  int i, found, randPos, xPos, yPos, j, validPosition, numRooms, updateX, updateY, c;
-  int corridorCheck, seenInCorridor, validMovement;
-  character_t character;
-
-  i = 0;
-  found = 0;
-  validMovement = 0;
-
-  while(found == 0 && i < characterQueue->size)
-    {
-      character = characterQueue->characterQueue[i];
-      //printf("Next Turn: %d\n", character.nextTurn);
-      //printf("Dead: %d\n", character.dead);
-
-      if(character.nextTurn <= turnNumber && character.dead == 0)
-	{
-	  //printf("Found\n");
-	  found = 1;
-	}
-
-      else
-	{
-	  i++;
-	}
-    }
-
-  if(found == 1)
-    {
-      if(i == 0)
-	{
-	  validPosition = 0;
-
-	  //printw("Your turn\n");
-
-	  while(validPosition == 0)
-	    {
-	      c = getch();
-
-	      validMovement = 0;
-
-	      switch(c)
-		{
-		  //If the user presses "y" or "7", move one up and one left
-		case 121:
-		case 55:
-		  xPos = character.xPos - 1;
-		  yPos = character.yPos - 1;
-		  break;
-
-		  //If the user presses "k" or "8", move one up
-		case 107:
-		case 56:
-		  xPos = character.xPos;
-		  yPos = character.yPos - 1;
-		  break;
-
-		  //If the user presses "u" or "9", move one up and one right
-		case 117:
-		case 57:
-		  xPos = character.xPos + 1;
-		  yPos = character.yPos - 1;
-		  break;
-		  
-		  //If the user presses "l" or "6", move one right
-		case 108:
-		case 54:
-		  xPos = character.xPos + 1;
-		  yPos = character.yPos;
-		  break;
-		  
-		  //If the user presses "n" or "3", move on down and one right
-		case 110:
-		case 51:
-		  xPos = character.xPos + 1;
-		  yPos = character.yPos + 1;
-		  break;
-		  
-		  //If the user presses "j" or "2", move one down
-		case 106:
-		case 50:
-		  xPos = character.xPos;
-		  yPos = character.yPos + 1;
-		  break;
-		  
-		  //If the user presses "b" or "1", move one down and one left
-		case 98:
-		case 49:
-		  xPos = character.xPos - 1;
-		  yPos = character.yPos + 1;
-		  break;
-
-		  //If the user presses "h" or "4", move one left
-		case 104:
-		case 52:
-		  xPos = character.xPos - 1;
-		  yPos = character.yPos;
-		  break;
-
-		  //If the user presses ">", attempt to go down stairs
-		case 62:
-		  //Testing to see if hero is on downwards staircase
-		  if(dungeon->dungeonArray[character.yPos][character.xPos].symbol == '>')
-		    {
-		      //This will be the return signal to go downstairs
-		      return -2;
-		    }
-		  else
-		    {
-		      validMovement = 1;
-		    }
-		  break;
-
-		  //If the user presses "<", attempt to go up stairs
-		case 60:
-		  //Testing to see if hero is on upwards staircase
-		  if(dungeon->dungeonArray[character.yPos][character.xPos].symbol == '<')
-		    {
-		      //This will be the return signal to go upstairs
-		      return -3;
-		    }
-		  else
-		    {
-		      validMovement = 1;
-		    }
-		  break;
-
-		  //If the user presses "5" or "Space", rest 1 turn
-		case 53:
-		case 32:
-		  xPos = character.xPos;
-		  yPos = character.yPos;
-		  break;
-
-		  //If the user presses "m", display monster list
-		case 109:
-		  view_monster_list(characterQueue, dungeon);
-		  validMovement = 1;
-		  break;
-		  
-		case 113:
-		  //This will be the return signal to quit
-		  return -1;
-		}
-
-	      if(xPos < 79 && yPos < 20 && xPos > 0 && yPos > 0 && validMovement == 0 && dungeon->dungeonArray[yPos][xPos].hardness == 0)
-		{
-		  validPosition = 1;
-		}
-	    }
-
-	  character.xPos = xPos;
-	  character.yPos = yPos;
-
-	  for(j = 1; j < characterQueue->size; j++)
-	    {
-	      //Defeating the monster
-	      if(xPos == characterQueue->characterQueue[j].xPos && yPos == characterQueue->characterQueue[j].yPos)
-		{
-		  //printf("Dying to hero\n");
-		  //characterQueue->characterQueue[j].monster = NULL;
-		  characterQueue->characterQueue[j].symbol = NULL;
-		  characterQueue->characterQueue[j].xPos = 256;
-		  characterQueue->characterQueue[j].yPos = 256;
-		  characterQueue->characterQueue[j].nextTurn = NULL;
-		  characterQueue->characterQueue[j].speed = NULL;
-		  characterQueue->characterQueue[j].dead = 1;
-		}
-	    }
-
-	  //If moving into a wall
-	  if(dungeon->dungeonArray[yPos][xPos].hardness != 0)
-	    {
-	      dungeon->dungeonArray[yPos][xPos].hardness = 0;
-	      dungeon->dungeonArray[yPos][xPos].symbol = '#';
-	    }
-
-	  character.nextTurn = character.nextTurn + (1000 / character.speed);
-
-
-	  characterQueue->characterQueue[0] = character;
-	}
-
-      else
-	{
-	  //printf("Moving Monster\n");
-	  //printf("%d\n", character.monster.traits);
-	  //printf("%c\n", character.symbol);
-	  //printf("%d\n", (character.monster.traits >> 2) % 2);
-	  if((int)character.monster.traits >> 3 == 1 && (rand() % 2) == 1)
-	    {
-	      //printf("Monster is erratic\n");
-	      validPosition = 0;
-
-	      while(validPosition == 0)
-		{
-		  randPos = rand() % 8;
-
-		  switch(randPos)
-		    {
-
-		    case 0:
-		      xPos = character.xPos;
-		      yPos = character.yPos - 1;
-		      break;
-
-		    case 1:
-		      xPos = character.xPos + 1;
-		      yPos = character.yPos - 1;
-		      break;
-
-		    case 2:
-		      xPos = character.xPos + 1;
-		      yPos = character.yPos;
-
-		    case 3:
-		      xPos = character.xPos + 1;
-		      yPos = character.yPos + 1;
-		      break;
-
-		    case 4:
-		      xPos = character.xPos;
-		      yPos = character.yPos + 1;
-		      break;
-
-		    case 5:
-		      xPos = character.xPos - 1;
-		      yPos = character.yPos + 1;
-		      break;
-
-		    case 6:
-		      xPos = character.xPos - 1;
-		      yPos = character.yPos;
-		      break;
-
-		    case 7:
-		      xPos = character.xPos - 1;
-		      yPos = character.yPos - 1;
-		      break;
-		    }
-
-		  if(xPos < 79 && yPos < 20 && ((int)(character.monster.traits >> 1) % 2 == 1 || dungeon->dungeonArray[yPos][xPos].hardness == 0))
-		    {
-		      validPosition = 1;
-		    }
-		}
-
-	      character.xPos = xPos;
-	      character.yPos = yPos;
-	    }
-
-	  else if((int)(character.monster.traits >> 2) % 2 == 1)
-	    {
-	      //printf("Monster is telepathic\n");
-	      if((int)(character.monster.traits >> 1) % 2 == 1)
-		{
-		  //printf("Monster can tunnel\n");
-
-		  select_closest_distance(dungeon, &character, 1);
-		}
-
-	      else
-		{
-		  //printf("Monster can't tunnel\n");
-
-		  select_closest_distance(dungeon, &character, 0);
-		}
-	    }
-
-	  else if((character.monster.traits % 2 == 1))
-	    {
-	      //printf("Monster is intelligent\n");
-	      for(numRooms = 0; numRooms < dungeon->numRooms; numRooms++)
-		{
-		  //Testing to see if the monster is in the same room as the hero
-		  if((character.xPos >= dungeon->roomArray[numRooms].xPos && character.xPos <= (dungeon->roomArray[numRooms].xPos + dungeon->roomArray[numRooms].xSize) && character.yPos >= dungeon->roomArray[numRooms].yPos && character.yPos <= (dungeon->roomArray[numRooms].yPos + dungeon->roomArray[numRooms].ySize)) && (characterQueue->characterQueue[0].xPos >= dungeon->roomArray[numRooms].xPos && characterQueue->characterQueue[0].xPos <= (dungeon->roomArray[numRooms].xPos + dungeon->roomArray[numRooms].xSize) && characterQueue->characterQueue[0].yPos >= dungeon->roomArray[numRooms].yPos && characterQueue->characterQueue[0].yPos <= (dungeon->roomArray[numRooms].yPos + dungeon->roomArray[numRooms].ySize)))
-		    {
-		      //printf("Monster is in same room\n");
-		      //Updating monster's memory
-		      if((int)character.monster.traits >> 1 % 2 == 1)
-			{
-			  //printf("Monster can tunnel\n");
-			  //printf("Updating monster memory\n");
-			  for(updateY = 0; updateY < 21; updateY++)
-			    {
-			      for(updateX = 0; updateX < 80; updateX++)
-				{
-				  character.monster.memory[updateY][updateX] = dungeon->vertexTunnelMap[updateY][updateX];
-				}
-			    }
-			}
-
-		      else
-			{
-			  //printf("Monster can't tunnel\n");
-			  for(updateY = 0; updateY < 21; updateY++)
-			    {
-			      for(updateX = 0; updateX < 80; updateX++)
-				{
-				  character.monster.memory[updateY][updateX] = dungeon->vertexMap[updateY][updateX];
-				}
-			    }
-			}
-		    }
-		}
-
-	      //Check to see if the monster can see the hero in a vertical corridor
-	      if(character.xPos == characterQueue->characterQueue[0].xPos)
-		{
-		  //printf("Monster is in vertical corridor\n");
-		  seenInCorridor = 1;
-
-		  if(character.yPos > characterQueue->characterQueue[0].yPos)
-		    {
-		      for(corridorCheck = characterQueue->characterQueue[0].yPos; corridorCheck <= character.yPos; corridorCheck++)
-			{
-			  if(dungeon->dungeonArray[corridorCheck][character.xPos].hardness != 0)
-			    {
-			      seenInCorridor = 0;
-			    }
-			}
-		    }
-
-		  else
-		    {
-		      for(corridorCheck = character.yPos; corridorCheck <= characterQueue->characterQueue[0].yPos; corridorCheck++)
-			{
-			  if(dungeon->dungeonArray[corridorCheck][character.xPos].hardness != 0)
-			    {
-			      seenInCorridor = 0;
-			    }
-			}
-		    }
-
-		  if(seenInCorridor == 1)
-		    {
-		      //printf("Monster can see hero\n");
-		      //Updating monster's memory
-		      if((int)character.monster.traits >> 1 % 2 == 1)
-			{
-			  //printf("Monster can tunnel\n");
-			  //printf("Updating monster memory\n");
-			  for(updateY = 0; updateY < 21; updateY++)
-			    {
-			      for(updateX = 0; updateX < 80; updateX++)
-				{
-				  character.monster.memory[updateY][updateX] = dungeon->vertexTunnelMap[updateY][updateX];
-				}
-			    }
-			}
-
-		      else
-			{
-			  //printf("Monster can tunnel\n");
-			  for(updateY = 0; updateY < 21; updateY++)
-			    {
-			      for(updateX = 0; updateX < 80; updateX++)
-				{
-				  character.monster.memory[updateY][updateX] = dungeon->vertexMap[updateY][updateX];
-				}
-			    }
-			}
-		    }
-		}
-
-	      //Check to see if the monster can see the hero in a horizontal corridor
-	      else if(character.yPos == characterQueue->characterQueue[0].yPos)
-		{
-		  //printf("Monster can see a hero in a horizontal corridor\n");
-		  seenInCorridor = 1;
-
-		  if(character.xPos > characterQueue->characterQueue[0].xPos)
-		    {
-		      for(corridorCheck = characterQueue->characterQueue[0].xPos; corridorCheck <= character.xPos; corridorCheck++)
-			{
-			  if(dungeon->dungeonArray[character.yPos][corridorCheck].hardness != 0)
-			    {
-			      seenInCorridor = 0;
-			    }
-			}
-
-		      if(seenInCorridor == 1)
-			{
-			  //Updating monster's memory
-			  if((int)character.monster.traits >> 1 % 2 == 1)
-			    {
-			      //printf("Monster can tunnel\n");
-			      for(updateY = 0; updateY < 21; updateY++)
-				{
-				  for(updateX = 0; updateX < 80; updateX++)
-				    {
-				      character.monster.memory[updateY][updateX] = dungeon->vertexTunnelMap[updateY][updateX];
-				    }
-				}
-			    }
-
-			  else
-			    {
-			      //printf("Monster can't tunnel\n");
-			      for(updateY = 0; updateY < 21; updateY++)
-				{
-				  for(updateX = 0; updateX < 80; updateX++)
-				    {
-				      character.monster.memory[updateY][updateX] = dungeon->vertexMap[updateY][updateX];
-				    }
-				}
-			    }
-			}
-		    }
-
-		  else
-		    {
-		      for(corridorCheck = character.xPos; corridorCheck <= characterQueue->characterQueue[0].xPos; corridorCheck++)
-			{
-			  if(dungeon->dungeonArray[character.yPos][corridorCheck].hardness != 0)
-			    {
-			      seenInCorridor = 0;
-			    }
-			}
-		    }
-
-		  if(seenInCorridor == 1)
-		    {
-		      //Updating monster's memory
-		      if((int)character.monster.traits >> 1 % 2 == 1)
-			{
-			  for(updateY = 0; updateY < 21; updateY++)
-			    {
-			      for(updateX = 0; updateX < 80; updateX++)
-				{
-				  character.monster.memory[updateY][updateX] = dungeon->vertexTunnelMap[updateY][updateX];
-				}
-			    }
-			}
-
-		      else
-			{
-			  for(updateY = 0; updateY < 21; updateY++)
-			    {
-			      for(updateX = 0; updateX < 80; updateX++)
-				{
-				  character.monster.memory[updateY][updateX] = dungeon->vertexMap[updateY][updateX];
-				}
-			    }
-			}
-		    }
-		}
-
-	      //If they don't see the hero, they stay dormant
-	      if(character.monster.memory[character.yPos][character.xPos].prev == NULL)
-		{
-		  //printf("Dont see hero\n");
-		  character.xPos = character.xPos;
-		  character.yPos = character.yPos;
-		}
-
-	      //Otherwise they take the fastest route
-	      else
-		{
-		  //printf("Taking fastest route\n");
-		  character.xPos = character.monster.memory[character.yPos][character.xPos].prev->xPos;
-		  character.yPos = character.monster.memory[character.yPos][character.xPos].prev->yPos;
-		}
-	    }
-
-	    //Else if the monster is only unintelligent
-	    else
-	      {
-		//printf("Monster is only unintelligent\n");
-		for(numRooms = 0; numRooms < dungeon->numRooms; numRooms++)
-		{
-		  //Testing to see if the monster is in the same room as the hero
-		  if((character.xPos >= dungeon->roomArray[numRooms].xPos && character.xPos <= dungeon->roomArray[numRooms].xPos + dungeon->roomArray[numRooms].xSize && character.yPos >= dungeon->roomArray[numRooms].yPos && character.yPos <= dungeon->roomArray[numRooms].yPos + dungeon->roomArray[numRooms].ySize) && (characterQueue->characterQueue[0].xPos >= dungeon->roomArray[numRooms].xPos && characterQueue->characterQueue[0].xPos <= dungeon->roomArray[numRooms].xPos + dungeon->roomArray[numRooms].xSize && characterQueue->characterQueue[0].yPos >= dungeon->roomArray[numRooms].yPos && characterQueue->characterQueue[0].yPos <= dungeon->roomArray[numRooms].yPos + dungeon->roomArray[numRooms].ySize))
-		    {
-		      //Move towards hero
-		      if((int)character.monster.traits >> 1 % 2 == 1)
-			{
-			  if(character.xPos - characterQueue->characterQueue[0].xPos > 0)
-			    {
-			      character.xPos--;
-			    }
-
-			  if(characterQueue->characterQueue[0].xPos - character.xPos > 0)
-			    {
-			      character.xPos++;
-			    }
-
-			  if(character.yPos - characterQueue->characterQueue[0].yPos > 0)
-			    {
-			      character.yPos--;
-			    }
-
-			  if(character.yPos - characterQueue->characterQueue[0].yPos < 0)
-			    {
-			      character.yPos++;
-			    }
-			}
-
-		      else
-			{
-			  if(character.xPos - characterQueue->characterQueue[0].xPos > 0 && dungeon->dungeonArray[character.yPos][character.xPos - 1].hardness == 0)
-			    {
-			      character.xPos--;
-			    }
-
-			  if(characterQueue->characterQueue[0].xPos - character.xPos > 0 && dungeon->dungeonArray[character.yPos][character.xPos + 1].hardness == 0)
-			    {
-			      character.xPos++;
-			    }
-
-			  if(character.yPos - characterQueue->characterQueue[0].yPos > 0 && dungeon->dungeonArray[character.yPos - 1][character.xPos].hardness == 0)
-			    {
-			      character.yPos--;
-			    }
-
-			  if(character.yPos - characterQueue->characterQueue[0].yPos < 0 && dungeon->dungeonArray[character.yPos + 1][character.xPos].hardness == 0)
-			    {
-			      character.yPos++;
-			    }
-			}
-		    }
-		}
-
-	      //Check to see if the monster can see the hero in a vertical corridor
-	      if(character.xPos == characterQueue->characterQueue[0].xPos)
-		{
-		  seenInCorridor = 1;
-
-		  if(character.yPos > characterQueue->characterQueue[0].yPos)
-		    {
-		      for(corridorCheck = characterQueue->characterQueue[0].yPos; corridorCheck <= character.yPos; corridorCheck++)
-			{
-			  if(dungeon->dungeonArray[corridorCheck][character.xPos].hardness != 0)
-			    {
-			      seenInCorridor = 0;
-			    }
-			}
-		    }
-
-		  else
-		    {
-		      for(corridorCheck = character.yPos; corridorCheck <= characterQueue->characterQueue[0].yPos; corridorCheck++)
-			{
-			  if(dungeon->dungeonArray[corridorCheck][character.xPos].hardness != 0)
-			    {
-			      seenInCorridor = 0;
-			    }
-			}
-		    }
-
-		  if(seenInCorridor == 1)
-		    {
-		      //Moving monster
-		      if((int)character.monster.traits >> 1 % 2 == 1)
-			{
-			  if(character.xPos - characterQueue->characterQueue[0].xPos > 0)
-			    {
-			      character.xPos--;
-			    }
-
-			  if(characterQueue->characterQueue[0].xPos - character.xPos > 0)
-			    {
-			      character.xPos++;
-			    }
-
-			  if(character.yPos - characterQueue->characterQueue[0].yPos > 0)
-			    {
-			      character.yPos--;
-			    }
-
-			  if(character.yPos - characterQueue->characterQueue[0].yPos < 0)
-			    {
-			      character.yPos++;
-			    }
-			}
-
-		      else
-			{
-			  if(character.xPos - characterQueue->characterQueue[0].xPos > 0 && dungeon->dungeonArray[character.yPos][character.xPos - 1].hardness == 0)
-			    {
-			      character.xPos--;
-			    }
-
-			  if(characterQueue->characterQueue[0].xPos - character.xPos > 0 && dungeon->dungeonArray[character.yPos][character.xPos + 1].hardness == 0)
-			    {
-			      character.xPos++;
-			    }
-
-			  if(character.yPos - characterQueue->characterQueue[0].yPos > 0 && dungeon->dungeonArray[character.yPos - 1][character.xPos].hardness == 0)
-			    {
-			      character.yPos--;
-			    }
-
-			  if(character.yPos - characterQueue->characterQueue[0].yPos < 0 && dungeon->dungeonArray[character.yPos + 1][character.xPos].hardness == 0)
-			    {
-			      character.yPos++;
-			    }
-			}
-		    }
-		}
-
-	      //Check to see if the monster can see the hero in a vertical corridor
-	      else if(character.yPos == characterQueue->characterQueue[0].yPos)
-		{
-		  seenInCorridor = 1;
-
-		  if(character.xPos > characterQueue->characterQueue[0].xPos)
-		    {
-		      for(corridorCheck = characterQueue->characterQueue[0].xPos; corridorCheck <= character.xPos; corridorCheck++)
-			{
-			  if(dungeon->dungeonArray[character.yPos][corridorCheck].hardness != 0)
-			    {
-			      seenInCorridor = 0;
-			    }
-			}
-
-		      if(seenInCorridor == 1)
-			{
-			  //Moving monster
-			  if((int)character.monster.traits >> 1 % 2 == 1)
-			    {
-			      if(character.xPos - characterQueue->characterQueue[0].xPos > 0)
-				{
-				  character.xPos--;
-				}
-
-			      if(characterQueue->characterQueue[0].xPos - character.xPos > 0)
-				{
-				  character.xPos++;
-				}
-
-			      if(character.yPos - characterQueue->characterQueue[0].yPos > 0)
-				{
-				  character.yPos--;
-				}
-
-			      if(character.yPos - characterQueue->characterQueue[0].yPos < 0)
-				{
-				  character.yPos++;
-				}
-			    }
-
-			  else
-			    {
-			      if(character.xPos - characterQueue->characterQueue[0].xPos > 0 && dungeon->dungeonArray[character.yPos][character.xPos - 1].hardness == 0)
-				{
-				  character.xPos--;
-				}
-
-			      if(characterQueue->characterQueue[0].xPos - character.xPos > 0 && dungeon->dungeonArray[character.yPos][character.xPos + 1].hardness == 0)
-				{
-				  character.xPos++;
-				}
-
-			      if(character.yPos - characterQueue->characterQueue[0].yPos > 0 && dungeon->dungeonArray[character.yPos - 1][character.xPos].hardness == 0)
-				{
-				  character.yPos--;
-				}
-
-			      if(character.yPos - characterQueue->characterQueue[0].yPos < 0 && dungeon->dungeonArray[character.yPos + 1][character.xPos].hardness == 0)
-				{
-				  character.yPos++;
-				}
-			    }
-			}
-		    }
-
-		  else
-		    {
-		      for(corridorCheck = character.xPos; corridorCheck <= characterQueue->characterQueue[0].xPos; corridorCheck++)
-			{
-			  if(dungeon->dungeonArray[character.yPos][corridorCheck].hardness != 0)
-			    {
-			      seenInCorridor = 0;
-			    }
-			}
-		    }
-
-		  if(seenInCorridor == 1)
-		    {
-		      //Moving monster
-		      if((int)character.monster.traits >> 1 % 2 == 1)
-			{
-			  if(character.xPos - characterQueue->characterQueue[0].xPos > 0)
-			    {
-			      character.xPos--;
-			    }
-
-			  if(characterQueue->characterQueue[0].xPos - character.xPos > 0)
-			    {
-			      character.xPos++;
-			    }
-
-			  if(character.yPos - characterQueue->characterQueue[0].yPos > 0)
-			    {
-			      character.yPos--;
-			    }
-
-			  if(character.yPos - characterQueue->characterQueue[0].yPos < 0)
-			    {
-			      character.yPos++;
-			    }
-			}
-
-		      else
-			{
-			  if(character.xPos - characterQueue->characterQueue[0].xPos > 0 && dungeon->dungeonArray[character.yPos][character.xPos - 1].hardness == 0)
-			    {
-			      character.xPos--;
-			    }
-
-			  if(characterQueue->characterQueue[0].xPos - character.xPos > 0 && dungeon->dungeonArray[character.yPos][character.xPos + 1].hardness == 0)
-			    {
-			      character.xPos++;
-			    }
-
-			  if(character.yPos - characterQueue->characterQueue[0].yPos > 0 && dungeon->dungeonArray[character.yPos - 1][character.xPos].hardness == 0)
-			    {
-			      character.yPos--;
-			    }
-
-			  if(character.yPos - characterQueue->characterQueue[0].yPos < 0 && dungeon->dungeonArray[character.yPos + 1][character.xPos].hardness == 0)
-			    {
-			      character.yPos++;
-			    }
-			}
-		    }
-		}
-
-	      }
-
-	    for(j = 0; j < characterQueue->size; j++)
-	      {
-		//printf("Testing to see if monster can defeat enemy\n");
-		//printf("%d\n", j);
-		//printf("%d\n", characterQueue->size);
-		//Checking to see if the monster is moving into and defeating a hero
-		if(character.xPos == characterQueue->characterQueue[j].xPos && character.yPos == characterQueue->characterQueue[j].yPos && character.symbol != characterQueue->characterQueue[j].symbol)
-		  {
-		    //printf("Dying to monsters\n");
-		    //characterQueue->characterQueue[j].hero = NULL;
-		    //characterQueue->characterQueue[j].monster = NULL;
-		    characterQueue->characterQueue[j].symbol = NULL;
-		    characterQueue->characterQueue[j].xPos = 256;
-		    characterQueue->characterQueue[j].yPos = 256;
-		    characterQueue->characterQueue[j].nextTurn = NULL;
-		    characterQueue->characterQueue[j].speed = NULL;
-		    characterQueue->characterQueue[j].dead = 1;
-		  }
-	      }
-
-	    //If moving through a wall
-	    if(dungeon->dungeonArray[character.yPos][character.xPos].hardness != 0)
-	      {
-		dungeon->dungeonArray[character.yPos][character.xPos].hardness = 0;
-		dungeon->dungeonArray[character.yPos][character.xPos].symbol = '#';
-	      }
-
-	    //printf("Updating nextTurn\n");
-	    character.nextTurn = character.nextTurn + (1000 / character.speed);
-
-	    //printf("Putting character back into characterQueue\n");
-	    characterQueue->characterQueue[i] = character;
-	}
-    }
-  return turnNumber + 1;
-}
-
-//Checks to see if the player has won or lost the game
-int check_win_condition(characterQueue_t *characterQueue)
+#include "utils.h"
+#include "heap.h"
+#include "event.h"
+#include "pc.h"
+#include "npc.h"
+#include "io.h"
+
+#define DUMP_HARDNESS_IMAGES 0
+
+typedef struct corridor_path {
+  heap_node_t *hn;
+  uint8_t pos[2];
+  uint8_t from[2];
+  int32_t cost;
+} corridor_path_t;
+
+/* Will need this later.
+static uint32_t in_room(dungeon_t *d, int16_t y, int16_t x)
 {
   int i;
 
-  if(characterQueue->characterQueue[0].dead == 1)
-    {
-      return -1;
+  for (i = 0; i < d->num_rooms; i++) {
+    if ((x >= d->rooms[i].position[dim_x]) &&
+        (x < (d->rooms[i].position[dim_x] + d->rooms[i].size[dim_x])) &&
+        (y >= d->rooms[i].position[dim_y]) &&
+        (y < (d->rooms[i].position[dim_y] + d->rooms[i].size[dim_y]))) {
+      return 1;
+    }
+  }
+
+  return 0;
+}
+*/
+
+static uint32_t adjacent_to_room(dungeon_t *d, int16_t y, int16_t x)
+{
+  return (mapxy(x - 1, y) == ter_floor_room ||
+          mapxy(x + 1, y) == ter_floor_room ||
+          mapxy(x, y - 1) == ter_floor_room ||
+          mapxy(x, y + 1) == ter_floor_room);
+}
+
+static uint32_t is_open_space(dungeon_t *d, int16_t y, int16_t x)
+{
+  return !hardnessxy(x, y);
+}
+
+static int32_t corridor_path_cmp(const void *key, const void *with) {
+  return ((corridor_path_t *) key)->cost - ((corridor_path_t *) with)->cost;
+}
+
+static void dijkstra_corridor(dungeon_t *d, pair_t from, pair_t to)
+{
+  static corridor_path_t path[DUNGEON_Y][DUNGEON_X], *p;
+  static uint32_t initialized = 0;
+  heap_t h;
+  uint32_t x, y;
+
+  if (!initialized) {
+    for (y = 0; y < DUNGEON_Y; y++) {
+      for (x = 0; x < DUNGEON_X; x++) {
+        path[y][x].pos[dim_y] = y;
+        path[y][x].pos[dim_x] = x;
+      }
+    }
+    initialized = 1;
+  }
+  
+  for (y = 0; y < DUNGEON_Y; y++) {
+    for (x = 0; x < DUNGEON_X; x++) {
+      path[y][x].cost = INT_MAX;
+    }
+  }
+
+  path[from[dim_y]][from[dim_x]].cost = 0;
+
+  heap_init(&h, corridor_path_cmp, NULL);
+
+  for (y = 0; y < DUNGEON_Y; y++) {
+    for (x = 0; x < DUNGEON_X; x++) {
+      if (mapxy(x, y) != ter_wall_immutable) {
+        path[y][x].hn = heap_insert(&h, &path[y][x]);
+      } else {
+        path[y][x].hn = NULL;
+      }
+    }
+  }
+
+  while ((p = heap_remove_min(&h))) {
+    p->hn = NULL;
+
+    if ((p->pos[dim_y] == to[dim_y]) && p->pos[dim_x] == to[dim_x]) {
+      for (x = to[dim_x], y = to[dim_y];
+           (x != from[dim_x]) || (y != from[dim_y]);
+           p = &path[y][x], x = p->from[dim_x], y = p->from[dim_y]) {
+        if (mapxy(x, y) != ter_floor_room) {
+          mapxy(x, y) = ter_floor_hall;
+          hardnessxy(x, y) = 0;
+        }
+      }
+      heap_delete(&h);
+      return;
     }
 
-  else
-    {
-      for(i = 1; i < characterQueue->size; i++)
-	{
-	  if(characterQueue->characterQueue[i].dead != 1)
-	    {
-	      return 0;
-	    }
-	}
+    if ((path[p->pos[dim_y] - 1][p->pos[dim_x]    ].hn) &&
+        (path[p->pos[dim_y] - 1][p->pos[dim_x]    ].cost >
+         p->cost + hardnesspair(p->pos))) {
+      path[p->pos[dim_y] - 1][p->pos[dim_x]    ].cost =
+        p->cost + hardnesspair(p->pos);
+      path[p->pos[dim_y] - 1][p->pos[dim_x]    ].from[dim_y] = p->pos[dim_y];
+      path[p->pos[dim_y] - 1][p->pos[dim_x]    ].from[dim_x] = p->pos[dim_x];
+      heap_decrease_key_no_replace(&h, path[p->pos[dim_y] - 1]
+                                           [p->pos[dim_x]    ].hn);
+    }
+    if ((path[p->pos[dim_y]    ][p->pos[dim_x] - 1].hn) &&
+        (path[p->pos[dim_y]    ][p->pos[dim_x] - 1].cost >
+         p->cost + hardnesspair(p->pos))) {
+      path[p->pos[dim_y]    ][p->pos[dim_x] - 1].cost =
+        p->cost + hardnesspair(p->pos);
+      path[p->pos[dim_y]    ][p->pos[dim_x] - 1].from[dim_y] = p->pos[dim_y];
+      path[p->pos[dim_y]    ][p->pos[dim_x] - 1].from[dim_x] = p->pos[dim_x];
+      heap_decrease_key_no_replace(&h, path[p->pos[dim_y]    ]
+                                           [p->pos[dim_x] - 1].hn);
+    }
+    if ((path[p->pos[dim_y]    ][p->pos[dim_x] + 1].hn) &&
+        (path[p->pos[dim_y]    ][p->pos[dim_x] + 1].cost >
+         p->cost + hardnesspair(p->pos))) {
+      path[p->pos[dim_y]    ][p->pos[dim_x] + 1].cost =
+        p->cost + hardnesspair(p->pos);
+      path[p->pos[dim_y]    ][p->pos[dim_x] + 1].from[dim_y] = p->pos[dim_y];
+      path[p->pos[dim_y]    ][p->pos[dim_x] + 1].from[dim_x] = p->pos[dim_x];
+      heap_decrease_key_no_replace(&h, path[p->pos[dim_y]    ]
+                                           [p->pos[dim_x] + 1].hn);
+    }
+    if ((path[p->pos[dim_y] + 1][p->pos[dim_x]    ].hn) &&
+        (path[p->pos[dim_y] + 1][p->pos[dim_x]    ].cost >
+         p->cost + hardnesspair(p->pos))) {
+      path[p->pos[dim_y] + 1][p->pos[dim_x]    ].cost =
+        p->cost + hardnesspair(p->pos);
+      path[p->pos[dim_y] + 1][p->pos[dim_x]    ].from[dim_y] = p->pos[dim_y];
+      path[p->pos[dim_y] + 1][p->pos[dim_x]    ].from[dim_x] = p->pos[dim_x];
+      heap_decrease_key_no_replace(&h, path[p->pos[dim_y] + 1]
+                                           [p->pos[dim_x]    ].hn);
+    }
+  }
+}
+
+/* This is a cut-and-paste of the above.  The code is modified to  *
+ * calculate paths based on inverse hardnesses so that we get a    *
+ * high probability of creating at least one cycle in the dungeon. */
+static void dijkstra_corridor_inv(dungeon_t *d, pair_t from, pair_t to)
+{
+  static corridor_path_t path[DUNGEON_Y][DUNGEON_X], *p;
+  static uint32_t initialized = 0;
+  heap_t h;
+  uint32_t x, y;
+
+  if (!initialized) {
+    for (y = 0; y < DUNGEON_Y; y++) {
+      for (x = 0; x < DUNGEON_X; x++) {
+        path[y][x].pos[dim_y] = y;
+        path[y][x].pos[dim_x] = x;
+      }
+    }
+    initialized = 1;
+  }
+  
+  for (y = 0; y < DUNGEON_Y; y++) {
+    for (x = 0; x < DUNGEON_X; x++) {
+      path[y][x].cost = INT_MAX;
+    }
+  }
+
+  path[from[dim_y]][from[dim_x]].cost = 0;
+
+  heap_init(&h, corridor_path_cmp, NULL);
+
+  for (y = 0; y < DUNGEON_Y; y++) {
+    for (x = 0; x < DUNGEON_X; x++) {
+      if (mapxy(x, y) != ter_wall_immutable) {
+        path[y][x].hn = heap_insert(&h, &path[y][x]);
+      } else {
+        path[y][x].hn = NULL;
+      }
+    }
+  }
+
+  while ((p = heap_remove_min(&h))) {
+    p->hn = NULL;
+
+    if ((p->pos[dim_y] == to[dim_y]) && p->pos[dim_x] == to[dim_x]) {
+      for (x = to[dim_x], y = to[dim_y];
+           (x != from[dim_x]) || (y != from[dim_y]);
+           p = &path[y][x], x = p->from[dim_x], y = p->from[dim_y]) {
+        if (mapxy(x, y) != ter_floor_room) {
+          mapxy(x, y) = ter_floor_hall;
+          hardnessxy(x, y) = 0;
+        }
+      }
+      heap_delete(&h);
+      return;
+    }
+
+#define hardnesspair_inv(p) (is_open_space(d, p[dim_y], p[dim_x]) ? 127 :     \
+                             (adjacent_to_room(d, p[dim_y], p[dim_x]) ? 191 : \
+                              (255 - hardnesspair(p))))
+
+    if ((path[p->pos[dim_y] - 1][p->pos[dim_x]    ].hn) &&
+        (path[p->pos[dim_y] - 1][p->pos[dim_x]    ].cost >
+         p->cost + hardnesspair_inv(p->pos))) {
+      path[p->pos[dim_y] - 1][p->pos[dim_x]    ].cost =
+        p->cost + hardnesspair_inv(p->pos);
+      path[p->pos[dim_y] - 1][p->pos[dim_x]    ].from[dim_y] = p->pos[dim_y];
+      path[p->pos[dim_y] - 1][p->pos[dim_x]    ].from[dim_x] = p->pos[dim_x];
+      heap_decrease_key_no_replace(&h, path[p->pos[dim_y] - 1]
+                                           [p->pos[dim_x]    ].hn);
+    }
+    if ((path[p->pos[dim_y]    ][p->pos[dim_x] - 1].hn) &&
+        (path[p->pos[dim_y]    ][p->pos[dim_x] - 1].cost >
+         p->cost + hardnesspair_inv(p->pos))) {
+      path[p->pos[dim_y]    ][p->pos[dim_x] - 1].cost =
+        p->cost + hardnesspair_inv(p->pos);
+      path[p->pos[dim_y]    ][p->pos[dim_x] - 1].from[dim_y] = p->pos[dim_y];
+      path[p->pos[dim_y]    ][p->pos[dim_x] - 1].from[dim_x] = p->pos[dim_x];
+      heap_decrease_key_no_replace(&h, path[p->pos[dim_y]    ]
+                                           [p->pos[dim_x] - 1].hn);
+    }
+    if ((path[p->pos[dim_y]    ][p->pos[dim_x] + 1].hn) &&
+        (path[p->pos[dim_y]    ][p->pos[dim_x] + 1].cost >
+         p->cost + hardnesspair_inv(p->pos))) {
+      path[p->pos[dim_y]    ][p->pos[dim_x] + 1].cost =
+        p->cost + hardnesspair_inv(p->pos);
+      path[p->pos[dim_y]    ][p->pos[dim_x] + 1].from[dim_y] = p->pos[dim_y];
+      path[p->pos[dim_y]    ][p->pos[dim_x] + 1].from[dim_x] = p->pos[dim_x];
+      heap_decrease_key_no_replace(&h, path[p->pos[dim_y]    ]
+                                           [p->pos[dim_x] + 1].hn);
+    }
+    if ((path[p->pos[dim_y] + 1][p->pos[dim_x]    ].hn) &&
+        (path[p->pos[dim_y] + 1][p->pos[dim_x]    ].cost >
+         p->cost + hardnesspair_inv(p->pos))) {
+      path[p->pos[dim_y] + 1][p->pos[dim_x]    ].cost =
+        p->cost + hardnesspair_inv(p->pos);
+      path[p->pos[dim_y] + 1][p->pos[dim_x]    ].from[dim_y] = p->pos[dim_y];
+      path[p->pos[dim_y] + 1][p->pos[dim_x]    ].from[dim_x] = p->pos[dim_x];
+      heap_decrease_key_no_replace(&h, path[p->pos[dim_y] + 1]
+                                           [p->pos[dim_x]    ].hn);
+    }
+  }
+}
+
+/* Chooses a random point inside each room and connects them with a *
+ * corridor.  Random internal points prevent corridors from exiting *
+ * rooms in predictable locations.                                  */
+static int connect_two_rooms(dungeon_t *d, room_t *r1, room_t *r2)
+{
+  pair_t e1, e2;
+
+  e1[dim_y] = rand_range(r1->position[dim_y],
+                         r1->position[dim_y] + r1->size[dim_y] - 1);
+  e1[dim_x] = rand_range(r1->position[dim_x],
+                         r1->position[dim_x] + r1->size[dim_x] - 1);
+  e2[dim_y] = rand_range(r2->position[dim_y],
+                         r2->position[dim_y] + r2->size[dim_y] - 1);
+  e2[dim_x] = rand_range(r2->position[dim_x],
+                         r2->position[dim_x] + r2->size[dim_x] - 1);
+
+  /*  return connect_two_points_recursive(d, e1, e2);*/
+  dijkstra_corridor(d, e1, e2);
+
+  return 0;
+}
+
+static int create_cycle(dungeon_t *d)
+{
+  /* Find the (approximately) farthest two rooms, then connect *
+   * them by the shortest path using inverted hardnesses.      */
+
+  int32_t max, tmp, i, j, p, q;
+  pair_t e1, e2;
+
+  for (i = max = 0; i < d->num_rooms - 1; i++) {
+    for (j = i + 1; j < d->num_rooms; j++) {
+      tmp = (((d->rooms[i].position[dim_x] - d->rooms[j].position[dim_x])  *
+              (d->rooms[i].position[dim_x] - d->rooms[j].position[dim_x])) +
+             ((d->rooms[i].position[dim_y] - d->rooms[j].position[dim_y])  *
+              (d->rooms[i].position[dim_y] - d->rooms[j].position[dim_y])));
+      if (tmp > max) {
+        max = tmp;
+        p = i;
+        q = j;
+      }
+    }
+  }
+
+  /* Can't simply call connect_two_rooms() because it doesn't *
+   * use inverse hardnesses, so duplicate it here.            */
+  e1[dim_y] = rand_range(d->rooms[p].position[dim_y],
+                         (d->rooms[p].position[dim_y] +
+                          d->rooms[p].size[dim_y] - 1));
+  e1[dim_x] = rand_range(d->rooms[p].position[dim_x],
+                         (d->rooms[p].position[dim_x] +
+                          d->rooms[p].size[dim_x] - 1));
+  e2[dim_y] = rand_range(d->rooms[q].position[dim_y],
+                         (d->rooms[q].position[dim_y] +
+                          d->rooms[q].size[dim_y] - 1));
+  e2[dim_x] = rand_range(d->rooms[q].position[dim_x],
+                         (d->rooms[q].position[dim_x] +
+                          d->rooms[q].size[dim_x] - 1));
+
+  dijkstra_corridor_inv(d, e1, e2);
+
+  return 0;
+}
+
+static int connect_rooms(dungeon_t *d)
+{
+  uint32_t i;
+
+  for (i = 1; i < d->num_rooms; i++) {
+    connect_two_rooms(d, d->rooms + i - 1, d->rooms + i);
+  }
+
+  create_cycle(d);
+
+  return 0;
+}
+
+int gaussian[5][5] = {
+  {  1,  4,  7,  4,  1 },
+  {  4, 16, 26, 16,  4 },
+  {  7, 26, 41, 26,  7 },
+  {  4, 16, 26, 16,  4 },
+  {  1,  4,  7,  4,  1 }
+};
+
+typedef struct queue_node {
+  int x, y;
+  struct queue_node *next;
+} queue_node_t;
+
+static int smooth_hardness(dungeon_t *d)
+{
+  int32_t i, x, y;
+  int32_t s, t, p, q;
+  queue_node_t *head, *tail, *tmp;
+#if DUMP_HARDNESS_IMAGES
+  FILE *out;
+#endif
+  uint8_t hardness[DUNGEON_Y][DUNGEON_X];
+
+  memset(&hardness, 0, sizeof (hardness));
+
+  /* Seed with some values */
+  for (i = 1; i < 255; i += 20) {
+    do {
+      x = rand() % DUNGEON_X;
+      y = rand() % DUNGEON_Y;
+    } while (hardness[y][x]);
+    hardness[y][x] = i;
+    if (i == 1) {
+      head = tail = malloc(sizeof (*tail));
+    } else {
+      tail->next = malloc(sizeof (*tail));
+      tail = tail->next;
+    }
+    tail->next = NULL;
+    tail->x = x;
+    tail->y = y;
+  }
+
+#if DUMP_HARDNESS_IMAGES
+  out = fopen("seeded.pgm", "w");
+  fprintf(out, "P5\n%u %u\n255\n", DUNGEON_X, DUNGEON_Y);
+  fwrite(&hardness, sizeof (hardness), 1, out);
+  fclose(out);
+#endif
+
+  /* Diffuse the vaules to fill the space */
+  while (head) {
+    x = head->x;
+    y = head->y;
+    i = hardness[y][x];
+
+    if (x - 1 >= 0 && y - 1 >= 0 && !hardness[y - 1][x - 1]) {
+      hardness[y - 1][x - 1] = i;
+      tail->next = malloc(sizeof (*tail));
+      tail = tail->next;
+      tail->next = NULL;
+      tail->x = x - 1;
+      tail->y = y - 1;
+    }
+    if (x - 1 >= 0 && !hardness[y][x - 1]) {
+      hardness[y][x - 1] = i;
+      tail->next = malloc(sizeof (*tail));
+      tail = tail->next;
+      tail->next = NULL;
+      tail->x = x - 1;
+      tail->y = y;
+    }
+    if (x - 1 >= 0 && y + 1 < DUNGEON_Y && !hardness[y + 1][x - 1]) {
+      hardness[y + 1][x - 1] = i;
+      tail->next = malloc(sizeof (*tail));
+      tail = tail->next;
+      tail->next = NULL;
+      tail->x = x - 1;
+      tail->y = y + 1;
+    }
+    if (y - 1 >= 0 && !hardness[y - 1][x]) {
+      hardness[y - 1][x] = i;
+      tail->next = malloc(sizeof (*tail));
+      tail = tail->next;
+      tail->next = NULL;
+      tail->x = x;
+      tail->y = y - 1;
+    }
+    if (y + 1 < DUNGEON_Y && !hardness[y + 1][x]) {
+      hardness[y + 1][x] = i;
+      tail->next = malloc(sizeof (*tail));
+      tail = tail->next;
+      tail->next = NULL;
+      tail->x = x;
+      tail->y = y + 1;
+    }
+    if (x + 1 < DUNGEON_X && y - 1 >= 0 && !hardness[y - 1][x + 1]) {
+      hardness[y - 1][x + 1] = i;
+      tail->next = malloc(sizeof (*tail));
+      tail = tail->next;
+      tail->next = NULL;
+      tail->x = x + 1;
+      tail->y = y - 1;
+    }
+    if (x + 1 < DUNGEON_X && !hardness[y][x + 1]) {
+      hardness[y][x + 1] = i;
+      tail->next = malloc(sizeof (*tail));
+      tail = tail->next;
+      tail->next = NULL;
+      tail->x = x + 1;
+      tail->y = y;
+    }
+    if (x + 1 < DUNGEON_X && y + 1 < DUNGEON_Y && !hardness[y + 1][x + 1]) {
+      hardness[y + 1][x + 1] = i;
+      tail->next = malloc(sizeof (*tail));
+      tail = tail->next;
+      tail->next = NULL;
+      tail->x = x + 1;
+      tail->y = y + 1;
+    }
+
+    tmp = head;
+    head = head->next;
+    free(tmp);
+  }
+
+  /* And smooth it a bit with a gaussian convolution */
+  for (y = 0; y < DUNGEON_Y; y++) {
+    for (x = 0; x < DUNGEON_X; x++) {
+      for (s = t = p = 0; p < 5; p++) {
+        for (q = 0; q < 5; q++) {
+          if (y + (p - 2) >= 0 && y + (p - 2) < DUNGEON_Y &&
+              x + (q - 2) >= 0 && x + (q - 2) < DUNGEON_X) {
+            s += gaussian[p][q];
+            t += hardness[y + (p - 2)][x + (q - 2)] * gaussian[p][q];
+          }
+        }
+      }
+      d->hardness[y][x] = t / s;
+    }
+  }
+  /* Let's do it again, until it's smooth like Kenny G. */
+  for (y = 0; y < DUNGEON_Y; y++) {
+    for (x = 0; x < DUNGEON_X; x++) {
+      for (s = t = p = 0; p < 5; p++) {
+        for (q = 0; q < 5; q++) {
+          if (y + (p - 2) >= 0 && y + (p - 2) < DUNGEON_Y &&
+              x + (q - 2) >= 0 && x + (q - 2) < DUNGEON_X) {
+            s += gaussian[p][q];
+            t += hardness[y + (p - 2)][x + (q - 2)] * gaussian[p][q];
+          }
+        }
+      }
+      d->hardness[y][x] = t / s;
+    }
+  }
+
+#if DUMP_HARDNESS_IMAGES
+  out = fopen("diffused.pgm", "w");
+  fprintf(out, "P5\n%u %u\n255\n", DUNGEON_X, DUNGEON_Y);
+  fwrite(&hardness, sizeof (hardness), 1, out);
+  fclose(out);
+
+  out = fopen("smoothed.pgm", "w");
+  fprintf(out, "P5\n%u %u\n255\n", DUNGEON_X, DUNGEON_Y);
+  fwrite(&d->hardness, sizeof (d->hardness), 1, out);
+  fclose(out);
+#endif
+
+  return 0;
+}
+
+static int empty_dungeon(dungeon_t *d)
+{
+  uint8_t x, y;
+
+  smooth_hardness(d);
+  for (y = 0; y < DUNGEON_Y; y++) {
+    for (x = 0; x < DUNGEON_X; x++) {
+      mapxy(x, y) = ter_wall;
+      if (y == 0 || y == DUNGEON_Y - 1 ||
+          x == 0 || x == DUNGEON_X - 1) {
+        mapxy(x, y) = ter_wall_immutable;
+        hardnessxy(x, y) = 255;
+      }
+      charxy(x, y) = NULL;
+    }
+  }
+
+  d->is_new = 1;
+
+  return 0;
+}
+
+static int place_rooms(dungeon_t *d)
+{
+  pair_t p;
+  uint32_t i;
+  int success;
+  room_t *r;
+
+  for (success = 0; !success; ) {
+    success = 1;
+    for (i = 0; success && i < d->num_rooms; i++) {
+      r = d->rooms + i;
+      r->position[dim_x] = 1 + rand() % (DUNGEON_X - 2 - r->size[dim_x]);
+      r->position[dim_y] = 1 + rand() % (DUNGEON_Y - 2 - r->size[dim_y]);
+      for (p[dim_y] = r->position[dim_y] - 1;
+           success && p[dim_y] < r->position[dim_y] + r->size[dim_y] + 1;
+           p[dim_y]++) {
+        for (p[dim_x] = r->position[dim_x] - 1;
+             success && p[dim_x] < r->position[dim_x] + r->size[dim_x] + 1;
+             p[dim_x]++) {
+          if (mappair(p) >= ter_floor) {
+            success = 0;
+            empty_dungeon(d);
+          } else if ((p[dim_y] != r->position[dim_y] - 1)              &&
+                     (p[dim_y] != r->position[dim_y] + r->size[dim_y]) &&
+                     (p[dim_x] != r->position[dim_x] - 1)              &&
+                     (p[dim_x] != r->position[dim_x] + r->size[dim_x])) {
+            mappair(p) = ter_floor_room;
+            hardnesspair(p) = 0;
+          }
+        }
+      }
+    }
+  }
+
+  return 0;
+}
+
+static int make_rooms(dungeon_t *d)
+{
+  uint32_t i;
+
+  for (i = MIN_ROOMS; i < MAX_ROOMS && rand_under(6, 8); i++)
+    ;
+  d->num_rooms = i;
+  d->rooms = malloc(sizeof (*d->rooms) * d->num_rooms);
+
+  for (i = 0; i < d->num_rooms; i++) {
+    d->rooms[i].size[dim_x] = ROOM_MIN_X;
+    d->rooms[i].size[dim_y] = ROOM_MIN_Y;
+    while (rand_under(3, 4) && d->rooms[i].size[dim_x] < ROOM_MAX_X) {
+      d->rooms[i].size[dim_x]++;
+    }
+    while (rand_under(3, 4) && d->rooms[i].size[dim_y] < ROOM_MAX_Y) {
+      d->rooms[i].size[dim_y]++;
+    }
+  }
+
+  return 0;
+}
+
+static void place_stairs(dungeon_t *d)
+{
+  pair_t p;
+  do {
+    while ((p[dim_y] = rand_range(1, DUNGEON_Y - 2)) &&
+           (p[dim_x] = rand_range(1, DUNGEON_X - 2)) &&
+           ((mappair(p) < ter_floor)                 ||
+            (mappair(p) > ter_stairs)))
+      ;
+    mappair(p) = ter_stairs_down;
+  } while (rand_under(1, 3));
+  do {
+    while ((p[dim_y] = rand_range(1, DUNGEON_Y - 2)) &&
+           (p[dim_x] = rand_range(1, DUNGEON_X - 2)) &&
+           ((mappair(p) < ter_floor)                 ||
+            (mappair(p) > ter_stairs)))
+      
+      ;
+    mappair(p) = ter_stairs_up;
+  } while (rand_under(2, 4));
+}
+
+int gen_dungeon(dungeon_t *d)
+{
+  empty_dungeon(d);
+
+  do {
+    make_rooms(d);
+  } while (place_rooms(d));
+  connect_rooms(d);
+  place_stairs(d);
+
+  return 0;
+}
+
+void delete_dungeon(dungeon_t *d)
+{
+  free(d->rooms);
+  heap_delete(&d->events);
+  memset(d->character, 0, sizeof (d->character));
+}
+
+void init_dungeon(dungeon_t *d)
+{
+  empty_dungeon(d);
+  memset(&d->events, 0, sizeof (d->events));
+  heap_init(&d->events, compare_events, event_delete);
+}
+
+int write_dungeon_map(dungeon_t *d, FILE *f)
+{
+  uint32_t x, y;
+
+  for (y = 0; y < DUNGEON_Y; y++) {
+    for (x = 0; x < DUNGEON_X; x++) {
+      fwrite(&d->hardness[y][x], sizeof (unsigned char), 1, f);
+    }
+  }
+
+  return 0;
+}
+
+int write_rooms(dungeon_t *d, FILE *f)
+{
+  uint32_t i;
+  uint8_t p;
+
+  for (i = 0; i < d->num_rooms; i++) {
+    /* write order is xpos, ypos, width, height */
+    p = d->rooms[i].position[dim_y];
+    fwrite(&p, 1, 1, f);
+    p = d->rooms[i].position[dim_x];
+    fwrite(&p, 1, 1, f);
+    p = d->rooms[i].size[dim_y];
+    fwrite(&p, 1, 1, f);
+    p = d->rooms[i].size[dim_x];
+    fwrite(&p, 1, 1, f);
+  }
+
+  return 0;
+}
+
+uint32_t calculate_dungeon_size(dungeon_t *d)
+{
+  return (20 /* The semantic, version, and size */     +
+          (DUNGEON_X * DUNGEON_Y) /* The hardnesses */ +
+          (d->num_rooms * 4) /* Four bytes per room */);
+}
+
+int write_dungeon(dungeon_t *d, char *file)
+{
+  char *home;
+  char *filename;
+  FILE *f;
+  size_t len;
+  uint32_t be32;
+
+  if (!file) {
+    if (!(home = getenv("HOME"))) {
+      fprintf(stderr, "\"HOME\" is undefined.  Using working directory.\n");
+      home = ".";
+    }
+
+    len = (strlen(home) + strlen(SAVE_DIR) + strlen(DUNGEON_SAVE_FILE) +
+           1 /* The NULL terminator */                                 +
+           2 /* The slashes */);
+
+    filename = malloc(len * sizeof (*filename));
+    sprintf(filename, "%s/%s/", home, SAVE_DIR);
+    makedirectory(filename);
+    strcat(filename, DUNGEON_SAVE_FILE);
+
+    if (!(f = fopen(filename, "w"))) {
+      perror(filename);
+      free(filename);
 
       return 1;
     }
-}
-
-//Given a character and the dungeon, selects the y and x coordinates with the shortest distance to the hero
-int select_closest_distance(dungeon_t *dungeon, character_t *character, int canTunnel)
-{
-  int minDistance;
-
-  if(canTunnel == 1)
-    {
-      minDistance = dungeon->distanceTunnelMap[character->yPos][character->xPos];
-
-      if(dungeon->distanceTunnelMap[character->yPos -1][character->xPos] < minDistance)
-	{
-	  minDistance = dungeon->distanceTunnelMap[character->yPos - 1][character->xPos];
-
-	  character->yPos = character->yPos - 1;
-	  character->xPos = character->xPos;
-	}
-
-      if(dungeon->distanceTunnelMap[character->yPos -1][character->xPos + 1] < minDistance)
-	{
-	  minDistance = dungeon->distanceTunnelMap[character->yPos - 1][character->xPos + 1];
-
-	  character->yPos = character->yPos - 1;
-	  character->xPos = character->xPos + 1;
-	}
-
-      if(dungeon->distanceTunnelMap[character->yPos][character->xPos + 1] < minDistance)
-	{
-	  minDistance = dungeon->distanceTunnelMap[character->yPos][character->xPos + 1];
-
-	  character->yPos = character->yPos;
-	  character->xPos = character->xPos + 1;
-	}
-
-      if(dungeon->distanceTunnelMap[character->yPos + 1][character->xPos + 1] < minDistance)
-	{
-	  minDistance = dungeon->distanceTunnelMap[character->yPos + 1][character->xPos + 1];
-
-	  character->yPos = character->yPos + 1;
-	  character->xPos = character->xPos + 1;
-	}
-
-      if(dungeon->distanceTunnelMap[character->yPos + 1][character->xPos] < minDistance)
-	{
-	  minDistance = dungeon->distanceTunnelMap[character->yPos + 1][character->xPos];
-
-	  character->yPos = character->yPos + 1;
-	  character->xPos = character->xPos;
-	}
-
-      if(dungeon->distanceTunnelMap[character->yPos + 1][character->xPos - 1] < minDistance)
-	{
-	  minDistance = dungeon->distanceTunnelMap[character->yPos + 1][character->xPos - 1];
-
-	  character->yPos = character->yPos + 1;
-	  character->xPos = character->xPos - 1;
-	}
-
-      if(dungeon->distanceTunnelMap[character->yPos][character->xPos - 1] < minDistance)
-	{
-	  minDistance = dungeon->distanceTunnelMap[character->yPos][character->xPos - 1];
-
-	  character->yPos = character->yPos;
-	  character->xPos = character->xPos - 1;
-	}
-
-      if(dungeon->distanceTunnelMap[character->yPos -1][character->xPos - 1] < minDistance)
-	{
-	  minDistance = dungeon->distanceTunnelMap[character->yPos - 1][character->xPos - 1];
-
-	  character->yPos = character->yPos - 1;
-	  character->xPos = character->xPos - 1;
-	}
+    free(filename);
+  } else {
+    if (!(f = fopen(file, "w"))) {
+      perror(file);
+      exit(-1);
     }
-
-  else
-    {
-      minDistance = dungeon->distanceMap[character->yPos][character->xPos];
-
-      if(dungeon->distanceMap[character->yPos -1][character->xPos] < minDistance)
-	{
-	  minDistance = dungeon->distanceMap[character->yPos - 1][character->xPos];
-
-	  character->yPos = character->yPos - 1;
-	  character->xPos = character->xPos;
-	}
-
-      if(dungeon->distanceMap[character->yPos -1][character->xPos + 1] < minDistance)
-	{
-	  minDistance = dungeon->distanceMap[character->yPos - 1][character->xPos + 1];
-
-	  character->yPos = character->yPos - 1;
-	  character->xPos = character->xPos + 1;
-	}
-
-      if(dungeon->distanceMap[character->yPos][character->xPos + 1] < minDistance)
-	{
-	  minDistance = dungeon->distanceMap[character->yPos][character->xPos + 1];
-
-	  character->yPos = character->yPos;
-	  character->xPos = character->xPos + 1;
-	}
-
-      if(dungeon->distanceMap[character->yPos + 1][character->xPos + 1] < minDistance)
-	{
-	  minDistance = dungeon->distanceMap[character->yPos + 1][character->xPos + 1];
-
-	  character->yPos = character->yPos + 1;
-	  character->xPos = character->xPos + 1;
-	}
-
-      if(dungeon->distanceMap[character->yPos + 1][character->xPos] < minDistance)
-	{
-	  minDistance = dungeon->distanceMap[character->yPos + 1][character->xPos];
-
-	  character->yPos = character->yPos + 1;
-	  character->xPos = character->xPos;
-	}
-
-      if(dungeon->distanceMap[character->yPos + 1][character->xPos - 1] < minDistance)
-	{
-	  minDistance = dungeon->distanceMap[character->yPos + 1][character->xPos - 1];
-
-	  character->yPos = character->yPos + 1;
-	  character->xPos = character->xPos - 1;
-	}
-
-      if(dungeon->distanceMap[character->yPos][character->xPos - 1] < minDistance)
-	{
-	  minDistance = dungeon->distanceMap[character->yPos][character->xPos - 1];
-
-	  character->yPos = character->yPos;
-	  character->xPos = character->xPos - 1;
-	}
-
-      if(dungeon->distanceMap[character->yPos -1][character->xPos - 1] < minDistance)
-	{
-	  minDistance = dungeon->distanceMap[character->yPos - 1][character->xPos - 1];
-
-	  character->yPos = character->yPos - 1;
-	  character->xPos = character->xPos - 1;
-	}
-    }
-
-  return 0;
-}
-
-int new_character_queue(int numMonsters, characterQueue_t *characterQueue, dungeon_t *dungeon)
-{
-  monster_t monster;
-  character_t character;
-  int i, xPos, yPos;
-  characterQueue->characterQueue[0].nextTurn = 0;
-  characterQueue->size = 1;
-
-  xPos = (rand() % 79) + 1;
-  yPos = (rand() % 20) + 1;
-
-  //printf("Determine xPos and yPos\n");
-  while(dungeon->dungeonArray[yPos][xPos].hardness != 0 && dungeon->dungeonArray[yPos][xPos].symbol != '.')
-    {
-      //printf("Finding new xPos and yPos\n");
-      xPos = (rand() % 79) + 1;
-      yPos = (rand() % 20) + 1;
-
-      //printf("xPos: %d yPos: %d\n", xPos, yPos);
-    }
-  characterQueue->characterQueue[0].xPos = xPos;
-  characterQueue->characterQueue[0].yPos = yPos;
-
-  //printf("Placing monsters\n");
-  for(i = 0; i < numMonsters; i++)
-    {
-      //printf("Determining monster traits\n");
-      monster.traits = determine_traits();
-
-      //printf("Determined traits\n");
-      //character.hero = NULL;
-      character.monster = monster;
-      character.dead = 0;
-
-      //printf("Monster symbol\n");
-      switch(monster.traits){
-      case 0:
-	character.symbol = '0';
-	break;
-
-      case 1:
-	character.symbol = '1';
-	break;
-
-      case 2:
-	character.symbol = '2';
-	break;
-
-      case 3:
-	character.symbol = '3';
-	break;
-
-      case 4:
-	character.symbol = '4';
-	break;
-
-      case 5:
-	character.symbol = '5';
-	break;
-
-      case 6:
-	character.symbol = '6';
-	break;
-
-      case 7:
-	character.symbol = '7';
-	break;
-
-      case 8:
-	character.symbol = '8';
-	break;
-
-      case 9:
-	character.symbol = '9';
-	break;
-
-      case 10:
-	character.symbol = 'a';
-	break;
-
-      case 11:
-	character.symbol = 'b';
-	break;
-
-      case 12:
-	character.symbol = 'c';
-	break;
-
-      case 13:
-	character.symbol = 'd';
-	break;
-
-      case 14:
-	character.symbol = 'e';
-	break;
-
-      case 15:
-	character.symbol = 'f';
-	break;
-      }
-
-      //printf("Monster speed\n");
-      character.speed = (rand() % 16) + 5;
-
-      xPos = (rand() % 79) + 1;
-      yPos = (rand() % 20) + 1;
-
-      //printf("Determine xPos and yPos\n");
-      while(dungeon->dungeonArray[yPos][xPos].hardness != 0 && dungeon->dungeonArray[yPos][xPos].symbol != '.')
-	{
-	  //printf("Finding new xPos and yPos\n");
-	  xPos = (rand() % 79) + 1;
-	  yPos = (rand() % 20) + 1;
-
-	  //printf("xPos: %d yPos: %d\n", xPos, yPos);
-	}
-
-      character.xPos = xPos;
-      character.yPos = yPos;
-      character.nextTurn = 0;
-
-      //printf("Placing character in characterQueue\n");
-      characterQueue->characterQueue[characterQueue->size] = character;
-      characterQueue->size++;
-    }
-
-  return 0;
-}
-
-int view_monster_list(characterQueue_t *characterQueue, dungeon_t *dungeon)
-{
-  int ch, i, xRelative, yRelative, endWindow, startNum;
-
-  //Create a new window with height of 10, width of 40, and at row 5 col 20
-  WINDOW *monsterWindow = newwin(5, 40, 5, 20);
-
-  keypad(monsterWindow, TRUE);
-  scrollok(monsterWindow, TRUE);
-
-  //Refresh window
-  wrefresh(monsterWindow);
-  refresh();
-
-  if(characterQueue-> size <= 5)
-    {
-      endWindow = characterQueue->size - 1;
-    }
-  else
-    {
-      endWindow = 5;
-    }
-
-  startNum = 1;
-
-  while(1)
-  {
-    for(i = startNum; i <= endWindow; i++)
-      {
-	//Finding the x and y position of the monster relative to the hero
-	xRelative = characterQueue->characterQueue[0].xPos - characterQueue->characterQueue[i].xPos;
-	yRelative = characterQueue->characterQueue[0].yPos - characterQueue->characterQueue[i].yPos;
-
-	//If the monster is south and east of the hero
-	if(xRelative < 0 && yRelative < 0)
-	  {
-	    xRelative = characterQueue->characterQueue[i].xPos - characterQueue->characterQueue[0].xPos;
-	    yRelative = characterQueue->characterQueue[i].yPos - characterQueue->characterQueue[0].yPos;
-
-	    mvwprintw(monsterWindow, i - startNum, 0, "A %c is %d units East and %d units South", characterQueue->characterQueue[i].symbol, xRelative, yRelative);
-	  }
-
-	//If the monster is south and west of the hero
-	else if(xRelative > 0 && yRelative < 0)
-	  {
-	    yRelative = characterQueue->characterQueue[i].yPos - characterQueue->characterQueue[0].yPos;
-
-	    mvwprintw(monsterWindow, i - startNum, 0, "A %c is %d units West and %d units South", characterQueue->characterQueue[i].symbol, xRelative, yRelative);
-	  }
-
-	//If the monster is east of the hero
-	else if(xRelative < 0 && yRelative == 0)
-	  {
-	    xRelative = characterQueue->characterQueue[i].xPos - characterQueue->characterQueue[0].xPos;
-
-	    mvwprintw(monsterWindow, i - startNum, 0, "A %c is %d units East", characterQueue->characterQueue[i].symbol, xRelative);
-	  }
-
-	//If the monster is west of the hero
-	else if(xRelative > 0 && yRelative == 0)
-	  {
-	    mvwprintw(monsterWindow, i - startNum, 0, "A %c is %d units West", characterQueue->characterQueue[i].symbol, xRelative);
-	  }
-
-	//If the monster is north and east of the hero
-	else if(xRelative < 0 && yRelative > 0)
-	  {
-	    xRelative = characterQueue->characterQueue[i].xPos - characterQueue->characterQueue[0].xPos;
-
-	    mvwprintw(monsterWindow, i - startNum, 0, "A %c is %d units East and %d units North", characterQueue->characterQueue[i].symbol, xRelative, yRelative);
-	  }
-
-	//If the monster is north and west of the hero
-	else if(xRelative > 0 && yRelative > 0)
-	  {
-	    mvwprintw(monsterWindow, i - startNum, 0, "A %c is %d units West and %d units North", characterQueue->characterQueue[i].symbol, xRelative, yRelative);
-	  }
-
-	//If the monster is south of the hero
-	else if(xRelative == 0 && yRelative < 0)
-	  {
-	    yRelative = characterQueue->characterQueue[i].yPos - characterQueue->characterQueue[0].yPos;
-
-	    mvwprintw(monsterWindow, i - startNum, 0, "A %c is %d units South", characterQueue->characterQueue[i].symbol, yRelative);
-	  }
-
-	//If the monster is north of the hero
-	else if(xRelative == 0 && yRelative > 0)
-	  {
-	    mvwprintw(monsterWindow, i - startNum, 0, "A %c is %d units North", characterQueue->characterQueue[i].symbol, yRelative);
-	  }
-      }
-
-    wrefresh(monsterWindow);
-    refresh();
-    ch = wgetch(monsterWindow);
-    //ch = getch();
-    
-    switch (ch) {
-      //If the user wants to scroll up
-      case 259:
-	if(startNum > 1)
-	  {
-	    wclear(monsterWindow);
-	    startNum--;
-	    endWindow--;
-	    wscrl(monsterWindow, -1);
-	  }
-        break;
-
-      //If the user wants to scroll down
-      case 258:
-	if(endWindow < characterQueue->size - 1)
-	  {
-	    wclear(monsterWindow);
-	    startNum++;
-	    endWindow++;
-	    wscrl(monsterWindow, 1);
-	  }
-        break;
-
-      //If the user wants to exit
-      case 27:
-	wrefresh(monsterWindow);
-        delwin(monsterWindow);
-	print_dungeon(dungeon, characterQueue);
-	refresh();
-        return 0;
-    }
-    refresh();
-    wrefresh(monsterWindow);
-  }
-}
-
-int place_staircase(dungeon_t *dungeon)
-{
-  int xPos, yPos;
-
-  xPos = rand() % 80;
-  yPos = rand() % 21;
-
-  while(dungeon->dungeonArray[yPos][xPos].hardness != 0)
-  {
-    xPos = rand() % 80;
-    yPos = rand() % 21;
   }
 
-  dungeon->dungeonArray[yPos][xPos].symbol = '>';
+  /* The semantic, which is 6 bytes, 0-5 */
+  fwrite(DUNGEON_SAVE_SEMANTIC, 1, sizeof (DUNGEON_SAVE_SEMANTIC) - 1, f);
 
-  xPos = rand() % 80;
-  yPos = rand() % 21;
+  /* The version, 4 bytes, 6-9 */
+  be32 = htobe32(DUNGEON_SAVE_VERSION);
+  fwrite(&be32, sizeof (be32), 1, f);
 
-  while(dungeon->dungeonArray[yPos][xPos].hardness != 0)
-  {
-    xPos = rand() % 80;
-    yPos = rand() % 21;
-  }
+  /* The size of the file, 4 bytes, 10-13 */
+  be32 = htobe32(calculate_dungeon_size(d));
+  fwrite(&be32, sizeof (be32), 1, f);
 
-  dungeon->dungeonArray[yPos][xPos].symbol = '<';
+  /* The dungeon map, 1680 bytes, 14-1693 */
+  write_dungeon_map(d, f);
+
+  /* And the rooms, num_rooms * 4 bytes, 1694-end */
+  write_rooms(d, f);
+
+  fclose(f);
 
   return 0;
 }
 
-int main(int argc, char *argv[])
+int read_dungeon_map(dungeon_t *d, FILE *f)
 {
-  srand(time(NULL));
+  uint32_t x, y;
 
-  dungeon_t dungeon;
-  characterQueue_t characterQueue;
-  int gameOver, turnNum, numMon, i, ch;
-
-  gameOver = 0;
-  turnNum = 0;
-  numMon = 10;
-
-  //Initializes the window
-  initscr();
-  raw();
-  noecho();
-  curs_set(0);
-  keypad(stdscr, TRUE);
-
-  //If there are no save or load arguments, just work normally
-  if(argc != 2 && argc != 3 && argc != 4 && argc != 5)
-    {
-      dungeon = build_dungeon();
-    }
-
-  //Else, test if the correct arguments are provided
-  else if(argc == 2)
-    {
-        if(argv[1][0] == '-'&& argv[1][1] == '-')
-	  {
-	    if(argv[1][2] == 's')
-	      {
-		dungeon = build_dungeon();
-		save_dungeon(dungeon);
-	      }
-
-	    else if(argv[1][2] == 'l')
-	      {
-		dungeon = load_dungeon();
-	      }
-
-	    else
-	      {
-		fprintf(stderr, "Wrong parameter.\n");
-		return -1;
-	      }
-	  }
-
-	else
-	  {
-	    fprintf(stderr, "Incorrect argument.\n");
-	    return -1;
-	  }
-    }
-
-  else if(argc == 3)
-    {
-      if(argv[1][0] == '-' && argv[1][1] == '-' && argv[2][0] == '-' && argv[2][1] == '-')
-	{
-	  if(argv[1][2] == 's')
-	    {
-	      if(argv[2][2] == 'l')
-		{
-		  dungeon = load_dungeon();
-		  save_dungeon(dungeon);
-		}
-
-	      else
-		{
-		  fprintf(stderr, "Incorrect argument.\n");
-		  return -1;
-		}
-	    }
-
-	  else if(argv[1][2] == 'l')
-	    {
-	      if(argv[2][2] == 's')
-		{
-		  dungeon = load_dungeon();
-		  save_dungeon(dungeon);
-		}
-
-	      else
-		{
-		  fprintf(stderr, "Incorrect argument.\n");
-		  return -1;
-		}
-	    }
-
-	  else
-	    {
-	      fprintf(stderr, "Incorrect argument.\n");
-	      return -1;
-	    }
-	}
-
-      else if(argv[1][0] == '-' && argv[1][1] == '-' && argv[1][2] == 'n')
-	{
-	  numMon = atoi(argv[2]);
-	  dungeon = build_dungeon();
-	}
-
-      else
-	{
-	  fprintf(stderr, "Incorrect argument.\n");
-	  return -1;
-	}
-    }
-
-  else if(argc == 4)
-    {
-      if(argv[1][0] == '-' && argv[1][1] == '-' && argv[2][0] == '-' && argv[2][1] == '-')
-	{
-	  if(argv[1][2] == 'l')
-	    {
-	      if(argv[2][2] == 'n')
-		{
-		  dungeon = load_dungeon();
-		  numMon = atoi(argv[3]);
-		}
-	      else
-		{
-		  fprintf(stderr, "Incorrect argument.\n");
-		  return -1;
-		}
-	    }
-
-	  else if(argv[1][2] == 's')
-	    {
-	      if(argv[2][2] == 'n')
-		{
-		  dungeon = build_dungeon();
-		  save_dungeon(dungeon);
-		  numMon = atoi(argv[3]);
-		}
-
-	      else
-		{
-		  fprintf(stderr, "Incorrect argument.\n");
-		  return -1;
-		}
-	    }
-
-	  else
-	    {
-	      fprintf(stderr, "Incorrect argument.\n");
-	      return -1;
-	    }
-	}
-
-	else if(argv[1][0] == '-' && argv[1][1] == '-' && argv[3][0] == '-' && argv[3][1] == '-' && argv[1][2] == 'n')
-	  {
-	    numMon = atoi(argv[2]);
-
-	    if(argv[3][2] == 'l')
-	      {
-		dungeon = load_dungeon();
-	      }
-
-	    else if(argv[3][2] == 's')
-	      {
-		dungeon = build_dungeon();
-		save_dungeon(dungeon);
-	      }
-
-	    else
-	      {
-		fprintf(stderr, "Incorrect argument.\n");
-		return -1;
-	      }
-	  }
-
-	else
-	  {
-	    fprintf(stderr, "Incorrect argument.\n");
-	    return -1;
-	  }
-    }
-  //If there are all three arguments, it tests to see if they are formatted correctly, then runs both save, load, and placing monsters
-  else
-    {
-      if(argv[1][0] == '-'&& argv[1][1] == '-' && argv[2][0] == '-' && argv[2][1] == '-' && argv[3][0] == '-' && argv[3][1] == '-')
-	  {
-	    numMon = atoi(argv[4]);
-	    dungeon = load_dungeon();
-	    save_dungeon(dungeon);
-	  }
-
-      else if(argv[1][0] == '-' && argv[1][1] == '-' && argv[2][0] == '-' && argv[2][1] == '-' && argv[4][0] == '-' && argv[4][1] == '-')
-	{
-	  numMon = atoi(argv[3]);
-	  dungeon = load_dungeon();
-	  save_dungeon(dungeon);
-	}
-
-      else if(argv[1][0] == '-' && argv[1][1] == '-' && argv[3][0] == '-' && argv[3][1] == '-' && argv[4][0] == '-' && argv[4][1] == '-')
-	{
-	  numMon = atoi(argv[2]);
-	  dungeon = load_dungeon();
-	  save_dungeon(dungeon);
-	}
-
-      else
-	{
-	  fprintf(stderr, "Wrong parameter.\n");
-	  return -1;
-	}
-    }
-
-  weight_dungeon(&dungeon);
-
-  init_character_queue(numMon, &characterQueue, &dungeon);
-
-  //printf("Doing full distance graph\n");
-
-  full_distance_graph(&dungeon, &characterQueue.characterQueue[0]);
-
-  //printf("Doing rooms distance graph\n");
-  rooms_distance_graph(&dungeon, &characterQueue.characterQueue[0]);
-
-  while(gameOver == 0)
-    {
-
-      print_dungeon(&dungeon, &characterQueue);
-      turnNum = move_character(&dungeon, &characterQueue, turnNum);
-
-      if(turnNum == -1)
-      {
-        printw("Sorry that you had to leave, didn't know our hero was a quitter\n");
-	free(dungeon.roomArray);
-	free(characterQueue.characterQueue);
-	getch();
-	endwin();
-        return 0;
+  for (y = 0; y < DUNGEON_Y; y++) {
+    for (x = 0; x < DUNGEON_X; x++) {
+      fread(&d->hardness[y][x], sizeof (d->hardness[y][x]), 1, f);
+      if (d->hardness[y][x] == 0) {
+        /* Mark it as a corridor.  We can't recognize room cells until *
+         * after we've read the room array, which we haven't done yet. */
+        d->map[y][x] = ter_floor_hall;
+      } else if (d->hardness[y][x] == 255) {
+        d->map[y][x] = ter_wall_immutable;
+      } else {
+        d->map[y][x] = ter_wall;
       }
-      if(turnNum == -2 || turnNum == -3)
-      {
-        turnNum = 0;
-        dungeon = build_dungeon();
-        new_character_queue(numMon, &characterQueue, &dungeon);
-      }
-      weight_dungeon(&dungeon);
-      full_distance_graph(&dungeon, &characterQueue.characterQueue[0]);
-      rooms_distance_graph(&dungeon, &characterQueue.characterQueue[0]);
-      gameOver = check_win_condition(&characterQueue);
-      refresh();
     }
+  }
 
-  if(gameOver == -1)
-    {
-      printf("You Lost! press any button to continue\n");
-      ch = getch();
-      endwin();
-    }
-
-  else
-    {
-      printf("You Won! Press any button to continue\n");
-      ch = getch();
-      endwin();
-    };
-
-
-  free(dungeon.roomArray);
-  free(characterQueue.characterQueue);
 
   return 0;
+}
+
+int read_rooms(dungeon_t *d, FILE *f)
+{
+  uint32_t i;
+  uint32_t x, y;
+  uint8_t p;
+
+  for (i = 0; i < d->num_rooms; i++) {
+    fread(&p, 1, 1, f);
+    d->rooms[i].position[dim_y] = p;
+    fread(&p, 1, 1, f);
+    d->rooms[i].position[dim_x] = p;
+    fread(&p, 1, 1, f);
+    d->rooms[i].size[dim_y] = p;
+    fread(&p, 1, 1, f);
+    d->rooms[i].size[dim_x] = p;
+
+    if (d->rooms[i].size[dim_x] < 1             ||
+        d->rooms[i].size[dim_y] < 1             ||
+        d->rooms[i].size[dim_x] > DUNGEON_X - 1 ||
+        d->rooms[i].size[dim_y] > DUNGEON_X - 1) {
+      fprintf(stderr, "Invalid room size in restored dungeon.\n");
+
+      exit(-1);
+    }
+
+    if (d->rooms[i].position[dim_x] < 1                                       ||
+        d->rooms[i].position[dim_y] < 1                                       ||
+        d->rooms[i].position[dim_x] > DUNGEON_X - 1                           ||
+        d->rooms[i].position[dim_y] > DUNGEON_Y - 1                           ||
+        d->rooms[i].position[dim_x] + d->rooms[i].size[dim_x] > DUNGEON_X - 1 ||
+        d->rooms[i].position[dim_x] + d->rooms[i].size[dim_x] < 0             ||
+        d->rooms[i].position[dim_y] + d->rooms[i].size[dim_y] > DUNGEON_Y - 1 ||
+        d->rooms[i].position[dim_y] + d->rooms[i].size[dim_y] < 0)             {
+      fprintf(stderr, "Invalid room position in restored dungeon.\n");
+
+      exit(-1);
+    }
+        
+
+    /* After reading each room, we need to reconstruct them in the dungeon. */
+    for (y = d->rooms[i].position[dim_y];
+         y < d->rooms[i].position[dim_y] + d->rooms[i].size[dim_y];
+         y++) {
+      for (x = d->rooms[i].position[dim_x];
+           x < d->rooms[i].position[dim_x] + d->rooms[i].size[dim_x];
+           x++) {
+        mapxy(x, y) = ter_floor_room;
+      }
+    }
+  }
+
+  return 0;
+}
+
+int calculate_num_rooms(uint32_t dungeon_bytes)
+{
+  return ((dungeon_bytes -
+          (20 /* The semantic, version, and size */       +
+           (DUNGEON_X * DUNGEON_Y) /* The hardnesses */)) /
+          4 /* Four bytes per room */);
+}
+
+int read_dungeon(dungeon_t *d, char *file)
+{
+  char semantic[sizeof (DUNGEON_SAVE_SEMANTIC)];
+  uint32_t be32;
+  FILE *f;
+  char *home;
+  size_t len;
+  char *filename;
+  struct stat buf;
+
+  if (!file) {
+    if (!(home = getenv("HOME"))) {
+      fprintf(stderr, "\"HOME\" is undefined.  Using working directory.\n");
+      home = ".";
+    }
+
+    len = (strlen(home) + strlen(SAVE_DIR) + strlen(DUNGEON_SAVE_FILE) +
+           1 /* The NULL terminator */                                 +
+           2 /* The slashes */);
+
+    filename = malloc(len * sizeof (*filename));
+    sprintf(filename, "%s/%s/%s", home, SAVE_DIR, DUNGEON_SAVE_FILE);
+
+    if (!(f = fopen(filename, "r"))) {
+      perror(filename);
+      free(filename);
+      exit(-1);
+    }
+
+    if (stat(filename, &buf)) {
+      perror(filename);
+      exit(-1);
+    }
+
+    free(filename);
+  } else {
+    if (!(f = fopen(file, "r"))) {
+      perror(file);
+      exit(-1);
+    }
+    if (stat(file, &buf)) {
+      perror(file);
+      exit(-1);
+    }
+  }
+
+  d->num_rooms = 0;
+
+  fread(semantic, sizeof (DUNGEON_SAVE_SEMANTIC) - 1, 1, f);
+  semantic[sizeof (DUNGEON_SAVE_SEMANTIC) - 1] = '\0';
+  if (strncmp(semantic, DUNGEON_SAVE_SEMANTIC,
+	      sizeof (DUNGEON_SAVE_SEMANTIC) - 1)) {
+    fprintf(stderr, "Not an RLG327 save file.\n");
+    exit(-1);
+  }
+  fread(&be32, sizeof (be32), 1, f);
+  if (be32toh(be32) != 0) { /* Since we expect zero, be32toh() is a no-op. */
+    fprintf(stderr, "File version mismatch.\n");
+    exit(-1);
+  }
+  fread(&be32, sizeof (be32), 1, f);
+  if (buf.st_size != be32toh(be32)) {
+    fprintf(stderr, "File size mismatch.\n");
+    exit(-1);
+  }
+  read_dungeon_map(d, f);
+  d->num_rooms = calculate_num_rooms(buf.st_size);
+  d->rooms = malloc(sizeof (*d->rooms) * d->num_rooms);
+  read_rooms(d, f);
+
+  fclose(f);
+
+  return 0;
+}
+
+int read_pgm(dungeon_t *d, char *pgm)
+{
+  FILE *f;
+  char s[80];
+  uint8_t gm[DUNGEON_Y - 2][DUNGEON_X - 2];
+  uint32_t x, y;
+  uint32_t i;
+  char size[8]; /* Big enough to hold two 3-digit values with a space between. */
+
+  if (!(f = fopen(pgm, "r"))) {
+    perror(pgm);
+    exit(-1);
+  }
+
+  if (!fgets(s, 80, f) || strncmp(s, "P5", 2)) {
+    fprintf(stderr, "Expected P5\n");
+    exit(-1);
+  }
+  if (!fgets(s, 80, f) || s[0] != '#') {
+    fprintf(stderr, "Expected comment\n");
+    exit(-1);
+  }
+  snprintf(size, 8, "%d %d", DUNGEON_X - 2, DUNGEON_Y - 2);
+  if (!fgets(s, 80, f) || strncmp(s, size, 5)) {
+    fprintf(stderr, "Expected %s\n", size);
+    exit(-1);
+  }
+  if (!fgets(s, 80, f) || strncmp(s, "255", 2)) {
+    fprintf(stderr, "Expected 255\n");
+    exit(-1);
+  }
+
+  fread(gm, 1, (DUNGEON_X - 2) * (DUNGEON_Y - 2), f);
+
+  fclose(f);
+
+  /* In our gray map, treat black (0) as corridor, white (255) as room, *
+   * all other values as a hardness.  For simplicity, treat every white *
+   * cell as its own room, so we have to count white after reading the  *
+   * image in order to allocate the room array.                         */
+  for (d->num_rooms = 0, y = 0; y < DUNGEON_Y - 2; y++) {
+    for (x = 0; x < DUNGEON_X - 2; x++) {
+      if (!gm[y][x]) {
+        d->num_rooms++;
+      }
+    }
+  }
+  d->rooms = malloc(sizeof (*d->rooms) * d->num_rooms);
+
+  for (i = 0, y = 0; y < DUNGEON_Y - 2; y++) {
+    for (x = 0; x < DUNGEON_X - 2; x++) {
+      if (!gm[y][x]) {
+        d->rooms[i].position[dim_x] = x + 1;
+        d->rooms[i].position[dim_y] = y + 1;
+        d->rooms[i].size[dim_x] = 1;
+        d->rooms[i].size[dim_y] = 1;
+        i++;
+        d->map[y + 1][x + 1] = ter_floor_room;
+        d->hardness[y + 1][x + 1] = 0;
+      } else if (gm[y][x] == 255) {
+        d->map[y + 1][x + 1] = ter_floor_hall;
+        d->hardness[y + 1][x + 1] = 0;
+      } else {
+        d->map[y + 1][x + 1] = ter_wall;
+        d->hardness[y + 1][x + 1] = gm[y][x];
+      }
+    }
+  }
+
+  for (x = 0; x < DUNGEON_X; x++) {
+    d->map[0][x] = ter_wall_immutable;
+    d->hardness[0][x] = 255;
+    d->map[DUNGEON_Y - 1][x] = ter_wall_immutable;
+    d->hardness[DUNGEON_Y - 1][x] = 255;
+  }
+  for (y = 1; y < DUNGEON_Y - 1; y++) {
+    d->map[y][0] = ter_wall_immutable;
+    d->hardness[y][0] = 255;
+    d->map[y][DUNGEON_X - 1] = ter_wall_immutable;
+    d->hardness[y][DUNGEON_X - 1] = 255;
+  }
+
+  return 0;
+}
+
+void new_dungeon(dungeon_t *d)
+{
+  uint32_t sequence_number;
+
+  sequence_number = d->character_sequence_number;
+
+  delete_dungeon(d);
+
+  init_dungeon(d);
+  gen_dungeon(d);
+  d->character_sequence_number = sequence_number;
+
+  place_pc(d);
+  d->character[d->pc.position[dim_y]][d->pc.position[dim_x]] = &d->pc;
+
+  gen_monsters(d);
 }
