@@ -1,11 +1,19 @@
 #ifndef PATH_H
 # define PATH_H
 
-# define HARDNESS_PER_TURN 85
+# ifdef __cplusplus
+extern "C"{
+# endif
 
-typedef struct dungeon dungeon_t;
+	# define HARDNESS_PER_TURN 85
 
-void dijkstra(dungeon_t *d);
-void dijkstra_tunnel(dungeon_t *d);
+	typedef struct dungeon dungeon_t;
+
+	void dijkstra(dungeon_t *d);
+	void dijkstra_tunnel(dungeon_t *d);
+
+# ifdef __cplusplus
+}
+# endif
 
 #endif

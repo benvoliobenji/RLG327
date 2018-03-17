@@ -9,15 +9,12 @@
 void character_delete(void *v)
 {
   /* The PC is never malloc()ed anymore, do don't attempt to free it here. */
-  character_t *c;
+  character c;
 
   if (v) {
     c = v;
 
-    if (c->npc) {
-      npc_delete(c->npc);
-      free(c);
-    }
+	delete c;
   }
 }
 
@@ -105,4 +102,46 @@ uint32_t can_see(dungeon_t *d, character_t *voyeur, character_t *exhibitionist)
   }
 
   return 1;
+}
+
+char get_symbol(const character &c){
+	return c.symbol;
+}
+
+int set_symbol(character &c, char symbol){
+	c.symbol = symbol;
+	return 1;
+}
+
+int *get_position(const character &c){
+	return c.position;
+}
+
+int set_position(character &c, int xPos, int yPos){
+	c.position[dim_x] = xPos;
+	c.position[dim_y] = yPos;
+	return 1;
+}
+
+int get_speed(const character &c){
+	return c.speed;
+}
+
+int set_speed(character &c, int speed){
+	c.speed = speed;
+	return 1;
+}
+
+int get_life(const character &c){
+	return c.alive;
+}
+
+int set_life(character &c, int life){
+	if(life > 1 || life < 0){
+		return -1;
+	}
+	else{
+		c.alive = life;
+		return 1;
+	}
 }

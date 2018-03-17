@@ -5,6 +5,22 @@
 
 # include "dims.h"
 
+# include "character.h"
+
+typedef uint32_t npc_characteristics_t;
+
+# ifdef __cplusplus
+class npc : public character {
+  npc_characteristics_t characteristics;
+  uint32_t have_seen_pc;
+  pair_t pc_last_known_position;
+};
+
+extern "C" {
+# else
+typedef void npc;
+# endif
+
 # define NPC_SMART         0x00000001
 # define NPC_TELEPATH      0x00000002
 # define NPC_TUNNEL        0x00000004
@@ -42,19 +58,36 @@
   ((character)->npc->characteristics & NPC_##bit)
 
 typedef struct dungeon dungeon_t;
-typedef struct character character_t;
-typedef uint32_t npc_characteristics_t;
-
-typedef struct npc {
-  npc_characteristics_t characteristics;
-  uint32_t have_seen_pc;
-  pair_t pc_last_known_position;
-
-} npc_t;
 
 void gen_monsters(dungeon_t *d);
-void npc_delete(npc_t *n);
-void npc_next_pos(dungeon_t *d, character_t *c, pair_t next);
+void npc_delete(npc *n);
+void npc_next_pos_rand_tunnel(dungeon_t *d, npc *npc, pair_t next);
+void npc_next_pos_rand(dungeon_t *d, npc *npc, pair_t next);
+void npc_next_pos_line_of_sight(dungeon_t *d, npc *npc, pair_t next);
+void npc_next_pos_line_of_sight_tunnel(dungeon_t *d, npc *npc, pair_t next);
+void npc_next_pos_gradient(dungeon_t *d, npc *npc, pair_t next);
+static void npc_next_pos_00(dungeon_t *d, npc *npc, pair_t next);
+static void npc_next_pos_01(dungeon_t *d, npc *npc, pair_t next);
+static void npc_next_pos_02(dungeon_t *d, npc *npc, pair_t next);
+static void npc_next_pos_03(dungeon_t *d, npc *npc, pair_t next);
+static void npc_next_pos_04(dungeon_t *d, npc *npc, pair_t next);
+static void npc_next_pos_05(dungeon_t *d, npc *npc, pair_t next);
+static void npc_next_pos_06(dungeon_t *d, npc *npc, pair_t next);
+static void npc_next_pos_07(dungeon_t *d, npc *npc, pair_t next);
+static void npc_next_pos_08(dungeon_t *d, npc *npc, pair_t next);
+static void npc_next_pos_09(dungeon_t *d, npc *npc, pair_t next);
+static void npc_next_pos_0a(dungeon_t *d, npc *npc, pair_t next);
+static void npc_next_pos_0b(dungeon_t *d, npc *npc, pair_t next);
+static void npc_next_pos_0c(dungeon_t *d, npc *npc, pair_t next);
+static void npc_next_pos_0d(dungeon_t *d, npc *npc, pair_t next);
+static void npc_next_pos_0e(dungeon_t *d, npc *npc, pair_t next);
+static void npc_next_pos_0f(dungeon_t *d, npc *npc, pair_t next);
+void npc_next_pos(dungeon_t *d, npc *npc, pair_t next);
+
 uint32_t dungeon_has_npcs(dungeon_t *d);
+
+# ifdef __cplusplus
+}
+#endif
 
 #endif
