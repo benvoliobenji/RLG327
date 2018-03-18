@@ -227,15 +227,16 @@ int main(int argc, char *argv[])
     gen_dungeon(&d);
   }
 
+  d.fog = 0;
   config_pc(&d);
   gen_monsters(&d);
 
-  io_display(&d);
+  io_determine_display(&d);
   io_queue_message("Seed is %u.", seed);
   while (pc_is_alive(&d) && dungeon_has_npcs(&d) && !d.quit) {
     do_moves(&d);
   }
-  io_display(&d);
+  io_determine_display(&d);
 
   io_reset_terminal();
 

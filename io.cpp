@@ -158,8 +158,8 @@ void io_display_hardness(dungeon_t *d)
 
 static int compare_monster_distance(const void *v1, const void *v2)
 {
-  const character_t *const *c1 = v1;
-  const character_t *const *c2 = v2;
+  const character *const *c1 = v1;
+  const character *const *c2 = v2;
 
   return (dungeon->pc_distance[(*c1)->position[dim_y]][(*c1)->position[dim_x]] -
           dungeon->pc_distance[(*c2)->position[dim_y]][(*c2)->position[dim_x]]);
@@ -167,7 +167,7 @@ static int compare_monster_distance(const void *v1, const void *v2)
 
 static character_t *io_nearest_visible_monster(dungeon_t *d)
 {
-  character_t **c, *n;
+  character **c, *n;
   uint32_t x, y, count, i;
 
   c = malloc(d->num_monsters * sizeof (*c));
@@ -200,7 +200,7 @@ static character_t *io_nearest_visible_monster(dungeon_t *d)
 void io_display(dungeon_t *d)
 {
   uint32_t y, x;
-  character_t *c;
+  character *c;
 
   clear();
   for (y = 0; y < 21; y++) {
@@ -432,7 +432,7 @@ static void io_list_monsters(dungeon_t *d)
   free(c);
 
   /* And redraw the dungeon */
-  io_display(d);
+  io_determine_display(d);
 }
 
 void io_handle_input(dungeon_t *d)
@@ -516,7 +516,7 @@ void io_handle_input(dungeon_t *d)
     case 's':
       /* New command.  Return to normal display after displaying some   *
        * special screen.                                                */
-      io_display(d);
+      io_determine_display(d);
       fail_code = 1;
       break;
     case 'L':
@@ -531,6 +531,11 @@ void io_handle_input(dungeon_t *d)
       io_list_monsters(d);
       fail_code = 1;
       break;
+	case 'f':
+		d->fog++
+		io_determine_display(d);
+		fail_code = 1;
+		break;
     case 'q':
       /* Demonstrate use of the message queue.  You can use this for *
        * printf()-style debugging (though gdb is probably a better   *
@@ -566,4 +571,80 @@ void io_handle_input(dungeon_t *d)
       fail_code = 1;
     }
   } while (fail_code);
+}
+
+//An added intermediate step in order to determine which map to use
+void io_determine_display(dungeon_t *d)
+{
+	if(d->fog % 2 == 1) {
+		io_display(d);
+	}
+	else {
+		io_fog_display(d->pc, d);
+	}
+}
+
+
+//Almost the exact same as io_display only using the pc's memory instead of the map
+void io_fog_display(pc *pc, dungeon_t *d) {
+  uint32_t y, x;
+  character *c;
+
+  clear();
+  for (y = 0; y < 21; y++) {
+    for (x = 0; x < 80; x++) {
+      if (d->character[y][x]) {
+        mvaddch(y + 1, x, d->character[y][x]->symbol);
+      } else {
+        switch (pc->memory[y][x]) {
+        case ter_wall:
+        case ter_wall_immutable:
+          mvaddch(y + 1, x, ' ');
+          break;
+        case ter_floor:
+        case ter_floor_room:
+          mvaddch(y + 1, x, '.');
+          break;
+        case ter_floor_hall:
+          mvaddch(y + 1, x, '#');
+          break;
+        case ter_debug:
+          mvaddch(y + 1, x, '*');
+          break;
+        case ter_stairs_up:
+          mvaddch(y + 1, x, '<');
+          break;
+        case ter_stairs_down:
+          mvaddch(y + 1, x, '>');
+          break;
+        default:
+ /* Use zero as an error symbol, since it stands out somewhat, and it's *
+  * not otherwise used.                                                 */
+          mvaddch(y + 1, x, '0');
+        }
+      }
+    }
+  }
+
+  mvprintw(23, 1, "PC position is (%2d,%2d).",
+           d->pc.position[dim_x], d->pc.position[dim_y]);
+  mvprintw(22, 1, "%d known %s.", d->num_monsters,
+           d->num_monsters > 1 ? "monsters" : "monster");
+  if ((c = io_nearest_visible_monster(d))) {
+    mvprintw(22, 30, "Nearest visible monster: %c at %d %c by %d %c.",
+             c->symbol,
+             abs(c->position[dim_y] - d->pc.position[dim_y]),
+             ((c->position[dim_y] - d->pc.position[dim_y]) <= 0 ?
+              'N' : 'S'),
+             abs(c->position[dim_x] - d->pc.position[dim_x]),
+             ((c->position[dim_x] - d->pc.position[dim_x]) <= 0 ?
+              'E' : 'W'));
+  } else {
+    mvprintw(22, 30, "Nearest visible monster: NONE.");
+  }
+           
+
+  io_print_message_queue(0, 0);
+
+  refresh();
 }

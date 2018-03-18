@@ -620,6 +620,8 @@ int gen_dungeon(dungeon_t *d)
   connect_rooms(d);
   place_stairs(d);
 
+  d->fog = 0;
+
   return 0;
 }
 
