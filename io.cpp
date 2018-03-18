@@ -536,6 +536,9 @@ void io_handle_input(dungeon_t *d)
 		io_determine_display(d);
 		fail_code = 1;
 		break;
+	case 't':
+		io_teleport(d);
+		fail_code = 1;
     case 'q':
       /* Demonstrate use of the message queue.  You can use this for *
        * printf()-style debugging (though gdb is probably a better   *
@@ -647,4 +650,65 @@ void io_fog_display(pc *pc, dungeon_t *d) {
   io_print_message_queue(0, 0);
 
   refresh();
+}
+
+void io_teleport(dungeon_t *d) {
+	do {
+		switch (key = getch()) {
+			case '7':
+			case 'y':
+			case KEY_HOME:
+				fail_code = move_pc(d, 7);
+				fail_code = 1;
+				break;
+			case '8':
+			case 'k':
+			case KEY_UP:
+				fail_code = move_pc(d, 8);
+				fail_code = 1;
+				break;
+			case '9':
+			case 'u':
+			case KEY_PPAGE:
+				fail_code = move_pc(d, 9);
+				fail_code = 1;
+				break;
+			case '6':
+			case 'l':
+			case KEY_RIGHT:
+				fail_code = move_pc(d, 6);
+				fail_code = 1;
+				break;
+			case '3':
+			case 'n':
+			case KEY_NPAGE:
+				fail_code = move_pc(d, 3);
+				fail_code = 1;
+				break;
+			case '2':
+			case 'j':
+			case KEY_DOWN:
+				fail_code = move_pc(d, 2);
+				fail_code = 1;
+				break;
+			case '1':
+			case 'b':
+			case KEY_END:
+				fail_code = move_pc(d, 1);
+				fail_code = 1;
+				break;
+			case '4':
+			case 'h':
+			case KEY_LEFT:
+				fail_code = move_pc(d, 4);
+				fail_code = 1;
+				break;
+			case '5':
+			case ' ':
+			case '.':
+			case KEY_B2:
+				fail_code = 1;
+				break;
+		}
+	} while(fail_code);
 }
