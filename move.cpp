@@ -15,7 +15,7 @@
 #include "event.h"
 #include "io.h"
 
-void do_combat(dungeon_t *d, character_t *atk, character_t *def)
+void do_combat(dungeon_t *d, character *atk, character *def)
 {
   int can_see_atk, can_see_def;
   char *organs[] = {
@@ -99,7 +99,7 @@ void do_combat(dungeon_t *d, character_t *atk, character_t *def)
   }
 }
 
-void move_character(dungeon_t *d, character_t *c, pair_t next)
+void move_character(dungeon_t *d, character *c, pair_t next)
 {
   if (charpair(next) &&
       ((next[dim_y] != c->position[dim_y]) ||
@@ -118,7 +118,7 @@ void move_character(dungeon_t *d, character_t *c, pair_t next)
 void do_moves(dungeon_t *d)
 {
   pair_t next;
-  character_t *c;
+  character *c;
   event_t *e;
 
   /* Remove the PC when it is PC turn.  Replace on next call.  This allows *
@@ -161,7 +161,8 @@ void do_moves(dungeon_t *d)
       continue;
     }
 
-    npc_next_pos(d, c, next);
+	//This needs to be down casted in order to be considered an npc for the function
+    npc_next_pos(d, (npc *) c, next);
     move_character(d, c, next);
 
     heap_insert(&d->events, update_event(d, e, 1000 / c->speed));
@@ -180,7 +181,7 @@ void do_moves(dungeon_t *d)
   }
 }
 
-void dir_nearest_wall(dungeon_t *d, character_t *c, pair_t dir)
+void dir_nearest_wall(dungeon_t *d, character *c, pair_t dir)
 {
   dir[dim_x] = dir[dim_y] = 0;
 
@@ -192,7 +193,7 @@ void dir_nearest_wall(dungeon_t *d, character_t *c, pair_t dir)
   }
 }
 
-uint32_t against_wall(dungeon_t *d, character_t *c)
+uint32_t against_wall(dungeon_t *d, character *c)
 {
   return ((mapxy(c->position[dim_x] - 1,
                  c->position[dim_y]    ) == ter_wall_immutable) ||
@@ -204,7 +205,7 @@ uint32_t against_wall(dungeon_t *d, character_t *c)
                  c->position[dim_y] + 1) == ter_wall_immutable));
 }
 
-uint32_t in_corner(dungeon_t *d, character_t *c)
+uint32_t in_corner(dungeon_t *d, character *c)
 {
   uint32_t num_immutable;
 
