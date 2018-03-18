@@ -652,7 +652,9 @@ void io_fog_display(pc *pc, dungeon_t *d) {
   refresh();
 }
 
+//Acts similar to the inputs of the normal movement, but changes the character to be '*'. 't' places the pc and 'r' randomly places the pc
 void io_teleport(dungeon_t *d) {
+	d->pc.symbol = '*';
 	do {
 		switch (key = getch()) {
 			case '7':
@@ -709,6 +711,24 @@ void io_teleport(dungeon_t *d) {
 			case KEY_B2:
 				fail_code = 1;
 				break;
+			case 'f':
+				d->fog++;
+				fail_code = 1;
+			case 'r':
+				d->pc.symbol = '@';
+				io_teleport_pc(d);
+				fail_code = 0;
+				break;
+			case 't':
+				d->pc.symbol = '@';
+				fail_code = 0;
+				break;
 		}
+
+		io_determine_display(d);
+		refresh();
+
 	} while(fail_code);
+
+	refresh();
 }
