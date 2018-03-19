@@ -637,6 +637,7 @@ void init_dungeon(dungeon_t *d)
   empty_dungeon(d);
   memset(&d->events, 0, sizeof (d->events));
   heap_init(&d->events, compare_events, event_delete);
+  reset_memory(d->pc);
 }
 
 int write_dungeon_map(dungeon_t *d, FILE *f)
@@ -997,6 +998,9 @@ void new_dungeon(dungeon_t *d)
 
   place_pc(d);
   d->character[d->pc.position[dim_y]][d->pc.position[dim_x]] = &d->pc;
+
+  reset_memory(d->pc);
+  update_memory(d, d->pc);
 
   gen_monsters(d);
 }

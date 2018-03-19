@@ -27,6 +27,7 @@ typedef void pc;
 	uint32_t pc_in_room(dungeon_t *d, uint32_t room);
 
 	int update_memory(dungeon_t *d, pc *pc);
+	int reset_memory(pc *pc);
 
 # ifdef __cplusplus
 }

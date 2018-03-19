@@ -36,17 +36,15 @@ void config_pc(dungeon_t *d)
   //d->pc.symbol = '@';
   pc = new pc;
 
+  d->pc = pc;
+
   set_symbol(d.pc, '@');
 
-  for(int i = 0; i < 21; i++) {
-  	  for(int j = 0; j < 80; j++) {
-	  	  d->pc->memory[i][j] = ter_wall;
-	  }
-  }
+  reset_memory(d->pc);
 
   place_pc(d);
 
-  update_memory(d, d)
+  update_memory(d, d->pc);
 
   //d->pc.speed = PC_SPEED;
   set_speed(d.pc, PC_SPEED);
@@ -218,4 +216,12 @@ int update_memory(dungeon_t *d, pc *pc) {
 	}
 
 	return 1;
+}
+
+int reset_memory(pc *pc) {
+	for(int y = 0; y < DUNGEON_Y; y++) {
+		for(int x = 0; x < DUNGEON_X; x++) {
+			pc->memory[y][x] = ter_wall;
+		}
+	}
 }
