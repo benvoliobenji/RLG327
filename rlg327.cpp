@@ -3,6 +3,12 @@
 #include <sys/time.h>
 #include <unistd.h>
 
+#include<string>
+#include<iostream>
+#include<fstream>
+#include<vector>
+#include<cstring>
+
 /* Very slow seed: 686846853 */
 
 #include "dungeon.h"
@@ -10,6 +16,25 @@
 #include "npc.h"
 #include "move.h"
 #include "io.h"
+
+//A very basic monster class to keep track of parsing
+class monster {
+	public:
+		string name;
+		string description;
+		string color;
+		int speedBase;
+		int speedDice;
+		int speedSides;
+		vector<string> abilities;
+		int hpBase;
+		int hpDice;
+		int hpSides;
+		int adBase;
+		int adDice;
+		int adSides;
+		int rarity;
+}
 
 const char *victory =
   "\n                                       o\n"
@@ -291,6 +316,124 @@ int main(int argc, char *argv[])
   delete_dungeon(&d);
   */
 
+  string npcDescription = std::getenv("HOME");
+  npcDescription = npcDescription + "/.rlg327/monster_desc";
+
+  std::cout << npcDescription << endl;
+
+  ifstream file;
+
+  file.open(npcDescription);
+
+  if(!file) {
+  	  std::cout << "Could not open monster_desc" << endl;
+	  return -1;
+  }
+
+  string monsterTitle;
+  string beginMonster;
+
+  std::getline(file, monsterTitle);
+
+  if(monsterTitle != "RLG327 MONSTER DESCRIPTION 1") {
+  	  std::cout << "File does not have correct header: " << monsterTitle << endl;
+	  return -2;
+  }
+
+  while(!file.eof()) {
+
+	while(isblank(file.peek())) {
+		file.get();
+	}
+
+	std::getline(file, beginMonster);
+
+	if(beginMonster == "BEGIN MONSTER")
+	{
+		monster m = new monster;
+
+		string category;
+		string descriptionRead;
+
+		while(category != "END") {
+			file >> category;
+
+			switch(category) {
+
+				case: "NAME"
+					while(file.peek() != '\n') {
+						monster.name += file.get();
+					}
+					break;
+
+				case: "DESC"
+					std::getline(file, descriptionRead);
+					while(descriptionRead != ".") {
+						monster.description += descriptionRead;
+						std::getline(file, descriptionRead);
+					}
+
+					if(monster.description.size() > 78) {
+						std::cout << "Description too long" << endl;
+						return -3;
+					}
+
+					break;
+
+				case: "COLOR"
+					file >> monster.color;
+					break;
+
+				case: "SPEED"
+					string data;
+
+					//Elminating space before the dice stats
+					file.get();
+
+					file >> data;
+
+					stringstream dataString(data);
+					string stringData;
+
+					getline(dataString, stringData, "+");
+					monster.speedBase = atoi(stringData.c_str());
+
+					getline(dataString, stringData, "d");
+					monster.speedDice = atoi(stringData.c_str());
+
+					getline(dataString, stringData, '\n');
+					monster.speedSides = atoi(stringData.c_str());
+
+					break;
+
+				case: "ABIL"
+					string abilityLine;
+
+					string ability;
+
+					while(file.peek() != '\n') {
+						abilityLine += file.get();
+					}
+
+					while(abilityLine >> ability) {
+						monster.abilities.push_back(ability);
+					}
+
+					
+
+					
+
+
+
+
+			}
+		}
+	}
+	
+  
+  }
+
+  file.close();
 
   return 0;
 }
