@@ -1,35 +1,67 @@
 #ifndef CHARACTER_H
-#define CHARACTER_H
+# define CHARACTER_H
 
-#include <stdio.h>
-#include <stdlib.h>
+# include <stdint.h>
 
-#include "hero.h"
-#include "monster.h"
+# include "dims.h"
+
+typedef enum kill_type {
+  kill_direct,
+  kill_avenged,
+  num_kill_types
+} kill_type_t;
+
+# ifdef __cplusplus
 
 
-typedef struct character{
+class character
+{
+ public:
   char symbol;
-  int xPos;
-  int yPos;
-  int speed;
-  hero_t hero;
-  monster_t monster;
-  int nextTurn;
-  int dead;
-}character_t;
+  pair_t position;
+  int32_t speed;
+  uint32_t alive;
+  /* Characters use to have a next_turn for the move queue.  Now that it is *
+   * an event queue, there's no need for that here.  Instead it's in the    *
+   * event.  Similarly, sequence_number was introduced in order to ensure   *
+   * that the queue remains stable.  Also no longer necessary here, but in  *
+   * this case, we'll keep it, because it provides a bit of interesting     *
+   * metadata: locally, how old is this character; and globally, how many   *
+   * characters have been created by the game.                              */
+  uint32_t sequence_number;
+  /*
+  npc_t *npc;
+  pc_t *pc;
+  */
+  uint32_t kills[num_kill_types];
+};
 
-typedef struct characterQueue{
-  int size;
-  character_t *characterQueue;
-}characterQueue_t;
+extern "C"{
+# else
+typedef void character;
+# endif
 
-/*
-int init_character_queue(int numMonsters, characterQueue_t *characterQueue, dungeon_t *dungeon);
+typedef struct dungeon dungeon_t;
 
+int32_t compare_characters_by_next_turn(const void *character1,
+                                        const void *character2);
+uint32_t can_see(dungeon_t *d, character *voyeur, character *exhibitionist);
+void character_delete(character *c);
 
-int move_character(dungeon_t *dungeon, characterQueue_t *characterQueue, int turnNumber);
+char get_symbol(const character &c);
+int set_symbol(character &c, char symbol);
 
-int check_win_condition(characterQueue_t *characterQueue);
-*/
+int *get_position(const character &c);
+int set_position(character &c, int xPos, int yPos);
+
+int get_speed(const character &c);
+int set_speed(character &c, int speed);
+
+int get_life(const character &c);
+int set_life(character &c, int life);
+
+# ifdef __cplusplus
+}
+# endif
+
 #endif
