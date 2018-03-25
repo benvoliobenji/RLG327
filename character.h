@@ -11,11 +11,7 @@ typedef enum kill_type {
   num_kill_types
 } kill_type_t;
 
-# ifdef __cplusplus
-
-
-class character
-{
+class character {
  public:
   char symbol;
   pair_t position;
@@ -29,39 +25,31 @@ class character
    * metadata: locally, how old is this character; and globally, how many   *
    * characters have been created by the game.                              */
   uint32_t sequence_number;
-  /*
-  npc_t *npc;
-  pc_t *pc;
-  */
   uint32_t kills[num_kill_types];
 };
 
-extern "C"{
-# else
-typedef void character;
-# endif
-
-typedef struct dungeon dungeon_t;
+class dungeon;
 
 int32_t compare_characters_by_next_turn(const void *character1,
                                         const void *character2);
-uint32_t can_see(dungeon_t *d, character *voyeur, character *exhibitionist);
+uint32_t can_see(dungeon *d, pair_t voyeur, pair_t exhibitionist,
+                 int is_pc, int learn);
 void character_delete(character *c);
-
-char get_symbol(const character &c);
-int set_symbol(character &c, char symbol);
-
-int *get_position(const character &c);
-int set_position(character &c, int xPos, int yPos);
-
-int get_speed(const character &c);
-int set_speed(character &c, int speed);
-
-int get_life(const character &c);
-int set_life(character &c, int life);
-
-# ifdef __cplusplus
-}
-# endif
+int16_t *character_get_pos(character *c);
+int16_t character_get_y(const character *c);
+int16_t character_set_y(character *c, int16_t y);
+int16_t character_get_x(const character *c);
+int16_t character_set_x(character *c, int16_t x);
+uint32_t character_get_next_turn(const character *c);
+void character_die(character *c);
+int character_is_alive(const character *c);
+void character_next_turn(character *c);
+void character_reset_turn(character *c);
+char character_get_symbol(const character *c);
+uint32_t character_get_speed(const character *c);
+uint32_t character_get_dkills(const character *c);
+uint32_t character_get_ikills(const character *c);
+uint32_t character_increment_dkills(character *c);
+uint32_t character_increment_ikills(character *c, uint32_t k);
 
 #endif

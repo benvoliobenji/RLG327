@@ -175,7 +175,6 @@ extern "C" {
 # ifdef __cplusplus
 }
 # endif
-
 # else /* NIAGARA */
 
 # define structdup(s) \

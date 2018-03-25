@@ -1,13 +1,7 @@
-/*
 #include <stdio.h>
 #include <string.h>
-*/
 #include <sys/time.h>
 #include <unistd.h>
-#include <iostream>
-#include <fstream>
-#include <cstdio>
-#include <cstdlib>
 
 /* Very slow seed: 686846853 */
 
@@ -85,13 +79,14 @@ int main(int argc, char *argv[])
   dungeon_t d;
   time_t seed;
   struct timeval tv;
-  uint32_t i;
+  int32_t i;
   uint32_t do_load, do_save, do_seed, do_image, do_save_seed,
            do_save_image, do_place_pc;
   uint32_t long_arg;
   char *save_file;
   char *load_file;
   char *pgm_file;
+
   memset(&d, 0, sizeof (d));
 
   /* Default behavior: Seed with the time, generate a new dungeon, *
@@ -117,7 +112,7 @@ int main(int argc, char *argv[])
    * interesting test dungeons for you.                             */
  
  if (argc > 1) {
-   for (i = 1, long_arg = 0; i < (uint32_t) argc; i++, long_arg = 0) {
+    for (i = 1, long_arg = 0; i < argc; i++, long_arg = 0) {
       if (argv[i][0] == '-') { /* All switches start with a dash */
         if (argv[i][1] == '-') {
           argv[i]++;    /* Make the argument have a single dash so we can */
@@ -127,7 +122,7 @@ int main(int argc, char *argv[])
         case 'r':
           if ((!long_arg && argv[i][2]) ||
               (long_arg && strcmp(argv[i], "-rand")) ||
-              (uint32_t) argc < ++i + 1 /* No more arguments */ ||
+              argc < ++i + 1 /* No more arguments */ ||
               !sscanf(argv[i], "%lu", &seed) /* Argument is not an integer */) {
             usage(argv[0]);
           }
@@ -136,7 +131,7 @@ int main(int argc, char *argv[])
         case 'n':
           if ((!long_arg && argv[i][2]) ||
               (long_arg && strcmp(argv[i], "-nummon")) ||
-              (uint32_t) argc < ++i + 1 /* No more arguments */ ||
+              argc < ++i + 1 /* No more arguments */ ||
               !sscanf(argv[i], "%hu", &d.max_monsters)) {
             usage(argv[0]);
           }
@@ -147,7 +142,7 @@ int main(int argc, char *argv[])
             usage(argv[0]);
           }
           do_load = 1;
-          if (((uint32_t) argc > i + 1) && argv[i + 1][0] != '-') {
+          if ((argc > i + 1) && argv[i + 1][0] != '-') {
             /* There is another argument, and it's not a switch, so *
              * we'll treat it as a save file and try to load it.    */
             load_file = argv[++i];
@@ -159,7 +154,7 @@ int main(int argc, char *argv[])
             usage(argv[0]);
           }
           do_save = 1;
-          if (((uint32_t) argc > i + 1) && argv[i + 1][0] != '-') {
+          if ((argc > i + 1) && argv[i + 1][0] != '-') {
             /* There is another argument, and it's not a switch, so *
              * we'll save to it.  If it is "seed", we'll save to    *
 	     * <the current seed>.rlg327.  If it is "image", we'll  *
@@ -181,7 +176,7 @@ int main(int argc, char *argv[])
             usage(argv[0]);
           }
           do_image = 1;
-          if (((uint32_t) argc > i + 1) && argv[i + 1][0] != '-') {
+          if ((argc > i + 1) && argv[i + 1][0] != '-') {
             /* There is another argument, and it's not a switch, so *
              * we'll treat it as a save file and try to load it.    */
             pgm_file = argv[++i];
@@ -194,10 +189,10 @@ int main(int argc, char *argv[])
               (long_arg && strcmp(argv[i], "-pc"))) {
             usage(argv[0]);
           }
-          if ((d.pc->position[dim_y] = atoi(argv[++i])) < 1 ||
-              d.pc->position[dim_y] > DUNGEON_Y - 2         ||
-              (d.pc->position[dim_x] = atoi(argv[++i])) < 1 ||
-              d.pc->position[dim_x] > DUNGEON_X - 2)         {
+          if ((d.PC->position[dim_y] = atoi(argv[++i])) < 1 ||
+              d.PC->position[dim_y] > DUNGEON_Y - 2         ||
+              (d.PC->position[dim_x] = atoi(argv[++i])) < 1 ||
+              d.PC->position[dim_x] > DUNGEON_X - 2)         {
             fprintf(stderr, "Invalid PC position.\n");
             usage(argv[0]);
           }
@@ -232,25 +227,22 @@ int main(int argc, char *argv[])
     gen_dungeon(&d);
   }
 
-  d.fog = 0;
   config_pc(&d);
   gen_monsters(&d);
 
-  //io_display(&d);
-  io_determine_display(&d);
+  io_display(&d);
   io_queue_message("Seed is %u.", seed);
   while (pc_is_alive(&d) && dungeon_has_npcs(&d) && !d.quit) {
     do_moves(&d);
   }
-  //io_display(&d);
-  io_determine_display(&d);
+  io_display(&d);
 
   io_reset_terminal();
 
   if (do_save) {
     if (do_save_seed) {
        /* 10 bytes for number, please dot, extention and null terminator. */
-      save_file = (char *)malloc(18);
+      save_file = (char *) malloc(18);
       sprintf(save_file, "%ld.rlg327", seed);
     }
     if (do_save_image) {
@@ -275,7 +267,14 @@ int main(int argc, char *argv[])
   printf("You defended your life in the face of %u deadly beasts.\n"
          "You avenged the cruel and untimely murders of %u "
          "peaceful dungeon residents.\n",
-         d.pc->kills[kill_direct], d.pc->kills[kill_avenged]);
+         d.PC->kills[kill_direct], d.PC->kills[kill_avenged]);
+
+  if (pc_is_alive(&d)) {
+    /* If the PC is dead, it's in the move heap and will get automatically *
+     * deleted when the heap destructs.  In that case, we can't call       *
+     * delete_pc(), because it will lead to a double delete.               */
+    character_delete(d.PC);
+  }
 
   delete_dungeon(&d);
 
