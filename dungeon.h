@@ -1,21 +1,6 @@
 #ifndef DUNGEON_H
 # define DUNGEON_H
 
-# ifdef __cplusplus
-
-class pc;
-
-extern "C"{
-# else
-typedef void pc;
-
-# endif
-
-# include "heap.h"
-# include "macros.h"
-# include "dims.h"
-# include "character.h"
-
 #define DUNGEON_X              80
 #define DUNGEON_Y              21
 #define MIN_ROOMS              5
@@ -50,6 +35,17 @@ typedef enum __attribute__ ((__packed__)) terrain_type {
 	ter_stairs_up,
 	ter_stairs_down
 } terrain_type_t;
+
+# ifdef __cplusplus
+
+extern "C"{
+# endif
+
+# include "heap.h"
+# include "macros.h"
+# include "dims.h"
+# include "character.h"
+# include "pc.h"
 
 typedef struct room {
 	pair_t position;

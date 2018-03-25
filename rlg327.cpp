@@ -1,7 +1,13 @@
+/*
 #include <stdio.h>
 #include <string.h>
+*/
 #include <sys/time.h>
 #include <unistd.h>
+#include <iostream>
+#include <fstream>
+#include <cstdio>
+#include <cstdlib>
 
 /* Very slow seed: 686846853 */
 
@@ -86,7 +92,6 @@ int main(int argc, char *argv[])
   char *save_file;
   char *load_file;
   char *pgm_file;
-
   memset(&d, 0, sizeof (d));
 
   /* Default behavior: Seed with the time, generate a new dungeon, *
@@ -112,7 +117,7 @@ int main(int argc, char *argv[])
    * interesting test dungeons for you.                             */
  
  if (argc > 1) {
-    for (i = 1, long_arg = 0; i < argc; i++, long_arg = 0) {
+   for (i = 1, long_arg = 0; i < (uint32_t) argc; i++, long_arg = 0) {
       if (argv[i][0] == '-') { /* All switches start with a dash */
         if (argv[i][1] == '-') {
           argv[i]++;    /* Make the argument have a single dash so we can */
@@ -122,7 +127,7 @@ int main(int argc, char *argv[])
         case 'r':
           if ((!long_arg && argv[i][2]) ||
               (long_arg && strcmp(argv[i], "-rand")) ||
-              argc < ++i + 1 /* No more arguments */ ||
+              (uint32_t) argc < ++i + 1 /* No more arguments */ ||
               !sscanf(argv[i], "%lu", &seed) /* Argument is not an integer */) {
             usage(argv[0]);
           }
@@ -131,7 +136,7 @@ int main(int argc, char *argv[])
         case 'n':
           if ((!long_arg && argv[i][2]) ||
               (long_arg && strcmp(argv[i], "-nummon")) ||
-              argc < ++i + 1 /* No more arguments */ ||
+              (uint32_t) argc < ++i + 1 /* No more arguments */ ||
               !sscanf(argv[i], "%hu", &d.max_monsters)) {
             usage(argv[0]);
           }
@@ -142,7 +147,7 @@ int main(int argc, char *argv[])
             usage(argv[0]);
           }
           do_load = 1;
-          if ((argc > i + 1) && argv[i + 1][0] != '-') {
+          if (((uint32_t) argc > i + 1) && argv[i + 1][0] != '-') {
             /* There is another argument, and it's not a switch, so *
              * we'll treat it as a save file and try to load it.    */
             load_file = argv[++i];
@@ -154,7 +159,7 @@ int main(int argc, char *argv[])
             usage(argv[0]);
           }
           do_save = 1;
-          if ((argc > i + 1) && argv[i + 1][0] != '-') {
+          if (((uint32_t) argc > i + 1) && argv[i + 1][0] != '-') {
             /* There is another argument, and it's not a switch, so *
              * we'll save to it.  If it is "seed", we'll save to    *
 	     * <the current seed>.rlg327.  If it is "image", we'll  *
@@ -176,7 +181,7 @@ int main(int argc, char *argv[])
             usage(argv[0]);
           }
           do_image = 1;
-          if ((argc > i + 1) && argv[i + 1][0] != '-') {
+          if (((uint32_t) argc > i + 1) && argv[i + 1][0] != '-') {
             /* There is another argument, and it's not a switch, so *
              * we'll treat it as a save file and try to load it.    */
             pgm_file = argv[++i];
@@ -189,10 +194,10 @@ int main(int argc, char *argv[])
               (long_arg && strcmp(argv[i], "-pc"))) {
             usage(argv[0]);
           }
-          if ((d.pc.position[dim_y] = atoi(argv[++i])) < 1 ||
-              d.pc.position[dim_y] > DUNGEON_Y - 2         ||
-              (d.pc.position[dim_x] = atoi(argv[++i])) < 1 ||
-              d.pc.position[dim_x] > DUNGEON_X - 2)         {
+          if ((d.pc->position[dim_y] = atoi(argv[++i])) < 1 ||
+              d.pc->position[dim_y] > DUNGEON_Y - 2         ||
+              (d.pc->position[dim_x] = atoi(argv[++i])) < 1 ||
+              d.pc->position[dim_x] > DUNGEON_X - 2)         {
             fprintf(stderr, "Invalid PC position.\n");
             usage(argv[0]);
           }
@@ -231,11 +236,13 @@ int main(int argc, char *argv[])
   config_pc(&d);
   gen_monsters(&d);
 
+  //io_display(&d);
   io_determine_display(&d);
   io_queue_message("Seed is %u.", seed);
   while (pc_is_alive(&d) && dungeon_has_npcs(&d) && !d.quit) {
     do_moves(&d);
   }
+  //io_display(&d);
   io_determine_display(&d);
 
   io_reset_terminal();
@@ -243,7 +250,7 @@ int main(int argc, char *argv[])
   if (do_save) {
     if (do_save_seed) {
        /* 10 bytes for number, please dot, extention and null terminator. */
-      save_file = malloc(18);
+      save_file = (char *)malloc(18);
       sprintf(save_file, "%ld.rlg327", seed);
     }
     if (do_save_image) {
@@ -252,7 +259,7 @@ int main(int argc, char *argv[])
 	do_save_image = 0;
       } else {
 	/* Extension of 3 characters longer than image extension + null. */
-	save_file = malloc(strlen(pgm_file) + 4);
+	save_file = (char *) malloc(strlen(pgm_file) + 4);
 	strcpy(save_file, pgm_file);
 	strcpy(strchr(save_file, '.') + 1, "rlg327");
       }
@@ -268,9 +275,7 @@ int main(int argc, char *argv[])
   printf("You defended your life in the face of %u deadly beasts.\n"
          "You avenged the cruel and untimely murders of %u "
          "peaceful dungeon residents.\n",
-         d.pc.kills[kill_direct], d.pc.kills[kill_avenged]);
-
-  pc_delete(d.pc);
+         d.pc->kills[kill_direct], d.pc->kills[kill_avenged]);
 
   delete_dungeon(&d);
 

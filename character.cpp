@@ -2,23 +2,19 @@
 
 #include "character.h"
 #include "heap.h"
+/*
 #include "npc.h"
 #include "pc.h"
+*/
 #include "dungeon.h"
 
-void character_delete(void *v)
+void character_delete(character *c)
 {
   /* The PC is never malloc()ed anymore, do don't attempt to free it here. */
-  character c;
-
-  if (v) {
-    c = v;
-
-	delete c;
-  }
+  delete c;
 }
 
-uint32_t can_see(dungeon_t *d, character_t *voyeur, character_t *exhibitionist)
+uint32_t can_see(dungeon_t *d, character *voyeur, character *exhibitionist)
 {
   /* Application of Bresenham's Line Drawing Algorithm.  If we can draw *
    * a line from v to e without intersecting any walls, then v can see  *
@@ -114,7 +110,7 @@ int set_symbol(character &c, char symbol){
 }
 
 int *get_position(const character &c){
-	return c.position;
+  return (int*) c.position;
 }
 
 int set_position(character &c, int xPos, int yPos){

@@ -2,6 +2,7 @@
 # define PATH_H
 
 # ifdef __cplusplus
+
 extern "C"{
 # endif
 

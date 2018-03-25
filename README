@@ -1,0 +1,16 @@
+For this assignment, I moved to the professor's code to speed up testing.
+Converting to c++ wasn't too terrible for most of the code. I mainly needed
+to encapsulate the old header files into an extern C portion. Outside of that,
+I set up character, pc, and npc to be classes where pc and npc inherit from
+character. I created accessor and modifier methods to the classes, but since
+I set all the variable to public, there was no real reason to create those
+methods in the first place. For the fog of war, I created an array within
+the pc class called memory, which would hold what the pc sees and remembers.
+When the player presses f, it determines which map to use by incrementing by one
+and modulo 2. For the teleport, I changed the symbol of the pc to be the debug
+symbol. When the player moves, its the same as normal movement, it just doesn't
+place the player back into the heap and process the other moves. For random, I
+just used the method already created in the professor's code. Every time the
+pc moves I call update_memory() which will update the memory map in the pc. When
+a new dungeon is created, I call reset_memory() to wipe the memory of the old 
+dungeon from the pc's mind.

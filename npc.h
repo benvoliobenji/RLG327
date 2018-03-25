@@ -11,6 +11,7 @@ typedef uint32_t npc_characteristics_t;
 
 # ifdef __cplusplus
 class npc : public character {
+ public:
   npc_characteristics_t characteristics;
   uint32_t have_seen_pc;
   pair_t pc_last_known_position;
@@ -66,6 +67,7 @@ void npc_next_pos_rand(dungeon_t *d, npc *npc, pair_t next);
 void npc_next_pos_line_of_sight(dungeon_t *d, npc *npc, pair_t next);
 void npc_next_pos_line_of_sight_tunnel(dungeon_t *d, npc *npc, pair_t next);
 void npc_next_pos_gradient(dungeon_t *d, npc *npc, pair_t next);
+  /*
 static void npc_next_pos_00(dungeon_t *d, npc *npc, pair_t next);
 static void npc_next_pos_01(dungeon_t *d, npc *npc, pair_t next);
 static void npc_next_pos_02(dungeon_t *d, npc *npc, pair_t next);
@@ -82,6 +84,7 @@ static void npc_next_pos_0c(dungeon_t *d, npc *npc, pair_t next);
 static void npc_next_pos_0d(dungeon_t *d, npc *npc, pair_t next);
 static void npc_next_pos_0e(dungeon_t *d, npc *npc, pair_t next);
 static void npc_next_pos_0f(dungeon_t *d, npc *npc, pair_t next);
+  */
 void npc_next_pos(dungeon_t *d, npc *npc, pair_t next);
 
 uint32_t dungeon_has_npcs(dungeon_t *d);

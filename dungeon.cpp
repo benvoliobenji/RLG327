@@ -95,12 +95,12 @@ static void dijkstra_corridor(dungeon_t *d, pair_t from, pair_t to)
     }
   }
 
-  while ((p = heap_remove_min(&h))) {
+  while ((p = (corridor_path_t *) heap_remove_min(&h))) {
     p->hn = NULL;
 
     if ((p->pos[dim_y] == to[dim_y]) && p->pos[dim_x] == to[dim_x]) {
-      for (x = to[dim_x], y = to[dim_y];
-           (x != from[dim_x]) || (y != from[dim_y]);
+      for (x = (uint32_t) to[dim_x], y = (uint32_t) to[dim_y];
+           (x != (uint32_t) from[dim_x]) || (y != (uint32_t) from[dim_y]);
            p = &path[y][x], x = p->from[dim_x], y = p->from[dim_y]) {
         if (mapxy(x, y) != ter_floor_room) {
           mapxy(x, y) = ter_floor_hall;
@@ -194,12 +194,12 @@ static void dijkstra_corridor_inv(dungeon_t *d, pair_t from, pair_t to)
     }
   }
 
-  while ((p = heap_remove_min(&h))) {
+  while ((p = (corridor_path_t *) heap_remove_min(&h))) {
     p->hn = NULL;
 
     if ((p->pos[dim_y] == to[dim_y]) && p->pos[dim_x] == to[dim_x]) {
-      for (x = to[dim_x], y = to[dim_y];
-           (x != from[dim_x]) || (y != from[dim_y]);
+      for (x = (uint32_t) to[dim_x], y = (uint32_t) to[dim_y];
+           (x != (uint32_t) from[dim_x]) || (y != (uint32_t) from[dim_y]);
            p = &path[y][x], x = p->from[dim_x], y = p->from[dim_y]) {
         if (mapxy(x, y) != ter_floor_room) {
           mapxy(x, y) = ter_floor_hall;
@@ -287,8 +287,8 @@ static int create_cycle(dungeon_t *d)
   int32_t max, tmp, i, j, p, q;
   pair_t e1, e2;
 
-  for (i = max = 0; i < d->num_rooms - 1; i++) {
-    for (j = i + 1; j < d->num_rooms; j++) {
+  for (i = max = 0; i < (int32_t) d->num_rooms - 1; i++) {
+    for (j = i + 1; j < (int32_t) d->num_rooms; j++) {
       tmp = (((d->rooms[i].position[dim_x] - d->rooms[j].position[dim_x])  *
               (d->rooms[i].position[dim_x] - d->rooms[j].position[dim_x])) +
              ((d->rooms[i].position[dim_y] - d->rooms[j].position[dim_y])  *
@@ -367,9 +367,9 @@ static int smooth_hardness(dungeon_t *d)
     } while (hardness[y][x]);
     hardness[y][x] = i;
     if (i == 1) {
-      head = tail = malloc(sizeof (*tail));
+      head = tail = (queue_node *)  malloc(sizeof (*tail));
     } else {
-      tail->next = malloc(sizeof (*tail));
+      tail->next = (queue_node *) malloc(sizeof (*tail));
       tail = tail->next;
     }
     tail->next = NULL;
@@ -392,7 +392,7 @@ static int smooth_hardness(dungeon_t *d)
 
     if (x - 1 >= 0 && y - 1 >= 0 && !hardness[y - 1][x - 1]) {
       hardness[y - 1][x - 1] = i;
-      tail->next = malloc(sizeof (*tail));
+      tail->next = (queue_node *) malloc(sizeof (*tail));
       tail = tail->next;
       tail->next = NULL;
       tail->x = x - 1;
@@ -400,7 +400,7 @@ static int smooth_hardness(dungeon_t *d)
     }
     if (x - 1 >= 0 && !hardness[y][x - 1]) {
       hardness[y][x - 1] = i;
-      tail->next = malloc(sizeof (*tail));
+      tail->next = (queue_node *) malloc(sizeof (*tail));
       tail = tail->next;
       tail->next = NULL;
       tail->x = x - 1;
@@ -408,7 +408,7 @@ static int smooth_hardness(dungeon_t *d)
     }
     if (x - 1 >= 0 && y + 1 < DUNGEON_Y && !hardness[y + 1][x - 1]) {
       hardness[y + 1][x - 1] = i;
-      tail->next = malloc(sizeof (*tail));
+      tail->next = (queue_node *) malloc(sizeof (*tail));
       tail = tail->next;
       tail->next = NULL;
       tail->x = x - 1;
@@ -416,7 +416,7 @@ static int smooth_hardness(dungeon_t *d)
     }
     if (y - 1 >= 0 && !hardness[y - 1][x]) {
       hardness[y - 1][x] = i;
-      tail->next = malloc(sizeof (*tail));
+      tail->next = (queue_node *) malloc(sizeof (*tail));
       tail = tail->next;
       tail->next = NULL;
       tail->x = x;
@@ -424,7 +424,7 @@ static int smooth_hardness(dungeon_t *d)
     }
     if (y + 1 < DUNGEON_Y && !hardness[y + 1][x]) {
       hardness[y + 1][x] = i;
-      tail->next = malloc(sizeof (*tail));
+      tail->next = (queue_node *) malloc(sizeof (*tail));
       tail = tail->next;
       tail->next = NULL;
       tail->x = x;
@@ -432,7 +432,7 @@ static int smooth_hardness(dungeon_t *d)
     }
     if (x + 1 < DUNGEON_X && y - 1 >= 0 && !hardness[y - 1][x + 1]) {
       hardness[y - 1][x + 1] = i;
-      tail->next = malloc(sizeof (*tail));
+      tail->next = (queue_node *) malloc(sizeof (*tail));
       tail = tail->next;
       tail->next = NULL;
       tail->x = x + 1;
@@ -440,7 +440,7 @@ static int smooth_hardness(dungeon_t *d)
     }
     if (x + 1 < DUNGEON_X && !hardness[y][x + 1]) {
       hardness[y][x + 1] = i;
-      tail->next = malloc(sizeof (*tail));
+      tail->next = (queue_node *) malloc(sizeof (*tail));
       tail = tail->next;
       tail->next = NULL;
       tail->x = x + 1;
@@ -448,7 +448,7 @@ static int smooth_hardness(dungeon_t *d)
     }
     if (x + 1 < DUNGEON_X && y + 1 < DUNGEON_Y && !hardness[y + 1][x + 1]) {
       hardness[y + 1][x + 1] = i;
-      tail->next = malloc(sizeof (*tail));
+      tail->next = (queue_node *) malloc(sizeof (*tail));
       tail = tail->next;
       tail->next = NULL;
       tail->x = x + 1;
@@ -572,7 +572,7 @@ static int make_rooms(dungeon_t *d)
   for (i = MIN_ROOMS; i < MAX_ROOMS && rand_under(6, 8); i++)
     ;
   d->num_rooms = i;
-  d->rooms = malloc(sizeof (*d->rooms) * d->num_rooms);
+  d->rooms = (room_t *) malloc(sizeof (*d->rooms) * d->num_rooms);
 
   for (i = 0; i < d->num_rooms; i++) {
     d->rooms[i].size[dim_x] = ROOM_MIN_X;
@@ -637,7 +637,6 @@ void init_dungeon(dungeon_t *d)
   empty_dungeon(d);
   memset(&d->events, 0, sizeof (d->events));
   heap_init(&d->events, compare_events, event_delete);
-  reset_memory(d->pc);
 }
 
 int write_dungeon_map(dungeon_t *d, FILE *f)
@@ -689,16 +688,16 @@ int write_dungeon(dungeon_t *d, char *file)
   uint32_t be32;
 
   if (!file) {
-    if (!(home = getenv("HOME"))) {
+    if (!(home =  getenv("HOME"))) {
       fprintf(stderr, "\"HOME\" is undefined.  Using working directory.\n");
-      home = ".";
+      home = (char *) ".";
     }
 
     len = (strlen(home) + strlen(SAVE_DIR) + strlen(DUNGEON_SAVE_FILE) +
            1 /* The NULL terminator */                                 +
            2 /* The slashes */);
 
-    filename = malloc(len * sizeof (*filename));
+    filename = (char *) malloc(len * sizeof (*filename));
     sprintf(filename, "%s/%s/", home, SAVE_DIR);
     makedirectory(filename);
     strcat(filename, DUNGEON_SAVE_FILE);
@@ -802,11 +801,11 @@ int read_rooms(dungeon_t *d, FILE *f)
         
 
     /* After reading each room, we need to reconstruct them in the dungeon. */
-    for (y = d->rooms[i].position[dim_y];
-         y < d->rooms[i].position[dim_y] + d->rooms[i].size[dim_y];
+    for (y = (uint32_t) d->rooms[i].position[dim_y];
+         y < (uint32_t) d->rooms[i].position[dim_y] + d->rooms[i].size[dim_y];
          y++) {
-      for (x = d->rooms[i].position[dim_x];
-           x < d->rooms[i].position[dim_x] + d->rooms[i].size[dim_x];
+      for (x = (uint32_t) d->rooms[i].position[dim_x];
+           x < (uint32_t) d->rooms[i].position[dim_x] + d->rooms[i].size[dim_x];
            x++) {
         mapxy(x, y) = ter_floor_room;
       }
@@ -837,14 +836,14 @@ int read_dungeon(dungeon_t *d, char *file)
   if (!file) {
     if (!(home = getenv("HOME"))) {
       fprintf(stderr, "\"HOME\" is undefined.  Using working directory.\n");
-      home = ".";
+      home = (char *) ".";
     }
 
     len = (strlen(home) + strlen(SAVE_DIR) + strlen(DUNGEON_SAVE_FILE) +
            1 /* The NULL terminator */                                 +
            2 /* The slashes */);
 
-    filename = malloc(len * sizeof (*filename));
+    filename = (char *) malloc(len * sizeof (*filename));
     sprintf(filename, "%s/%s/%s", home, SAVE_DIR, DUNGEON_SAVE_FILE);
 
     if (!(f = fopen(filename, "r"))) {
@@ -891,7 +890,7 @@ int read_dungeon(dungeon_t *d, char *file)
   }
   read_dungeon_map(d, f);
   d->num_rooms = calculate_num_rooms(buf.st_size);
-  d->rooms = malloc(sizeof (*d->rooms) * d->num_rooms);
+  d->rooms = (room_t *)  malloc(sizeof (*d->rooms) * d->num_rooms);
   read_rooms(d, f);
 
   fclose(f);
@@ -946,7 +945,7 @@ int read_pgm(dungeon_t *d, char *pgm)
       }
     }
   }
-  d->rooms = malloc(sizeof (*d->rooms) * d->num_rooms);
+  d->rooms = (room_t *) malloc(sizeof (*d->rooms) * d->num_rooms);
 
   for (i = 0, y = 0; y < DUNGEON_Y - 2; y++) {
     for (x = 0; x < DUNGEON_X - 2; x++) {
@@ -997,7 +996,7 @@ void new_dungeon(dungeon_t *d)
   d->character_sequence_number = sequence_number;
 
   place_pc(d);
-  d->character[d->pc.position[dim_y]][d->pc.position[dim_x]] = &d->pc;
+  d->character[d->pc->position[dim_y]][d->pc->position[dim_x]] = d->pc;
 
   reset_memory(d->pc);
   update_memory(d, d->pc);

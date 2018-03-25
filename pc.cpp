@@ -8,15 +8,9 @@
 #include "move.h"
 #include "path.h"
 
-void pc_delete(pc *pc)
-{
-  delete pc;
-}
-
 uint32_t pc_is_alive(dungeon_t *d)
 {
-  //return d->pc.alive;
-  return d->pc.getlife();
+  return d->pc->alive;
 }
 
 void place_pc(dungeon_t *d)
@@ -33,12 +27,10 @@ void config_pc(dungeon_t *d)
 {
 	
   //memset(&d->pc, 0, sizeof (d->pc));
-  //d->pc.symbol = '@';
-  pc = new pc;
 
-  d->pc = pc;
+  d->pc = new pc;
 
-  set_symbol(d.pc, '@');
+  d->pc->symbol = '@';
 
   reset_memory(d->pc);
 
@@ -46,16 +38,15 @@ void config_pc(dungeon_t *d)
 
   update_memory(d, d->pc);
 
-  //d->pc.speed = PC_SPEED;
-  set_speed(d.pc, PC_SPEED);
-  //d->pc.alive = 1;
-  set_life(d.pc, 1);
+  d->pc->speed = PC_SPEED;
+  d->pc->alive = 1;
+  //set_life(d.pc, 1);
   d->pc->sequence_number = 0;
   //d->pc.pc = calloc(1, sizeof (*d->pc.pc));
   //d->pc.npc = NULL;
-  d->pc->kills[kill_direct] = d->pc.kills[kill_avenged] = 0;
+  d->pc->kills[kill_direct] = d->pc->kills[kill_avenged] = 0;
 
-  d->character[d->pc.position[dim_y]][d->pc.position[dim_x]] = &d->pc;
+  d->character[d->pc->position[dim_y]][d->pc->position[dim_x]] = d->pc;
 
   dijkstra(d);
   dijkstra_tunnel(d);
@@ -68,7 +59,7 @@ uint32_t pc_next_pos(dungeon_t *d, pair_t dir)
 
   dir[dim_y] = dir[dim_x] = 0;
 
-  if (in_corner(d, &d->pc)) {
+  if (in_corner(d, d->pc)) {
     if (!count) {
       count = 1;
     }
@@ -76,24 +67,24 @@ uint32_t pc_next_pos(dungeon_t *d, pair_t dir)
   }
 
   /* First, eat anybody standing next to us. */
-  if (charxy(d->pc.position[dim_x] - 1, d->pc.position[dim_y] - 1)) {
+  if (charxy(d->pc->position[dim_x] - 1, d->pc->position[dim_y] - 1)) {
     dir[dim_y] = -1;
     dir[dim_x] = -1;
-  } else if (charxy(d->pc.position[dim_x], d->pc.position[dim_y] - 1)) {
+  } else if (charxy(d->pc->position[dim_x], d->pc->position[dim_y] - 1)) {
     dir[dim_y] = -1;
-  } else if (charxy(d->pc.position[dim_x] + 1, d->pc.position[dim_y] - 1)) {
+  } else if (charxy(d->pc->position[dim_x] + 1, d->pc->position[dim_y] - 1)) {
     dir[dim_y] = -1;
     dir[dim_x] = 1;
-  } else if (charxy(d->pc.position[dim_x] - 1, d->pc.position[dim_y])) {
+  } else if (charxy(d->pc->position[dim_x] - 1, d->pc->position[dim_y])) {
     dir[dim_x] = -1;
-  } else if (charxy(d->pc.position[dim_x] + 1, d->pc.position[dim_y])) {
+  } else if (charxy(d->pc->position[dim_x] + 1, d->pc->position[dim_y])) {
     dir[dim_x] = 1;
-  } else if (charxy(d->pc.position[dim_x] - 1, d->pc.position[dim_y] + 1)) {
+  } else if (charxy(d->pc->position[dim_x] - 1, d->pc->position[dim_y] + 1)) {
     dir[dim_y] = 1;
     dir[dim_x] = -1;
-  } else if (charxy(d->pc.position[dim_x], d->pc.position[dim_y] + 1)) {
+  } else if (charxy(d->pc->position[dim_x], d->pc->position[dim_y] + 1)) {
     dir[dim_y] = 1;
-  } else if (charxy(d->pc.position[dim_x] + 1, d->pc.position[dim_y] + 1)) {
+  } else if (charxy(d->pc->position[dim_x] + 1, d->pc->position[dim_y] + 1)) {
     dir[dim_y] = 1;
     dir[dim_x] = 1;
   } else if (!have_seen_corner || count < 250) {
@@ -101,58 +92,58 @@ uint32_t pc_next_pos(dungeon_t *d, pair_t dir)
     if (count) {
       count++;
     }
-    if (!against_wall(d, &d->pc) && ((rand() & 0x111) == 0x111)) {
+    if (!against_wall(d, d->pc) && ((rand() & 0x111) == 0x111)) {
       dir[dim_x] = (rand() % 3) - 1;
       dir[dim_y] = (rand() % 3) - 1;
     } else {
-      dir_nearest_wall(d, &d->pc, dir);
+      dir_nearest_wall(d, d->pc, dir);
     }
   }else {
     /* And after we've been there, let's head toward the center of the map. */
-    if (!against_wall(d, &d->pc) && ((rand() & 0x111) == 0x111)) {
+    if (!against_wall(d, d->pc) && ((rand() & 0x111) == 0x111)) {
       dir[dim_x] = (rand() % 3) - 1;
       dir[dim_y] = (rand() % 3) - 1;
     } else {
-      dir[dim_x] = ((d->pc.position[dim_x] > DUNGEON_X / 2) ? -1 : 1);
-      dir[dim_y] = ((d->pc.position[dim_y] > DUNGEON_Y / 2) ? -1 : 1);
+      dir[dim_x] = ((d->pc->position[dim_x] > DUNGEON_X / 2) ? -1 : 1);
+      dir[dim_y] = ((d->pc->position[dim_y] > DUNGEON_Y / 2) ? -1 : 1);
     }
   }
 
   /* Don't move to an unoccupied location if that places us next to a monster */
-  if (!charxy(d->pc.position[dim_x] + dir[dim_x],
-              d->pc.position[dim_y] + dir[dim_y]) &&
-      ((charxy(d->pc.position[dim_x] + dir[dim_x] - 1,
-               d->pc.position[dim_y] + dir[dim_y] - 1) &&
-        (charxy(d->pc.position[dim_x] + dir[dim_x] - 1,
-                d->pc.position[dim_y] + dir[dim_y] - 1) != &d->pc)) ||
-       (charxy(d->pc.position[dim_x] + dir[dim_x] - 1,
-               d->pc.position[dim_y] + dir[dim_y]) &&
-        (charxy(d->pc.position[dim_x] + dir[dim_x] - 1,
-                d->pc.position[dim_y] + dir[dim_y]) != &d->pc)) ||
-       (charxy(d->pc.position[dim_x] + dir[dim_x] - 1,
-               d->pc.position[dim_y] + dir[dim_y] + 1) &&
-        (charxy(d->pc.position[dim_x] + dir[dim_x] - 1,
-                d->pc.position[dim_y] + dir[dim_y] + 1) != &d->pc)) ||
-       (charxy(d->pc.position[dim_x] + dir[dim_x],
-               d->pc.position[dim_y] + dir[dim_y] - 1) &&
-        (charxy(d->pc.position[dim_x] + dir[dim_x],
-                d->pc.position[dim_y] + dir[dim_y] - 1) != &d->pc)) ||
-       (charxy(d->pc.position[dim_x] + dir[dim_x],
-               d->pc.position[dim_y] + dir[dim_y] + 1) &&
-        (charxy(d->pc.position[dim_x] + dir[dim_x],
-                d->pc.position[dim_y] + dir[dim_y] + 1) != &d->pc)) ||
-       (charxy(d->pc.position[dim_x] + dir[dim_x] + 1,
-               d->pc.position[dim_y] + dir[dim_y] - 1) &&
-        (charxy(d->pc.position[dim_x] + dir[dim_x] + 1,
-                d->pc.position[dim_y] + dir[dim_y] - 1) != &d->pc)) ||
-       (charxy(d->pc.position[dim_x] + dir[dim_x] + 1,
-               d->pc.position[dim_y] + dir[dim_y]) &&
-        (charxy(d->pc.position[dim_x] + dir[dim_x] + 1,
-                d->pc.position[dim_y] + dir[dim_y]) != &d->pc)) ||
-       (charxy(d->pc.position[dim_x] + dir[dim_x] + 1,
-               d->pc.position[dim_y] + dir[dim_y] + 1) &&
-        (charxy(d->pc.position[dim_x] + dir[dim_x] + 1,
-                d->pc.position[dim_y] + dir[dim_y] + 1) != &d->pc)))) {
+  if (!charxy(d->pc->position[dim_x] + dir[dim_x],
+              d->pc->position[dim_y] + dir[dim_y]) &&
+      ((charxy(d->pc->position[dim_x] + dir[dim_x] - 1,
+               d->pc->position[dim_y] + dir[dim_y] - 1) &&
+        (charxy(d->pc->position[dim_x] + dir[dim_x] - 1,
+                d->pc->position[dim_y] + dir[dim_y] - 1) != d->pc)) ||
+       (charxy(d->pc->position[dim_x] + dir[dim_x] - 1,
+               d->pc->position[dim_y] + dir[dim_y]) &&
+        (charxy(d->pc->position[dim_x] + dir[dim_x] - 1,
+                d->pc->position[dim_y] + dir[dim_y]) != d->pc)) ||
+       (charxy(d->pc->position[dim_x] + dir[dim_x] - 1,
+               d->pc->position[dim_y] + dir[dim_y] + 1) &&
+        (charxy(d->pc->position[dim_x] + dir[dim_x] - 1,
+                d->pc->position[dim_y] + dir[dim_y] + 1) != d->pc)) ||
+       (charxy(d->pc->position[dim_x] + dir[dim_x],
+               d->pc->position[dim_y] + dir[dim_y] - 1) &&
+        (charxy(d->pc->position[dim_x] + dir[dim_x],
+                d->pc->position[dim_y] + dir[dim_y] - 1) != d->pc)) ||
+       (charxy(d->pc->position[dim_x] + dir[dim_x],
+               d->pc->position[dim_y] + dir[dim_y] + 1) &&
+        (charxy(d->pc->position[dim_x] + dir[dim_x],
+                d->pc->position[dim_y] + dir[dim_y] + 1) != d->pc)) ||
+       (charxy(d->pc->position[dim_x] + dir[dim_x] + 1,
+               d->pc->position[dim_y] + dir[dim_y] - 1) &&
+        (charxy(d->pc->position[dim_x] + dir[dim_x] + 1,
+                d->pc->position[dim_y] + dir[dim_y] - 1) != d->pc)) ||
+       (charxy(d->pc->position[dim_x] + dir[dim_x] + 1,
+               d->pc->position[dim_y] + dir[dim_y]) &&
+        (charxy(d->pc->position[dim_x] + dir[dim_x] + 1,
+                d->pc->position[dim_y] + dir[dim_y]) != d->pc)) ||
+       (charxy(d->pc->position[dim_x] + dir[dim_x] + 1,
+               d->pc->position[dim_y] + dir[dim_y] + 1) &&
+        (charxy(d->pc->position[dim_x] + dir[dim_x] + 1,
+                d->pc->position[dim_y] + dir[dim_y] + 1) != d->pc)))) {
     dir[dim_x] = dir[dim_y] = 0;
   }
 
@@ -224,4 +215,6 @@ int reset_memory(pc *pc) {
 			pc->memory[y][x] = ter_wall;
 		}
 	}
+
+	return 1;
 }

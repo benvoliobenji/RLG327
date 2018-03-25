@@ -60,7 +60,7 @@ void gen_monsters(dungeon_t *d)
     //m->npc = malloc(sizeof (*m->npc));
     m->characteristics = rand() & 0x0000000f;
     /*    m->npc->characteristics = 0xf;*/
-    m->symbol = symbol[m->npc->characteristics];
+    m->symbol = symbol[m->characteristics];
     m->have_seen_pc = 0;
     m->kills[kill_direct] = m->kills[kill_avenged] = 0;
 
@@ -332,9 +332,9 @@ void npc_next_pos_gradient(dungeon_t *d, npc *npc, pair_t next)
 static void npc_next_pos_00(dungeon_t *d, npc *npc, pair_t next)
 {
   /* not smart; not telepathic; not tunneling; not erratic */
-  if (can_see(d, npc, &d->pc)) {
-    npc->pc_last_known_position[dim_y] = d->pc.position[dim_y];
-    npc->pc_last_known_position[dim_x] = d->pc.position[dim_x];
+  if (can_see(d, npc, d->pc)) {
+    npc->pc_last_known_position[dim_y] = d->pc->position[dim_y];
+    npc->pc_last_known_position[dim_x] = d->pc->position[dim_x];
     npc_next_pos_line_of_sight(d, npc, next);
   } else {
     npc_next_pos_rand(d, npc, next);
@@ -344,9 +344,9 @@ static void npc_next_pos_00(dungeon_t *d, npc *npc, pair_t next)
 static void npc_next_pos_01(dungeon_t *d, npc *npc, pair_t next)
 {
   /*     smart; not telepathic; not tunneling; not erratic */
-  if (can_see(d, npc, &d->pc)) {
-    npc->pc_last_known_position[dim_y] = d->pc.position[dim_y];
-    npc->pc_last_known_position[dim_x] = d->pc.position[dim_x];
+  if (can_see(d, npc, d->pc)) {
+    npc->pc_last_known_position[dim_y] = d->pc->position[dim_y];
+    npc->pc_last_known_position[dim_x] = d->pc->position[dim_x];
     npc->have_seen_pc = 1;
     npc_next_pos_line_of_sight(d, npc, next);
   } else if (npc->have_seen_pc) {
@@ -362,8 +362,8 @@ static void npc_next_pos_01(dungeon_t *d, npc *npc, pair_t next)
 static void npc_next_pos_02(dungeon_t *d, npc *npc, pair_t next)
 {
   /* not smart;     telepathic; not tunneling; not erratic */
-  npc->pc_last_known_position[dim_y] = d->pc.position[dim_y];
-  npc->pc_last_known_position[dim_x] = d->pc.position[dim_x];
+  npc->pc_last_known_position[dim_y] = d->pc->position[dim_y];
+  npc->pc_last_known_position[dim_x] = d->pc->position[dim_x];
   npc_next_pos_line_of_sight(d, npc, next);
 }
 
@@ -376,9 +376,9 @@ static void npc_next_pos_03(dungeon_t *d, npc *npc, pair_t next)
 static void npc_next_pos_04(dungeon_t *d, npc *npc, pair_t next)
 {
   /* not smart; not telepathic;     tunneling; not erratic */
-  if (can_see(d, npc, &d->pc)) {
-    npc->pc_last_known_position[dim_y] = d->pc.position[dim_y];
-    npc->pc_last_known_position[dim_x] = d->pc.position[dim_x];
+  if (can_see(d, npc, d->pc)) {
+    npc->pc_last_known_position[dim_y] = d->pc->position[dim_y];
+    npc->pc_last_known_position[dim_x] = d->pc->position[dim_x];
     npc_next_pos_line_of_sight(d, npc, next);
   } else {
     npc_next_pos_rand_tunnel(d, npc, next);
@@ -388,9 +388,9 @@ static void npc_next_pos_04(dungeon_t *d, npc *npc, pair_t next)
 static void npc_next_pos_05(dungeon_t *d, npc *npc, pair_t next)
 {
   /*     smart; not telepathic;     tunneling; not erratic */
-  if (can_see(d, c, &d->pc)) {
-    npc->pc_last_known_position[dim_y] = d->pc.position[dim_y];
-    npc->pc_last_known_position[dim_x] = d->pc.position[dim_x];
+  if (can_see(d, npc, d->pc)) {
+    npc->pc_last_known_position[dim_y] = d->pc->position[dim_y];
+    npc->pc_last_known_position[dim_x] = d->pc->position[dim_x];
     npc->have_seen_pc = 1;
     npc_next_pos_line_of_sight(d, npc, next);
   } else if (npc->have_seen_pc) {
@@ -406,8 +406,8 @@ static void npc_next_pos_05(dungeon_t *d, npc *npc, pair_t next)
 static void npc_next_pos_06(dungeon_t *d, npc *npc, pair_t next)
 {
   /* not smart;     telepathic;     tunneling; not erratic */
-  npc->pc_last_known_position[dim_y] = d->pc.position[dim_y];
-  npc->pc_last_known_position[dim_x] = d->pc.position[dim_x];
+  npc->pc_last_known_position[dim_y] = d->pc->position[dim_y];
+  npc->pc_last_known_position[dim_x] = d->pc->position[dim_x];
   npc_next_pos_line_of_sight_tunnel(d, npc, next);
 }
 
@@ -522,10 +522,10 @@ void (*npc_move_func[])(dungeon_t *d, npc *npc, pair_t next) = {
 
 void npc_next_pos(dungeon_t *d, npc *npc, pair_t next)
 {
-  next[dim_y] = c->position[dim_y];
-  next[dim_x] = c->position[dim_x];
+  next[dim_y] = npc->position[dim_y];
+  next[dim_x] = npc->position[dim_x];
 
-  npc_move_func[npc->characteristics & 0x0000000f](d, c, next);
+  npc_move_func[npc->characteristics & 0x0000000f](d, npc, next);
 }
 
 uint32_t dungeon_has_npcs(dungeon_t *d)
