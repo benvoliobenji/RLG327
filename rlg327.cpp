@@ -3,11 +3,12 @@
 #include <sys/time.h>
 #include <unistd.h>
 
-#include<string>
-#include<iostream>
-#include<fstream>
-#include<vector>
-#include<cstring>
+#include <string>
+#include <iostream>
+#include <fstream>
+#include <vector>
+#include <cstring>
+#include <sstream>
 
 /* Very slow seed: 686846853 */
 
@@ -17,24 +18,26 @@
 #include "move.h"
 #include "io.h"
 
+using namespace std;
+
 //A very basic monster class to keep track of parsing
 class monster {
-	public:
-		string name;
-		string description;
-		string color;
-		int speedBase;
-		int speedDice;
-		int speedSides;
-		vector<string> abilities;
-		int hpBase;
-		int hpDice;
-		int hpSides;
-		int adBase;
-		int adDice;
-		int adSides;
-		int rarity;
-}
+public:
+  string name;
+  string description;
+  string color;
+  int speedBase;
+  int speedDice;
+  int speedSides;
+  vector<string> abilities;
+  int hpBase;
+  int hpDice;
+  int hpSides;
+  int adBase;
+  int adDice;
+  int adSides;
+  int rarity;
+};
 
 const char *victory =
   "\n                                       o\n"
@@ -151,7 +154,7 @@ int main(int argc, char *argv[])
         case 'r':
           if ((!long_arg && argv[i][2]) ||
               (long_arg && strcmp(argv[i], "-rand")) ||
-              argc < ++i + 1 *//* No more arguments */ ||
+              argc < ++i + 1 *//* No more arguments */// ||
               //!sscanf(argv[i], "%lu", &seed) /* Argument is not an integer */) {
 			  /*
             usage(argv[0]);
@@ -161,7 +164,7 @@ int main(int argc, char *argv[])
         case 'n':
           if ((!long_arg && argv[i][2]) ||
               (long_arg && strcmp(argv[i], "-nummon")) ||
-              argc < ++i + 1 *//* No more arguments */ ||
+              argc < ++i + 1 *//* No more arguments */ //||
               /*!sscanf(argv[i], "%hu", &d.max_monsters)) {
             usage(argv[0]);
           }
@@ -316,199 +319,202 @@ int main(int argc, char *argv[])
   delete_dungeon(&d);
   */
 
-  string npcDescription = std::getenv("HOME");
+  string npcDescription = getenv("HOME");
   npcDescription = npcDescription + "/.rlg327/monster_desc";
 
-  std::cout << npcDescription << endl;
+  cout << npcDescription << endl;
 
   ifstream file;
 
-  file.open(npcDescription);
+  file.open(npcDescription.c_str());
 
   if(!file) {
-  	  std::cout << "Could not open monster_desc" << endl;
-	  return -1;
+    cout << "Could not open monster_desc" << endl;
+    return -1;
   }
 
   string monsterTitle;
   string beginMonster;
 
-  std::getline(file, monsterTitle);
+  getline(file, monsterTitle);
 
   if(monsterTitle != "RLG327 MONSTER DESCRIPTION 1") {
-  	  std::cout << "File does not have correct header: " << monsterTitle << endl;
-	  return -2;
+    cout << "File does not have correct header: " << monsterTitle << endl;
+    return -2;
   }
 
   while(!file.eof()) {
 
-	while(isblank(file.peek())) {
-		file.get();
+    while(isblank(file.peek())) {
+      file.get();
+    }
+
+    getline(file, beginMonster);
+
+    if(beginMonster == "BEGIN MONSTER")
+      {
+	monster *m = new monster;
+
+	string category;
+	string descriptionRead;
+
+	int numCategories = 0;
+
+	while(category != "END") {
+	  file >> category;
+
+	  switch(category[0]) {
+
+	  case 'N': //NAME
+	    while(file.peek() != '\n') {
+	      m->name += file.get();
+	    }
+	    numCategories++;
+	    break;
+
+	  case 'D': //DESC
+	    getline(file, descriptionRead);
+	    while(descriptionRead != ".") {
+	      m->description += descriptionRead;
+	      getline(file, descriptionRead);
+	    }
+
+	    if(m->description.size() > 78) {
+	      cout << "Description too long" << endl;
+	      return -3;
+	    }
+	    numCategories++;
+	    break;
+
+	  case 'C': //COLOR
+	    file >> m->color;
+	    numCategories++;
+	    break;
+
+	  case 'S': //SPEED
+	    string data;
+
+	    //Elminating space before the dice stats
+	    file.get();
+
+	    file >> data;
+
+	    stringstream dataString(data);
+	    string stringData;
+
+	    
+	    /*
+	    getline(dataString, stringData, "+");
+	    m->speedBase = atoi(stringData.c_str());
+
+	    getline(dataString, stringData, "d");
+	    m->speedDice = atoi(stringData.c_str());
+
+	    getline(dataString, stringData, '\n');
+	    m->speedSides = atoi(stringData.c_str());
+	    */
+
+	    numCategories++;
+	    break;
+
+	  case 'A': //ABIL
+	    string abilityLine;
+
+	    string ability;
+
+	    while(file.peek() != '\n') {
+	      abilityLine += file.get();
+	    }
+
+	    while(abilityLine >> ability) {
+	      m->abilities.push_back(ability);
+	    }
+
+	    numCategories++;
+	    break;
+
+	  case 'H': //HP
+	    string data;
+
+	    //Elminating space before the dice stats
+	    file.get();
+
+	    file >> data;
+
+	    stringstream dataString(data);
+	    string stringData;
+
+	    getline(dataString, stringData, "+");
+	    m->hpBase = atoi(stringData.c_str());
+
+	    getline(dataString, stringData, "d");
+	    m->hpDice = atoi(stringData.c_str());
+
+	    getline(dataString, stringData, '\n');
+	    m->hpSides = atoi(stringData.c_str());
+
+	    numCategories++;
+	    break;
+
+	  case 'D': //DAM
+	    string data;
+
+	    //Elminating space before the dice stats
+	    file.get();
+
+	    file >> data;
+
+	    stringstream dataString(data);
+	    string stringData;
+	    
+	    getline(dataString, stringData, "+");
+	    m->adBase = atoi(stringData.c_str());
+	    
+	    getline(dataString, stringData, "d");
+	    m->adDice = atoi(stringData.c_str());
+
+	    getline(dataString, stringData, '\n');
+	    m->adSides = atoi(stringData.c_str());
+
+	    numCategories++;
+	    break;
+
+	  case 'R': //RRTY
+	    string rarity;
+
+	    file >> rarity;
+
+	    m->rarity = atoi(rarity.c_str());
+
+	    numCategories++;
+	    break;
+
+	  default:
+	    cout << "Incorrect type specifier" << endl;
+	    return -4;
+	  }
+
+	  if(numCategories == 8) {
+	    cout << m->name << endl;
+	    cout << m->description << endl;
+	    cout << m->symbol << endl;
+	    cout << m->color << endl;
+	    cout << m->speedBase << "+" << monster.speedDice << "d" << monster.speedSides << endl;
+
+	    vector<string>:: iterator abilityIterator;
+	    for(abilityIterator = m->abilities.begin(); abilityIterator != m->abilities.end(); abilityIterator++) {
+	      cout << *abilityIterator << " ";
+	    }
+	    cout << endl;
+
+	    cout << m->hpBase << "+" << m->hpDice << "d" << m->hpSides << endl;
+	    cout << m->adBase << "+" << m->adDice << "d" << m->adSides << endl;
+	    cout << m->rarity << endl;
+	  }
 	}
-
-	std::getline(file, beginMonster);
-
-	if(beginMonster == "BEGIN MONSTER")
-	{
-		monster m = new monster;
-
-		string category;
-		string descriptionRead;
-
-		int numCategories = 0;
-
-		while(category != "END") {
-			file >> category;
-
-			switch(category) {
-
-				case "NAME":
-					while(file.peek() != '\n') {
-						monster.name += file.get();
-					}
-					numCategories++;
-					break;
-
-				case "DESC":
-					std::getline(file, descriptionRead);
-					while(descriptionRead != ".") {
-						monster.description += descriptionRead;
-						std::getline(file, descriptionRead);
-					}
-
-					if(monster.description.size() > 78) {
-						std::cout << "Description too long" << endl;
-						return -3;
-					}
-					numCategories++;
-					break;
-
-				case "COLOR":
-					file >> monster.color;
-					numCategories++;
-					break;
-
-				case "SPEED":
-					string data;
-
-					//Elminating space before the dice stats
-					file.get();
-
-					file >> data;
-
-					stringstream dataString(data);
-					string stringData;
-
-					getline(dataString, stringData, "+");
-					monster.speedBase = atoi(stringData.c_str());
-
-					getline(dataString, stringData, "d");
-					monster.speedDice = atoi(stringData.c_str());
-
-					getline(dataString, stringData, '\n');
-					monster.speedSides = atoi(stringData.c_str());
-
-					numCategories++;
-					break;
-
-				case "ABIL":
-					string abilityLine;
-
-					string ability;
-
-					while(file.peek() != '\n') {
-						abilityLine += file.get();
-					}
-
-					while(abilityLine >> ability) {
-						monster.abilities.push_back(ability);
-					}
-
-					numCategories++;
-					break;
-
-				case "HP":
-					string data;
-
-					//Elminating space before the dice stats
-					file.get();
-
-					file >> data;
-
-					stringstream dataString(data);
-					string stringData;
-
-					getline(dataString, stringData, "+");
-					monster.hpBase = atoi(stringData.c_str());
-
-					getline(dataString, stringData, "d");
-					monster.hpDice = atoi(stringData.c_str());
-
-					getline(dataString, stringData, '\n');
-					monster.hpSides = atoi(stringData.c_str());
-
-					numCategories++;
-					break;
-
-				case "DAM":
-					string data;
-
-					//Elminating space before the dice stats
-					file.get();
-
-					file >> data;
-
-					stringstream dataString(data);
-					string stringData;
-
-					getline(dataString, stringData, "+");
-					monster.adBase = atoi(stringData.c_str());
-
-					getline(dataString, stringData, "d");
-					monster.adDice = atoi(stringData.c_str());
-
-					getline(dataString, stringData, '\n');
-					monster.adSides = atoi(stringData.c_str());
-
-					numCategories++;
-					break;
-
-				case "RRTY":
-					string rarity;
-
-					file >> rarity;
-
-					monster.rarity = atoi(rarity.c_str());
-
-					numCategories++;
-					break;
-
-				default:
-					std::cout << "Incorrect type specifier" << endl;
-					return -4;
-			}
-
-			if(numCategories == 8) {
-				std::cout << monster.name << endl;
-				std::cout << monster.description << endl;
-				std::cout << monster.symbol << endl;
-				std::cout << monster.color << endl;
-				std::cout << monster.speedBase << "+" << monster.speedDice << "d" << monster.speedSides << endl;
-
-				vector<string>:: iterator abilityIterator;
-				for(abilityIterator = monster.abilities.begin(); abilityIterator != monster.abilities.end(); abilityIterator++) {
-					std::cout << *abilityIterator << " ";
-				}
-				std::cout << endl;
-
-				std::cout << monster.hpBase << "+" << monster.hpDice << "d" << monster.hpSides << endl;
-				std::cout << monster.adBase << "+" << monster.adDice << "d" << monster.adSides << endl;
-				std::cout << monster.rarity << endl;
-			}
-		}
-	}
+      }
+    delete m;
   }
-
   file.close();
 
   return 0;
