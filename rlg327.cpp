@@ -355,18 +355,21 @@ int main(int argc, char *argv[])
 		string category;
 		string descriptionRead;
 
+		int numCategories = 0;
+
 		while(category != "END") {
 			file >> category;
 
 			switch(category) {
 
-				case: "NAME"
+				case "NAME":
 					while(file.peek() != '\n') {
 						monster.name += file.get();
 					}
+					numCategories++;
 					break;
 
-				case: "DESC"
+				case "DESC":
 					std::getline(file, descriptionRead);
 					while(descriptionRead != ".") {
 						monster.description += descriptionRead;
@@ -377,14 +380,15 @@ int main(int argc, char *argv[])
 						std::cout << "Description too long" << endl;
 						return -3;
 					}
-
+					numCategories++;
 					break;
 
-				case: "COLOR"
+				case "COLOR":
 					file >> monster.color;
+					numCategories++;
 					break;
 
-				case: "SPEED"
+				case "SPEED":
 					string data;
 
 					//Elminating space before the dice stats
@@ -404,9 +408,10 @@ int main(int argc, char *argv[])
 					getline(dataString, stringData, '\n');
 					monster.speedSides = atoi(stringData.c_str());
 
+					numCategories++;
 					break;
 
-				case: "ABIL"
+				case "ABIL":
 					string abilityLine;
 
 					string ability;
@@ -419,18 +424,89 @@ int main(int argc, char *argv[])
 						monster.abilities.push_back(ability);
 					}
 
-					
+					numCategories++;
+					break;
 
-					
+				case "HP":
+					string data;
 
+					//Elminating space before the dice stats
+					file.get();
 
+					file >> data;
 
+					stringstream dataString(data);
+					string stringData;
 
+					getline(dataString, stringData, "+");
+					monster.hpBase = atoi(stringData.c_str());
+
+					getline(dataString, stringData, "d");
+					monster.hpDice = atoi(stringData.c_str());
+
+					getline(dataString, stringData, '\n');
+					monster.hpSides = atoi(stringData.c_str());
+
+					numCategories++;
+					break;
+
+				case "DAM":
+					string data;
+
+					//Elminating space before the dice stats
+					file.get();
+
+					file >> data;
+
+					stringstream dataString(data);
+					string stringData;
+
+					getline(dataString, stringData, "+");
+					monster.adBase = atoi(stringData.c_str());
+
+					getline(dataString, stringData, "d");
+					monster.adDice = atoi(stringData.c_str());
+
+					getline(dataString, stringData, '\n');
+					monster.adSides = atoi(stringData.c_str());
+
+					numCategories++;
+					break;
+
+				case "RRTY":
+					string rarity;
+
+					file >> rarity;
+
+					monster.rarity = atoi(rarity.c_str());
+
+					numCategories++;
+					break;
+
+				default:
+					std::cout << "Incorrect type specifier" << endl;
+					return -4;
+			}
+
+			if(numCategories == 8) {
+				std::cout << monster.name << endl;
+				std::cout << monster.description << endl;
+				std::cout << monster.symbol << endl;
+				std::cout << monster.color << endl;
+				std::cout << monster.speedBase << "+" << monster.speedDice << "d" << monster.speedSides << endl;
+
+				vector<string>:: iterator abilityIterator;
+				for(abilityIterator = monster.abilities.begin(); abilityIterator != monster.abilities.end(); abilityIterator++) {
+					std::cout << *abilityIterator << " ";
+				}
+				std::cout << endl;
+
+				std::cout << monster.hpBase << "+" << monster.hpDice << "d" << monster.hpSides << endl;
+				std::cout << monster.adBase << "+" << monster.adDice << "d" << monster.adSides << endl;
+				std::cout << monster.rarity << endl;
 			}
 		}
 	}
-	
-  
   }
 
   file.close();
