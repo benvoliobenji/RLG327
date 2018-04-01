@@ -30,8 +30,10 @@ void gen_monsters(dungeon *d)
   uint32_t room;
   pair_t p;
   const static char symbol[] = "0123456789abcdef";
-
-  d->num_monsters = min(d->max_monsters, max_monster_cells(d));
+  uint32_t num_cells;
+  
+  num_cells = max_monster_cells(d);
+  d->num_monsters = d->max_monsters < num_cells ? d->max_monsters : num_cells;
 
   for (i = 0; i < d->num_monsters; i++) {
     m = new npc;
