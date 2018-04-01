@@ -97,7 +97,7 @@ class object_description {
            const uint32_t rarity);
   std::ostream &print(std::ostream &o);
   /* Need all these accessors because otherwise there is a *
-   * circular dependancy that is difficult to get around.  */
+   * circular dependency that is difficult to get around.  */
   inline const std::string &get_name() const { return name; }
   inline const std::string &get_description() const { return description; }
   inline const object_type_t get_type() const { return type; }
