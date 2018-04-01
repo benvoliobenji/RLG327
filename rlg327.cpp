@@ -1,13 +1,14 @@
-/*
 #include <stdio.h>
 #include <string.h>
-*/
 #include <sys/time.h>
 #include <unistd.h>
+
+#include <string>
 #include <iostream>
 #include <fstream>
-#include <cstdio>
-#include <cstdlib>
+#include <vector>
+#include <cstring>
+#include <sstream>
 
 /* Very slow seed: 686846853 */
 
@@ -16,6 +17,27 @@
 #include "npc.h"
 #include "move.h"
 #include "io.h"
+
+using namespace std;
+
+//A very basic monster class to keep track of parsing
+class monster {
+public:
+  string name;
+  string description;
+  string color;
+  int speedBase;
+  int speedDice;
+  int speedSides;
+  vector<string> abilities;
+  int hpBase;
+  int hpDice;
+  int hpSides;
+  int adBase;
+  int adDice;
+  int adSides;
+  int rarity;
+};
 
 const char *victory =
   "\n                                       o\n"
@@ -82,26 +104,29 @@ void usage(char *name)
 
 int main(int argc, char *argv[])
 {
+/*
   dungeon_t d;
   time_t seed;
   struct timeval tv;
-  uint32_t i;
+  int32_t i;
   uint32_t do_load, do_save, do_seed, do_image, do_save_seed,
            do_save_image, do_place_pc;
   uint32_t long_arg;
   char *save_file;
   char *load_file;
   char *pgm_file;
-  memset(&d, 0, sizeof (d));
 
+  memset(&d, 0, sizeof (d));
+  */
   /* Default behavior: Seed with the time, generate a new dungeon, *
    * and don't write to disk.                                      */
+   /*
   do_load = do_save = do_image = do_save_seed =
     do_save_image = do_place_pc = 0;
   do_seed = 1;
   save_file = load_file = NULL;
   d.max_monsters = MAX_MONSTERS;
-
+  */
   /* The project spec requires '--load' and '--save'.  It's common  *
    * to have short and long forms of most switches (assuming you    *
    * don't run out of letters).  For now, we've got plenty.  Long   *
@@ -115,20 +140,23 @@ int main(int argc, char *argv[])
    * And the final switch, '--image', allows me to create a dungeon *
    * from a PGM image, so that I was able to create those more      *
    * interesting test dungeons for you.                             */
- 
+ /*
  if (argc > 1) {
-   for (i = 1, long_arg = 0; i < (uint32_t) argc; i++, long_arg = 0) {
-      if (argv[i][0] == '-') { /* All switches start with a dash */
+    for (i = 1, long_arg = 0; i < argc; i++, long_arg = 0) {
+      if (argv[i][0] == '-') {*/ /* All switches start with a dash */
+	  /*
         if (argv[i][1] == '-') {
-          argv[i]++;    /* Make the argument have a single dash so we can */
-          long_arg = 1; /* handle long and short args at the same place.  */
+          argv[i]++;   */ /* Make the argument have a single dash so we can */
+          //long_arg = 1; /* handle long and short args at the same place.  */
+		  /*
         }
         switch (argv[i][1]) {
         case 'r':
           if ((!long_arg && argv[i][2]) ||
               (long_arg && strcmp(argv[i], "-rand")) ||
-              (uint32_t) argc < ++i + 1 /* No more arguments */ ||
-              !sscanf(argv[i], "%lu", &seed) /* Argument is not an integer */) {
+              argc < ++i + 1 *//* No more arguments */// ||
+              //!sscanf(argv[i], "%lu", &seed) /* Argument is not an integer */) {
+			  /*
             usage(argv[0]);
           }
           do_seed = 0;
@@ -136,8 +164,8 @@ int main(int argc, char *argv[])
         case 'n':
           if ((!long_arg && argv[i][2]) ||
               (long_arg && strcmp(argv[i], "-nummon")) ||
-              (uint32_t) argc < ++i + 1 /* No more arguments */ ||
-              !sscanf(argv[i], "%hu", &d.max_monsters)) {
+              argc < ++i + 1 *//* No more arguments */ //||
+              /*!sscanf(argv[i], "%hu", &d.max_monsters)) {
             usage(argv[0]);
           }
           break;
@@ -147,10 +175,10 @@ int main(int argc, char *argv[])
             usage(argv[0]);
           }
           do_load = 1;
-          if (((uint32_t) argc > i + 1) && argv[i + 1][0] != '-') {
+          if ((argc > i + 1) && argv[i + 1][0] != '-') { */
             /* There is another argument, and it's not a switch, so *
              * we'll treat it as a save file and try to load it.    */
-            load_file = argv[++i];
+           /* load_file = argv[++i];
           }
           break;
         case 's':
@@ -159,11 +187,12 @@ int main(int argc, char *argv[])
             usage(argv[0]);
           }
           do_save = 1;
-          if (((uint32_t) argc > i + 1) && argv[i + 1][0] != '-') {
+          if ((argc > i + 1) && argv[i + 1][0] != '-') { */
             /* There is another argument, and it's not a switch, so *
              * we'll save to it.  If it is "seed", we'll save to    *
 	     * <the current seed>.rlg327.  If it is "image", we'll  *
 	     * save to <the current image>.rlg327.                  */
+		 /*
 	    if (!strcmp(argv[++i], "seed")) {
 	      do_save_seed = 1;
 	      do_save_image = 0;
@@ -181,23 +210,25 @@ int main(int argc, char *argv[])
             usage(argv[0]);
           }
           do_image = 1;
-          if (((uint32_t) argc > i + 1) && argv[i + 1][0] != '-') {
+          if ((argc > i + 1) && argv[i + 1][0] != '-') { */
             /* There is another argument, and it's not a switch, so *
              * we'll treat it as a save file and try to load it.    */
+			 /*
             pgm_file = argv[++i];
           }
           break;
-        case 'p':
+        case 'p': */
           /* PC placement makes no effort to avoid placing *
            * the PC inside solid rock.                     */
+		   /*
           if ((!long_arg && argv[i][2]) ||
               (long_arg && strcmp(argv[i], "-pc"))) {
             usage(argv[0]);
           }
-          if ((d.pc->position[dim_y] = atoi(argv[++i])) < 1 ||
-              d.pc->position[dim_y] > DUNGEON_Y - 2         ||
-              (d.pc->position[dim_x] = atoi(argv[++i])) < 1 ||
-              d.pc->position[dim_x] > DUNGEON_X - 2)         {
+          if ((d.PC->position[dim_y] = atoi(argv[++i])) < 1 ||
+              d.PC->position[dim_y] > DUNGEON_Y - 2         ||
+              (d.PC->position[dim_x] = atoi(argv[++i])) < 1 ||
+              d.PC->position[dim_x] > DUNGEON_X - 2)         {
             fprintf(stderr, "Invalid PC position.\n");
             usage(argv[0]);
           }
@@ -206,16 +237,17 @@ int main(int argc, char *argv[])
         default:
           usage(argv[0]);
         }
-      } else { /* No dash */
+      } else { *//* No dash */
+	  /*
         usage(argv[0]);
       }
     }
   }
 
-  if (do_seed) {
+  if (do_seed) { */
     /* Allows me to generate more than one dungeon *
      * per second, as opposed to time().           */
-    gettimeofday(&tv, NULL);
+    /* gettimeofday(&tv, NULL);
     seed = (tv.tv_usec ^ (tv.tv_sec << 20)) & 0xffffffff;
   }
 
@@ -232,33 +264,32 @@ int main(int argc, char *argv[])
     gen_dungeon(&d);
   }
 
-  d.fog = 0;
   config_pc(&d);
   gen_monsters(&d);
 
-  //io_display(&d);
-  io_determine_display(&d);
+  io_display(&d);
   io_queue_message("Seed is %u.", seed);
   while (pc_is_alive(&d) && dungeon_has_npcs(&d) && !d.quit) {
     do_moves(&d);
   }
-  //io_display(&d);
-  io_determine_display(&d);
+  io_display(&d);
 
   io_reset_terminal();
 
   if (do_save) {
-    if (do_save_seed) {
+    if (do_save_seed) { */
        /* 10 bytes for number, please dot, extention and null terminator. */
-      save_file = (char *)malloc(18);
+	   /*
+      save_file = (char *) malloc(18);
       sprintf(save_file, "%ld.rlg327", seed);
     }
     if (do_save_image) {
       if (!pgm_file) {
 	fprintf(stderr, "No image file was loaded.  Using default.\n");
 	do_save_image = 0;
-      } else {
+      } else { */
 	/* Extension of 3 characters longer than image extension + null. */
+	/*
 	save_file = (char *) malloc(strlen(pgm_file) + 4);
 	strcpy(save_file, pgm_file);
 	strcpy(strchr(save_file, '.') + 1, "rlg327");
@@ -275,9 +306,216 @@ int main(int argc, char *argv[])
   printf("You defended your life in the face of %u deadly beasts.\n"
          "You avenged the cruel and untimely murders of %u "
          "peaceful dungeon residents.\n",
-         d.pc->kills[kill_direct], d.pc->kills[kill_avenged]);
+         d.PC->kills[kill_direct], d.PC->kills[kill_avenged]);
+
+  if (pc_is_alive(&d)) { */
+    /* If the PC is dead, it's in the move heap and will get automatically *
+     * deleted when the heap destructs.  In that case, we can't call       *
+     * delete_pc(), because it will lead to a double delete.               */
+	 /*
+    character_delete(d.PC);
+  }
 
   delete_dungeon(&d);
+  */
+
+  string npcDescription = getenv("HOME");
+  npcDescription = npcDescription + "/.rlg327/monster_desc";
+
+  cout << npcDescription << endl;
+
+  ifstream file;
+
+  file.open(npcDescription.c_str());
+
+  if(!file) {
+    cout << "Could not open monster_desc" << endl;
+    return -1;
+  }
+
+  string monsterTitle;
+  string beginMonster;
+
+  getline(file, monsterTitle);
+
+  if(monsterTitle != "RLG327 MONSTER DESCRIPTION 1") {
+    cout << "File does not have correct header: " << monsterTitle << endl;
+    return -2;
+  }
+
+  while(!file.eof()) {
+
+    while(isblank(file.peek())) {
+      file.get();
+    }
+
+    getline(file, beginMonster);
+
+    if(beginMonster == "BEGIN MONSTER")
+      {
+	monster *m = new monster;
+
+	string category;
+	string descriptionRead;
+
+	int numCategories = 0;
+
+	while(category != "END") {
+	  file >> category;
+
+	  switch(category[0]) {
+
+	  case 'N': //NAME
+	    while(file.peek() != '\n') {
+	      m->name += file.get();
+	    }
+	    numCategories++;
+	    break;
+
+	  case 'D': //DESC
+	    getline(file, descriptionRead);
+	    while(descriptionRead != ".") {
+	      m->description += descriptionRead;
+	      getline(file, descriptionRead);
+	    }
+
+	    if(m->description.size() > 78) {
+	      cout << "Description too long" << endl;
+	      return -3;
+	    }
+	    numCategories++;
+	    break;
+
+	  case 'C': //COLOR
+	    file >> m->color;
+	    numCategories++;
+	    break;
+
+	  case 'S': //SPEED
+	    string data;
+
+	    //Elminating space before the dice stats
+	    file.get();
+
+	    file >> data;
+
+	    stringstream dataString(data);
+	    string stringData;
+
+	    
+	    /*
+	    getline(dataString, stringData, "+");
+	    m->speedBase = atoi(stringData.c_str());
+
+	    getline(dataString, stringData, "d");
+	    m->speedDice = atoi(stringData.c_str());
+
+	    getline(dataString, stringData, '\n');
+	    m->speedSides = atoi(stringData.c_str());
+	    */
+
+	    numCategories++;
+	    break;
+
+	  case 'A': //ABIL
+	    string abilityLine;
+
+	    string ability;
+
+	    while(file.peek() != '\n') {
+	      abilityLine += file.get();
+	    }
+
+	    while(abilityLine >> ability) {
+	      m->abilities.push_back(ability);
+	    }
+
+	    numCategories++;
+	    break;
+
+	  case 'H': //HP
+	    string data;
+
+	    //Elminating space before the dice stats
+	    file.get();
+
+	    file >> data;
+
+	    stringstream dataString(data);
+	    string stringData;
+
+	    getline(dataString, stringData, "+");
+	    m->hpBase = atoi(stringData.c_str());
+
+	    getline(dataString, stringData, "d");
+	    m->hpDice = atoi(stringData.c_str());
+
+	    getline(dataString, stringData, '\n');
+	    m->hpSides = atoi(stringData.c_str());
+
+	    numCategories++;
+	    break;
+
+	  case 'D': //DAM
+	    string data;
+
+	    //Elminating space before the dice stats
+	    file.get();
+
+	    file >> data;
+
+	    stringstream dataString(data);
+	    string stringData;
+	    
+	    getline(dataString, stringData, "+");
+	    m->adBase = atoi(stringData.c_str());
+	    
+	    getline(dataString, stringData, "d");
+	    m->adDice = atoi(stringData.c_str());
+
+	    getline(dataString, stringData, '\n');
+	    m->adSides = atoi(stringData.c_str());
+
+	    numCategories++;
+	    break;
+
+	  case 'R': //RRTY
+	    string rarity;
+
+	    file >> rarity;
+
+	    m->rarity = atoi(rarity.c_str());
+
+	    numCategories++;
+	    break;
+
+	  default:
+	    cout << "Incorrect type specifier" << endl;
+	    return -4;
+	  }
+
+	  if(numCategories == 8) {
+	    cout << m->name << endl;
+	    cout << m->description << endl;
+	    cout << m->symbol << endl;
+	    cout << m->color << endl;
+	    cout << m->speedBase << "+" << monster.speedDice << "d" << monster.speedSides << endl;
+
+	    vector<string>:: iterator abilityIterator;
+	    for(abilityIterator = m->abilities.begin(); abilityIterator != m->abilities.end(); abilityIterator++) {
+	      cout << *abilityIterator << " ";
+	    }
+	    cout << endl;
+
+	    cout << m->hpBase << "+" << m->hpDice << "d" << m->hpSides << endl;
+	    cout << m->adBase << "+" << m->adDice << "d" << m->adSides << endl;
+	    cout << m->rarity << endl;
+	  }
+	}
+      }
+    delete m;
+  }
+  file.close();
 
   return 0;
 }
