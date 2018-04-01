@@ -87,11 +87,13 @@ int main(int argc, char *argv[])
   char *load_file;
   char *pgm_file;
 
-  parse_descriptions(&d);
-  print_descriptions(&d);
-  destroy_descriptions(&d);
+  d.num_objects = 10;
 
-  return 0;
+  parse_descriptions(&d);
+  //print_descriptions(&d);
+  //destroy_descriptions(&d);
+
+  //return 0;
   
   memset(&d, 0, sizeof (d));
 

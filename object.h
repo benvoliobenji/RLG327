@@ -29,8 +29,6 @@ private:
 public:
 	object(object_description obj, int xPos, int yPos);
 
-	~object();
-
 	string get_name();
 
 	string get_description();
@@ -71,9 +69,9 @@ public:
 
 	int get_yPos();
 
-	int set_xPos();
+	int set_xPos(int xPos);
 
-	int set_yPos();
+	int set_yPos(int yPos);
 
 	int roll_damage();
 };

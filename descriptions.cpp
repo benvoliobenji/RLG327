@@ -1062,3 +1062,31 @@ std::ostream &operator<<(std::ostream &o, object_description &od)
 {
   return od.print(o);
 }
+
+
+object *create_object(dungeon_t *d) {
+	object *o;
+
+	std::vector<object_description> object_vector = d->object_descriptions;
+
+	int random;
+	int xPos, yPos;
+	bool placed = false;
+
+	random = rand() % object_vector.size();
+
+	object_description desc = object_vector[random];
+
+	while (!placed) {
+		xPos = rand() % DUNGEON_X;
+		yPos = rand() % DUNGEON_Y;
+
+		if (d->dungeon_hardness[yPos][xPos] == 0) {
+			placed = true;
+		}
+	}
+
+	o = new object(desc, xPos, yPos);
+
+	return o;
+}
