@@ -51,7 +51,6 @@ class npc : public character {
   uint32_t have_seen_pc;
   pair_t pc_last_known_position;
   std::string description;
-  std::string name;
   uint32_t rarity;
 };
 

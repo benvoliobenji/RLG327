@@ -9,6 +9,8 @@
 #include "event.h"
 #include "pc.h"
 
+//Not being used
+/*
 static uint32_t max_monster_cells(dungeon_t *d)
 {
   uint32_t i;
@@ -22,7 +24,7 @@ static uint32_t max_monster_cells(dungeon_t *d)
 
   return sum;
 }
-
+*/
 /*
 void gen_monsters(dungeon *d)
 {
@@ -56,6 +58,7 @@ void gen_monsters(dungeon *d)
     m->alive = 1;
     m->sequence_number = ++d->character_sequence_number;
     m->characteristics = rand() & 0x0000000f;
+*/
     /*    m->npc->characteristics = 0xf;*/
 /*
     m->symbol = symbol[m->characteristics];
@@ -76,7 +79,7 @@ void gen_monsters(dungeon *d) {
 	for (int i = 0; i < d->max_monsters; i++) {
 		m = create_npc(d);
 
-		d->character_map[pos[dim_y]][pos[dim_x]] = m;
+		d->character_map[m->position[dim_y]][m->position[dim_x]] = m;
 
 		heap_insert(&d->events, new_event(d, event_character_turn, m, 0));
 	}
@@ -546,3 +549,4 @@ uint32_t dungeon_has_npcs(dungeon_t *d)
 {
   return d->num_monsters;
 }
+

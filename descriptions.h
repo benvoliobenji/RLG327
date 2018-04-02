@@ -117,8 +117,8 @@ class object_description {
 std::ostream &operator<<(std::ostream &o, monster_description &m);
 std::ostream &operator<<(std::ostream &o, object_description &od);
 
-object::object *create_object(dungeon_t *d);
+object *create_object(dungeon_t *d);
 
-npc::npc *create_npc(dungeon_t *d);
+npc *create_npc(dungeon_t *d);
 
 #endif

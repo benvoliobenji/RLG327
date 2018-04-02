@@ -5,8 +5,6 @@
 # include "descriptions.h"
 # include "dims.h"
 
-typedef enum object_type object_type_t;
-
 class object {
 private:
 	std::string name;
@@ -29,6 +27,7 @@ private:
 	int yPos;
 
 public:
+	pair_t position;
 
 	std::string get_name();
 
@@ -108,10 +107,10 @@ public:
 
 	bool get_seen();
 
-	bool seen();
+	bool is_seen();
 
 	bool not_seen();
 
-	pair_t get_pos();
+	//pair_t get_pos();
 };
 #endif

@@ -196,6 +196,7 @@ int object::get_yPos()
 	return this.yPos;
 }
 
+/*
 pair_t object::get_pos() {
 	pair_t p;
 	p[dim_y] = this.yPos;
@@ -203,16 +204,18 @@ pair_t object::get_pos() {
 
 	return p;
 }
-
+*/
 int object::set_xPos(int xPos)
 {
 	this.xPos = xPos;
+	this.position[dim_x] = xPos;
 	return 0;
 }
 
 int object::set_yPos(int yPos)
 {
 	this.yPos = yPos;
+	this.position[dim_y] = yPos;
 	return 0;
 }
 
@@ -234,7 +237,7 @@ bool object::get_seen() {
 	return this.seen;
 }
 
-bool object::seen() {
+bool object::is_seen() {
 	this.seen = true;
 	return true;
 }

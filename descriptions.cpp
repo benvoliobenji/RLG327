@@ -121,14 +121,14 @@ static inline void eat_whitespace(std::ifstream &f)
 {
   while (isspace(f.peek())) {
     f.get();
-  }
+  }  
 }
 
 static inline void eat_blankspace(std::ifstream &f)
 {
   while (isblank(f.peek())) {
     f.get();
-  }
+  }  
 }
 
 static uint32_t parse_name(std::ifstream &f,
@@ -1064,7 +1064,7 @@ std::ostream &operator<<(std::ostream &o, object_description &od)
 }
 
 
-object::object *create_object(dungeon_t *d) {
+object *create_object(dungeon_t *d) {
 	object *o;
 
 	std::vector<object_description> object_vector = d->object_descriptions;
@@ -1090,25 +1090,20 @@ object::object *create_object(dungeon_t *d) {
 	      {
 		random = rand() % object_vector.size();
 		obj_rarity = rand() % 100;
-
+		
 		desc = object_vector[random];
-
+		
 		if(desc.rarity >= obj_rarity)
 		  {
 		    valid_object = true;
 		  }
-    for(int i = 0; i < d->invalid_objects.size(); i++) {
-      if(desc.name == d->invalid_objects[i]) {
-        valid_object = false;
-            }
-          }
 	      }
-
+	    
 	    for(int y = 0; y < DUNGEON_Y; y++)
 	      {
 		for(int x = 0; x < DUNGEON_X; x++)
 		  {
-		    if((d->object_map[y][x] && d->object_map[y][x].name == desc.name))
+		    if(d->object_map[y][x] && (d->object_map[y][x].name == desc.name) && d->object_map[y][x].get_picked_up())
 		      {
 			eligible_object = false;
 		      }
@@ -1212,60 +1207,17 @@ object::object *create_object(dungeon_t *d) {
 	return o;
 }
 
-npc::npc *create_npc(dungeon_t *d) {
+npc *create_npc(dungeon_t *d) {
 	npc *m;
 
 	std::vector<monster_description> monster_vector = d->monster_descriptions;
 
-	int random, mon_rarity;
-  bool placed = false;
-  bool valid_monster = false;
-  bool eligible_monster = true;
-  bool valid_and_eligible = false;
-  char desc_type;
-  monster_description desc;
+	int random;
 
-	//To make sure the object generated is valid and eligible
-	//Check for if description is used, not object due to dungeon
-	//regeneration
-	while(!valid_and_eligible)
-	  {
-	    valid_object = false;
-	    eligible_object = true;
+	random = rand() % monster_vector.size();
 
-	    while(!valid_monster)
-	      {
-		random = rand() % monster_vector.size();
-		mon_rarity = rand() % 100;
+	monster_description desc = monster_vector[random];
 
-		desc = monster_vector[random];
-
-		if(desc.rarity >= mon_rarity)
-		  {
-		    valid_monster = true;
-		  }
-    for(int i = 0; i < d->invalid_monsters.size(); i++) {
-      if(desc.name == d->invalid_monsters[i]) {
-        valid_object = false;
-            }
-          }
-	      }
-
-	    for(int y = 0; y < DUNGEON_Y; y++)
-	      {
-		for(int x = 0; x < DUNGEON_X; x++)
-		  {
-		    if((d->character_map[y][x] && d->character_map[y][x].name == desc.name))
-		      {
-			eligible_monster = false;
-		      }
-		  }
-	      }
-	    if(valid_monster = true && eligible_monster = true)
-	      {
-		valid_and_eligible = true;
-	      }
-	  }
 	m = new npc();
 
 	pair_t pos;
@@ -1298,6 +1250,7 @@ npc::npc *create_npc(dungeon_t *d) {
 	m.description = desc.discription;
 	m.name = desc.name;
 	m.rarity = mon.rarity;
+	m.color = desc.color;
 
 	return m;
 }
