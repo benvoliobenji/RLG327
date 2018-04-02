@@ -55,7 +55,6 @@ class npc : public character {
   uint32_t rarity;
 };
 
-npc(monster_description *mon, dungeon *d);
 void gen_monsters(dungeon *d);
 void npc_delete(npc *n);
 void npc_next_pos(dungeon *d, npc *c, pair_t next);

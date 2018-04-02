@@ -71,8 +71,14 @@ void gen_monsters(dungeon *d)
 */
 
 void gen_monsters(dungeon *d) {
+	npc *m;
+
 	for (int i = 0; i < d->max_monsters; i++) {
-		create_npc(d);
+		m = create_npc(d);
+
+		d->character_map[pos[dim_y]][pos[dim_x]] = m;
+
+		heap_insert(&d->events, new_event(d, event_character_turn, m, 0));
 	}
 
 	d->num_monsters = d->max_monsters;
@@ -539,40 +545,4 @@ void npc_next_pos(dungeon_t *d, npc *c, pair_t next)
 uint32_t dungeon_has_npcs(dungeon_t *d)
 {
   return d->num_monsters;
-}
-
-
-npc::npc(monster_description *mon, dungeon *d) {
-	pair_t pos;
-	int xPos, yPos;
-	bool placed = false;
-
-	this.symbol = mon->symbol;
-
-	while (!placed) {
-		xPos = rand() % DUNGEON_X;
-		yPos = rand() % DUNGEON_Y;
-
-		if (d->hardness[yPos][xPos] == 0) {
-			placed = true;
-		}
-	}
-
-	pos[dim_y] = yPos;
-	pos[dim_x] = xPos;
-
-	this.position = pos;
-	this.speed = mon->speed.roll();
-	this.alive = 1;
-	this.hp = mon->hitpoints.roll();
-	this.damage = mon->damage;
-	this.sequence_number = ++d->sequence_number;
-	this.characteristics = mon->abilities;
-	this.have_seen_pc = 0;
-	this.pc_last_known_position = pos;
-	this.description = mon->discription;
-	this.name = mon->name;
-	this.rarity = mon->rarity;
-
-	d->character_map[pos[dim_y]][pos[dim_x]] = this;
 }

@@ -1086,12 +1086,30 @@ object *create_object(dungeon_t *d) {
 		}
 	}
 
-	o = new object(desc, xPos, yPos);
+	o = new object;
+	o.set_name(desc.name);
+	o.set_description(desc->get_description());
+	o.set_type(desc.get_type());
+	o.set_color(desc.get_color());
+	o.set_hp(desc.get_hit());
+	o.set_dodge(desc.get_dodge());
+	o.set_defence(desc.get_defence());
+	o.set_weight(desc.get_weight());
+	o.set_speed(desc.get_speed());
+	o.set_attribute(desc.get_attribute());
+	o.set_value(desc.get_value());
+	o.set_damage(desc.damage);
+	o.set_artifact(desc.artifact);
+	o.set_rarity(desc.rarity);
+	o.on_floor();
+	o.set_xPos(xPos);
+	o.set_yPos(yPos);
+	o.not_seen();
 
 	return o;
 }
 
-void create_npc(dungeon_t *d) {
+npc *create_npc(dungeon_t *d) {
 	npc *m;
 
 	std::vector<monster_description> monster_vector = d->monster_descriptions;
@@ -1102,7 +1120,38 @@ void create_npc(dungeon_t *d) {
 
 	monster_description desc = monster_vector[random];
 
-	m = new npc(desc, d);
+	m = new npc();
 
-	heap_insert(&d->events, new_event(d, event_character_turn, m, 0));
+	pair_t pos;
+	int xPos, yPos;
+	bool placed = false;
+
+	m.symbol = desc.symbol;
+
+	while (!placed) {
+		xPos = rand() % DUNGEON_X;
+		yPos = rand() % DUNGEON_Y;
+
+		if (d->hardness[yPos][xPos] == 0) {
+			placed = true;
+		}
+	}
+
+	pos[dim_y] = yPos;
+	pos[dim_x] = xPos;
+
+	m.position = pos;
+	m.speed = desc.speed.roll();
+	m.alive = 1;
+	m.hp = desc.hitpoints.roll();
+	m.damage = mon->damage;
+	m.sequence_number = ++d->sequence_number;
+	m.characteristics = desc->abilities;
+	m.have_seen_pc = 0;
+	m.pc_last_known_position = pos;
+	m.description = desc.discription;
+	m.name = desc.name;
+	m.rarity = mon.rarity;
+
+	return m;
 }

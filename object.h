@@ -28,7 +28,6 @@ private:
 	int yPos;
 
 public:
-	//object(object_description obj, int xPos, int yPos);
 
 	string get_name();
 
@@ -94,6 +93,8 @@ public:
 
 	bool pick_up();
 
+	bool on_floor();
+
 	int get_xPos();
 
 	int get_yPos();
@@ -107,6 +108,8 @@ public:
 	bool get_seen();
 
 	bool seen();
+
+	bool not_seen();
 
 	pair_t get_pos();
 };

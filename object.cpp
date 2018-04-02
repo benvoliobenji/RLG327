@@ -5,28 +5,6 @@
 #include "object.h"
 
 
-/*
-object(object_description *obj, int xPos, int yPos) {
-	this.name = obj->get_name();
-	this.description = obj->get_description();
-	this.type = obj->get_type();
-	this.color = obj->get_color();
-	this.hp = obj->get_hit().roll();
-	this.dodge = obj->get_dodge().roll();
-	this.defence = obj->get_defence().roll();
-	this.weight = obj->get_weight().roll();
-	this.speed = obj->get_speed().roll();
-	this.attribute = obj->get_attribute().roll();
-	this.value = obj->get_value().roll();
-	this.damage = obj->damage;
-	this.artifact = obj->artifact;
-	this.rarity = obj->rarity;
-	this.picked_up = false;
-	this.xPos = xPos;
-	this.yPos = yPos;
-	this.seen = false;
-}
-*/
 string object::get_name()
 {
 	return this.name;
@@ -193,12 +171,17 @@ int object::set_rarity(uint32_t rarity)
 
 bool object::get_picked_up()
 {
-	return this.picked_up();
+	return this.picked_up;
 }
 
 bool object::pick_up()
 {
-	this.pick_up = true;
+	this.picked_up = true;
+	return true;
+}
+
+bool object::on_floor() {
+	this.picked_up = false;
 	return true;
 }
 
@@ -246,11 +229,16 @@ void create_objects(dungeon *d) {
 	}
 }
 
-bool get_seen() {
+bool object::get_seen() {
 	return this.seen;
 }
 
-bool seen() {
+bool object::seen() {
 	this.seen = true;
+	return true;
+}
+
+bool object::not_seen() {
+	this.seen = false;
 	return true;
 }
