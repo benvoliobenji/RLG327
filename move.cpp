@@ -53,9 +53,10 @@ void do_combat(dungeon *d, character *atk, character *def)
   int part;
 
   if (def->alive) {
-    def->alive = 0;
+    character_die(def, d);
+    //def->alive = 0;
     charpair(def->position) = NULL;
-    
+
     if (def != d->PC) {
       d->num_monsters--;
     } else {

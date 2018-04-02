@@ -174,9 +174,10 @@ bool object::get_picked_up()
 	return this.picked_up;
 }
 
-bool object::pick_up()
+bool object::pick_up(dungeon *d)
 {
 	this.picked_up = true;
+	d->invalid_objects.push_back(this.name);
 	return true;
 }
 

@@ -37,6 +37,7 @@ void io_init_terminal(void)
   init_pair(COLOR_MAGENTA, COLOR_MAGENTA, COLOR_BLACK);
   init_pair(COLOR_CYAN, COLOR_CYAN, COLOR_BLACK);
   init_pair(COLOR_WHITE, COLOR_WHITE, COLOR_BLACK);
+  init_pair(COLOR_BLACK, COLOR_WHITE, COLOR_BLACK);
 }
 
 void io_reset_terminal(void)
@@ -221,7 +222,7 @@ void io_display(dungeon_t *d)
 		attroff(COLOR_PAIR(d->charmap[y][x]->get_color()));
 
         visible_monsters++;
-      } 
+      }
 	  else if (d->object_map[y][x] && (d->object_map[y][x]->get_seen() || can_see(d, character_get_pos(d->PC), d->object_map[y][x].get_pos(), 1, 1))) {
 		  attron(COLOR_PAIR(d->object_map[y][x]->get_color()));
 		  mvaddch(y + 1, x, d->object_map[y][x]->get_type());
@@ -400,7 +401,7 @@ uint32_t io_teleport_pc(dungeon_t *d)
         break;
       default:
         break;
-      }      
+      }
     }
 
     mvaddch(dest[dim_y] + 1, dest[dim_x], actual);
@@ -489,7 +490,7 @@ uint32_t io_teleport_pc(dungeon_t *d)
 
   if (charpair(dest) && charpair(dest) != d->PC) {
     io_queue_message("Teleport failed.  Destination occupied.");
-  } else {  
+  } else {
     d->character_map[d->PC->position[dim_y]][d->PC->position[dim_x]] = NULL;
     d->character_map[dest[dim_y]][dest[dim_x]] = d->PC;
 
