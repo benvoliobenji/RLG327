@@ -122,12 +122,13 @@ extern "C" {
 
 # endif /* __OPTIMIZE__ */
 
+  /*
 # define swap(a, b) ({   \
   typeof (a) _tmp = (a); \
   (a) = (b);             \
   (b) = _tmp;            \
 })
-
+  */
 # define memswap(a, b) ({    \
   typeof (*(a)) _tmp = *(a); \
   *(a) = *(b);               \

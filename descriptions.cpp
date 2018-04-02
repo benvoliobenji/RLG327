@@ -1064,18 +1064,54 @@ std::ostream &operator<<(std::ostream &o, object_description &od)
 }
 
 
-object *create_object(dungeon_t *d) {
+object::object *create_object(dungeon_t *d) {
 	object *o;
 
 	std::vector<object_description> object_vector = d->object_descriptions;
 
-	int random;
+	int random, obj_rarity;
 	int xPos, yPos;
 	bool placed = false;
+	bool valid_object = false;
+	bool eligible_object = true;
+	bool valid_and_eligible = false;
+	char desc_type;
+	object_description desc;
 
-	random = rand() % object_vector.size();
+	//To make sure the object generated is valid and eligible
+	while(!valid_and_eligible)
+	  {
+	    valid_object = false;
+	    eligible_object = true;
 
-	object_description desc = object_vector[random];
+	    while(!valid_object)
+	      {
+		random = rand() % object_vector.size();
+		obj_rarity = rand() % 100;
+		
+		desc = object_vector[random];
+		
+		if(desc.rarity >= obj_rarity)
+		  {
+		    valid_object = true;
+		  }
+	      }
+	    
+	    for(int y = 0; y < DUNGEON_Y; y++)
+	      {
+		for(int x = 0; x < DUNGEON_X; x++)
+		  {
+		    if(d->object_map[y][x] && (d->object_map[y][x].name == desc.name) && d->object_map[y][x].get_picked_up())
+		      {
+			eligible_object = false;
+		      }
+		  }
+	      }
+	    if(valid_object = true && eligible_object = true)
+	      {
+		valid_and_eligible = true;
+	      }
+	  }
 
 	while (!placed) {
 		xPos = rand() % DUNGEON_X;
@@ -1086,10 +1122,70 @@ object *create_object(dungeon_t *d) {
 		}
 	}
 
+	switch(desc.get_type()){
+	case 'objtype_no_type':
+	  desc_type = '*';
+	  break;
+	case 'objtype_WEAPON':
+	  desc_type = '|':
+	  break;
+	case 'objtype_OFFHAND':
+	  desc_type = ')';
+	  break;
+	case 'objtype_RANGED':
+	  desc_type = '}';
+	  break;
+	case 'objtype_LIGHT':
+	  desc_type = '_';
+	  break;
+	case 'objtype_ARMOR':
+	  desc_type = '[';
+	  break;
+	case 'objtype_HELMET':
+	  desc_type = ']';
+	  break;
+	case 'objtype_CLOAK':
+	  desc_type = '(';
+	  break;
+	case 'objtype_BOOTS':
+	  desc_type = '\\';
+	  break;
+	case 'objtype_AMULET':
+	  desc_type = '"';
+	  break;
+	case 'objtype_RING':
+	  desc_type = '=';
+	  break;
+	case 'objtype_SCROLL':
+	  desc_type = '~';
+	  break;
+	case 'objtype_BOOK':
+	  desc_type = '?';
+	  break;
+	case 'objtype_FLASK':
+	  desc_type = '!';
+	  break;
+	case 'objtype_GOLD':
+	  desc_type = '$';
+	  break;
+	case 'objtype_AMMUNITION':
+	  desc_type = '/';
+	  break;
+	case 'objtype_FOOD':
+	  desc_type = ',';
+	  break;
+	case 'objtype_WAND':
+	  desc_type = '-';
+	  break;
+	case 'objtype_CONTAINER':
+	  desc_type = '%';
+	  break;
+	}
+
 	o = new object;
 	o.set_name(desc.name);
 	o.set_description(desc->get_description());
-	o.set_type(desc.get_type());
+	o.set_type(desc_type);
 	o.set_color(desc.get_color());
 	o.set_hp(desc.get_hit());
 	o.set_dodge(desc.get_dodge());
@@ -1109,7 +1205,7 @@ object *create_object(dungeon_t *d) {
 	return o;
 }
 
-npc *create_npc(dungeon_t *d) {
+npc::npc *create_npc(dungeon_t *d) {
 	npc *m;
 
 	std::vector<monster_description> monster_vector = d->monster_descriptions;

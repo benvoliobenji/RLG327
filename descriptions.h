@@ -6,6 +6,8 @@
 # include <vector>
 # include <string>
 # include "dice.h"
+# include "npc.h"
+# include "object.h"
 
 typedef struct dungeon dungeon_t;
 
@@ -115,6 +117,8 @@ class object_description {
 std::ostream &operator<<(std::ostream &o, monster_description &m);
 std::ostream &operator<<(std::ostream &o, object_description &od);
 
-object *create_object(dungeon_t *d);
+object::object *create_object(dungeon_t *d);
+
+npc::npc *create_npc(dungeon_t *d);
 
 #endif

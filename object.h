@@ -5,12 +5,13 @@
 # include "descriptions.h"
 # include "dims.h"
 
+typedef enum object_type object_type_t;
 
 class object {
 private:
 	std::string name;
 	std::string description;
-	object_type_t type;
+	char type;
 	uint32_t color;
 	int hp;
 	int dodge;
@@ -29,17 +30,17 @@ private:
 
 public:
 
-	string get_name();
+	std::string get_name();
 
-	int set_name(string name);
+	int set_name(std::string name);
 
-	string get_description();
+	std::string get_description();
 
-	int set_description(string description);
+	int set_description(std::string description);
 
-	object_type_t get_type();
+	char get_type();
 
-	int set_type(object_type_t type);
+	int set_type(char type);
 
 	uint32_t get_color();
 
@@ -63,7 +64,7 @@ public:
 
 	int get_speed();
 
-	int set_speed(dice speed)
+	int set_speed(dice speed);
 
 	int get_attribute();
 

@@ -224,7 +224,7 @@ void io_display(dungeon_t *d)
       } 
 	  else if (d->object_map[y][x] && (d->object_map[y][x]->get_seen() || can_see(d, character_get_pos(d->PC), d->object_map[y][x].get_pos(), 1, 1))) {
 		  attron(COLOR_PAIR(d->object_map[y][x]->get_color()));
-		  mvaddch(y + 1, x, d->object_map[y][x]->get_symbol());
+		  mvaddch(y + 1, x, d->object_map[y][x]->get_type());
 		  attroff(COLOR_PAIR(d->object_map[y][x]->get_color()));
 	  }
 	  else {

@@ -6,6 +6,7 @@
 # include "dims.h"
 # include "character.h"
 # include "descriptions.h"
+# include "object.h"
 
 #define DUNGEON_X              80
 #define DUNGEON_Y              21
