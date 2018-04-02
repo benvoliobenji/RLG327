@@ -24,6 +24,7 @@ object(object_description *obj, int xPos, int yPos) {
 	this.picked_up = false;
 	this.xPos = xPos;
 	this.yPos = yPos;
+	this.seen = false;
 }
 
 string object::get_name()
@@ -127,6 +128,14 @@ int object::get_yPos()
 	return this.yPos;
 }
 
+pair_t object::get_pos() {
+	pair_t p;
+	p[dim_y] = this.yPos;
+	p[dim_x] = this.xPos;
+
+	return p;
+}
+
 int object::set_xPos(int xPos)
 {
 	this.xPos = xPos;
@@ -151,4 +160,13 @@ void create_objects(dungeon *d) {
 		o = create_object(d);
 		d->object_map[o.get_yPos()][o.get_xPos()] = o;
 	}
+}
+
+bool get_seen() {
+	return this.seen;
+}
+
+bool seen() {
+	this.seen = true;
+	return true;
 }

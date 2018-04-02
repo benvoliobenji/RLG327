@@ -4,6 +4,7 @@
 # include <stdint.h>
 
 # include "dims.h"
+# include "dice.h"
 
 typedef enum kill_type {
   kill_direct,
@@ -17,6 +18,8 @@ class character {
   pair_t position;
   int32_t speed;
   uint32_t alive;
+  int32_t hp;
+  dice damage;
   /* Characters use to have a next_turn for the move queue.  Now that it is *
    * an event queue, there's no need for that here.  Instead it's in the    *
    * event.  Similarly, sequence_number was introduced in order to ensure   *

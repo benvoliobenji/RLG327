@@ -215,10 +215,19 @@ void io_display(dungeon_t *d)
                   character_get_pos(d->PC),
                   character_get_pos(d->character_map[y][x]),
                   1, 0)) {
+		  attron(COLOR_PAIR(d->charmap[y][x]->get_color()));
         mvaddch(y + 1, x,
                 character_get_symbol(d->character_map[y][x]));
+		attroff(COLOR_PAIR(d->charmap[y][x]->get_color()));
+
         visible_monsters++;
-      } else {
+      } 
+	  else if (d->object_map[y][x] && (d->object_map[y][x]->get_seen() || can_see(d, character_get_pos(d->PC), d->object_map[y][x].get_pos(), 1, 1))) {
+		  attron(COLOR_PAIR(d->object_map[y][x]->get_color()));
+		  mvaddch(y + 1, x, d->object_map[y][x]->get_symbol());
+		  attroff(COLOR_PAIR(d->object_map[y][x]->get_color()));
+	  }
+	  else {
         switch (pc_learned_terrain(d->PC, y, x)) {
         case ter_wall:
         case ter_wall_immutable:

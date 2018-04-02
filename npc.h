@@ -2,6 +2,7 @@
 # define NPC_H
 
 # include <stdint.h>
+# include <string>
 
 # include "dims.h"
 # include "character.h"
@@ -49,8 +50,12 @@ class npc : public character {
   npc_characteristics_t characteristics;
   uint32_t have_seen_pc;
   pair_t pc_last_known_position;
+  std::string description;
+  std::string name;
+  uint32_t rarity;
 };
 
+npc(monster_description *mon, dungeon *d);
 void gen_monsters(dungeon *d);
 void npc_delete(npc *n);
 void npc_next_pos(dungeon *d, npc *c, pair_t next);

@@ -23,6 +23,7 @@ static uint32_t max_monster_cells(dungeon_t *d)
   return sum;
 }
 
+/*
 void gen_monsters(dungeon *d)
 {
   uint32_t i;
@@ -56,6 +57,7 @@ void gen_monsters(dungeon *d)
     m->sequence_number = ++d->character_sequence_number;
     m->characteristics = rand() & 0x0000000f;
     /*    m->npc->characteristics = 0xf;*/
+/*
     m->symbol = symbol[m->characteristics];
     m->have_seen_pc = 0;
     m->kills[kill_direct] = m->kills[kill_avenged] = 0;
@@ -64,6 +66,16 @@ void gen_monsters(dungeon *d)
 
     heap_insert(&d->events, new_event(d, event_character_turn, m, 0));
   }
+}
+
+*/
+
+void gen_monsters(dungeon *d) {
+	for (int i = 0; i < d->max_monsters; i++) {
+		create_npc(d);
+	}
+
+	d->num_monsters = d->max_monsters;
 }
 
 void npc_next_pos_rand_tunnel(dungeon_t *d, npc *c, pair_t next)
@@ -527,4 +539,40 @@ void npc_next_pos(dungeon_t *d, npc *c, pair_t next)
 uint32_t dungeon_has_npcs(dungeon_t *d)
 {
   return d->num_monsters;
+}
+
+
+npc::npc(monster_description *mon, dungeon *d) {
+	pair_t pos;
+	int xPos, yPos;
+	bool placed = false;
+
+	this.symbol = mon->symbol;
+
+	while (!placed) {
+		xPos = rand() % DUNGEON_X;
+		yPos = rand() % DUNGEON_Y;
+
+		if (d->hardness[yPos][xPos] == 0) {
+			placed = true;
+		}
+	}
+
+	pos[dim_y] = yPos;
+	pos[dim_x] = xPos;
+
+	this.position = pos;
+	this.speed = mon->speed.roll();
+	this.alive = 1;
+	this.hp = mon->hitpoints.roll();
+	this.damage = mon->damage;
+	this.sequence_number = ++d->sequence_number;
+	this.characteristics = mon->abilities;
+	this.have_seen_pc = 0;
+	this.pc_last_known_position = pos;
+	this.description = mon->discription;
+	this.name = mon->name;
+	this.rarity = mon->rarity;
+
+	d->character_map[pos[dim_y]][pos[dim_x]] = this;
 }

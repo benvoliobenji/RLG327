@@ -8,6 +8,7 @@
 #include "move.h"
 #include "path.h"
 #include "io.h"
+#include "dice.h"
 
 uint32_t pc_is_alive(dungeon_t *d)
 {
@@ -29,6 +30,8 @@ void place_pc(dungeon_t *d)
 
 void config_pc(dungeon_t *d)
 {
+	//PC rolls a 6 sided die for damage
+	dice dam_dice(0, 1, 6);
   d->PC = new pc;
 
   memset(d->PC, 0, sizeof (*d->PC));
@@ -40,6 +43,9 @@ void config_pc(dungeon_t *d)
   d->PC->alive = 1;
   d->PC->sequence_number = 0;
   d->PC->kills[kill_direct] = d->PC->kills[kill_avenged] = 0;
+  d->PC->hp = 100;
+  d->PC->damage = dam_dice;
+
 
   d->character_map[character_get_y(d->PC)][character_get_x(d->PC)] = d->PC;
 

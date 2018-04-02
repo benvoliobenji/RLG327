@@ -21,6 +21,7 @@ private:
 	int value;
 	dice damage;
 	bool artifact;
+	bool seen;
 	uint32_t rarity;
 	bool picked_up;
 	int xPos;
@@ -74,6 +75,12 @@ public:
 	int set_yPos(int yPos);
 
 	int roll_damage();
+
+	bool get_seen();
+
+	bool seen();
+
+	pair_t get_pos();
 };
 #endif
  

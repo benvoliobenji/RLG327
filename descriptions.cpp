@@ -1090,3 +1090,19 @@ object *create_object(dungeon_t *d) {
 
 	return o;
 }
+
+void create_npc(dungeon_t *d) {
+	npc *m;
+
+	std::vector<monster_description> monster_vector = d->monster_descriptions;
+
+	int random;
+
+	random = rand() % monster_vector.size();
+
+	monster_description desc = monster_vector[random];
+
+	m = new npc(desc, d);
+
+	heap_insert(&d->events, new_event(d, event_character_turn, m, 0));
+}
