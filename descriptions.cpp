@@ -1109,6 +1109,13 @@ object *create_object(dungeon_t *d) {
 		      }
 		  }
 	      }
+	    for(int i = 0; i < d->invalid_objects.size(); i++)
+	      {
+		if(desc.name == d->invalid_objects[i])
+		  {
+		    eligible_object = false;
+		  }
+	      }
 	    if(valid_object = true && eligible_object = true)
 	      {
 		valid_and_eligible = true;
@@ -1212,28 +1219,63 @@ npc *create_npc(dungeon_t *d) {
 
 	std::vector<monster_description> monster_vector = d->monster_descriptions;
 
-	int random;
-
-	random = rand() % monster_vector.size();
-
-	monster_description desc = monster_vector[random];
-
 	m = new npc();
 
 	pair_t pos;
 	int xPos, yPos;
 	bool placed = false;
+	int random, mon_rarity;
+	bool placed = false;
+	bool valid_monster = false;
+	bool eligible_monster = true;
+	bool valid_and_eligible = false;
+	char desc_type;
+	monster_description desc;
 
-	m.symbol = desc.symbol;
+	//To make sure the object generated is valid and eligible
+	//Check for if description is used, not object due to dungeon
+	//regeneration
+	while(!valid_and_eligible)
+	  {
+	    valid_object = false;
+	    eligible_object = true;
 
-	while (!placed) {
-		xPos = rand() % DUNGEON_X;
-		yPos = rand() % DUNGEON_Y;
+	    while(!valid_object)
+	      {
+		random = rand() % monster_vector.size();
+		mon_rarity = rand() % 100;
+		
+		desc = monster_vector[random];
+		
+		if(desc.rarity >= mon_rarity)
+		  {
+		    valid_object = true;
+		  }
+	      }
+	    
+	    for(int y = 0; y < DUNGEON_Y; y++)
+	      {
+		for(int x = 0; x < DUNGEON_X; x++)
+		  {
+		    if(d->character_map[y][x] && (d->character_map[y][x].name == desc.name && (desc.abilities & 0x00000080 != 0)))
+		      {
+			eligible_object = false;
+		      }
+		  }
+	      }
+	    for(int i = 0; i < d->invalid_monsters.size(); i++)
+	      {
+		if(desc.name == d->invalid_monsters[i] && (desc.abilities & 0x00000080 != 0)
+		  {
+		    eligible_object = false;
+		  }
+	      }
+	    if(valid_object = true && eligible_object = true)
+	      {
+		valid_and_eligible = true;
+	      }
+	  }
 
-		if (d->hardness[yPos][xPos] == 0) {
-			placed = true;
-		}
-	}
 
 	pos[dim_y] = yPos;
 	pos[dim_x] = xPos;
@@ -1242,14 +1284,14 @@ npc *create_npc(dungeon_t *d) {
 	m.speed = desc.speed.roll();
 	m.alive = 1;
 	m.hp = desc.hitpoints.roll();
-	m.damage = mon->damage;
+	m.damage = desc.damage;
 	m.sequence_number = ++d->sequence_number;
-	m.characteristics = desc->abilities;
+	m.characteristics = desc.abilities;
 	m.have_seen_pc = 0;
 	m.pc_last_known_position = pos;
 	m.description = desc.discription;
 	m.name = desc.name;
-	m.rarity = mon.rarity;
+	m.rarity = desc.rarity;
 	m.color = desc.color;
 
 	return m;

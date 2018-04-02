@@ -9,6 +9,7 @@
 #include "path.h"
 #include "io.h"
 #include "dice.h"
+#include "descriptions.h"
 
 uint32_t pc_is_alive(dungeon_t *d)
 {
