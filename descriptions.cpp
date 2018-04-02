@@ -1079,6 +1079,8 @@ object::object *create_object(dungeon_t *d) {
 	object_description desc;
 
 	//To make sure the object generated is valid and eligible
+	//Check for if description is used, not object due to dungeon
+	//regeneration
 	while(!valid_and_eligible)
 	  {
 	    valid_object = false;
