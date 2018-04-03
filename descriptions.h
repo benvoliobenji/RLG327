@@ -43,14 +43,15 @@ typedef enum object_type {
 extern const char object_symbol[];
 
 class monster_description {
- private:
+ public:
   std::string name, description;
   char symbol;
   std::vector<uint32_t> color;
   uint32_t abilities;
   dice speed, hitpoints, damage;
   uint32_t rarity;
- public:
+  
+
   monster_description() : name(),       description(), symbol(0),   color(0),
                           abilities(0), speed(),       hitpoints(), damage(),
                           rarity(0)
@@ -78,14 +79,14 @@ class monster_description {
 };
 
 class object_description {
- private:
+ public:
   std::string name, description;
   object_type_t type;
   uint32_t color;
   dice hit, damage, dodge, defence, weight, speed, attribute, value;
   bool artifact;
   uint32_t rarity;
- public:
+
   object_description() : name(),    description(), type(objtype_no_type),
                          color(0),  hit(),         damage(),
                          dodge(),   defence(),     weight(),

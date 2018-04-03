@@ -1,16 +1,12 @@
-For this assignment, I moved to the professor's code to speed up testing.
-Converting to c++ wasn't too terrible for most of the code. I mainly needed
-to encapsulate the old header files into an extern C portion. Outside of that,
-I set up character, pc, and npc to be classes where pc and npc inherit from
-character. I created accessor and modifier methods to the classes, but since
-I set all the variable to public, there was no real reason to create those
-methods in the first place. For the fog of war, I created an array within
-the pc class called memory, which would hold what the pc sees and remembers.
-When the player presses f, it determines which map to use by incrementing by one
-and modulo 2. For the teleport, I changed the symbol of the pc to be the debug
-symbol. When the player moves, its the same as normal movement, it just doesn't
-place the player back into the heap and process the other moves. For random, I
-just used the method already created in the professor's code. Every time the
-pc moves I call update_memory() which will update the memory map in the pc. When
-a new dungeon is created, I call reset_memory() to wipe the memory of the old 
-dungeon from the pc's mind.
+For this assignment, I created a class to specifically handle object descriptions, object.cpp
+and object.h. Afterwards, I modified npc and monster to handle the extra information that's
+held within monster_description. I then created factory methods within descriptions.cpp for
+both objects and descriptions. Within those factories, I check to make sure the randomly
+selected item is within the randomly generated rarity and not an artifact already
+generated (for objects) or not already in the dungeon and unique (monster). It then places
+the object or monster and then returns a pointer to an instance of the object or monster
+to the gen_monsters() in npc or create_objects() in object. After that, it was mostly changing
+io.cpp to display the items as well as colors of the objects and monsters as well as a few
+small changes to rlg327, specifically where memset was in order to deal with the descriptions
+and new vectors I added. In dungeon, I added new object and monster vectors to hold the identities
+of monsters and objects that should not be regenerated.

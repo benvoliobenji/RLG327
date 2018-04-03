@@ -1091,10 +1091,10 @@ object *create_object(dungeon_t *d) {
 	      {
 		if(object_vector.size() > 0)
 		  {
-		    random = rand() % object_vector.size();
+		    random = std::rand() % object_vector.size();
 		  }
 
-		obj_rarity = rand() % 100;
+		obj_rarity = std::rand() % 100;
 		
 		desc = object_vector[random];
 		
@@ -1108,7 +1108,7 @@ object *create_object(dungeon_t *d) {
 	      {
 		for(int x = 0; x < DUNGEON_X; x++)
 		  {
-		    if(d->object_map[y][x] && (d->object_map[y][x]->get_name() == desc.get_name()) && d->object_map[y][x]->get_picked_up())
+		    if(d->object_map[y][x] && ((d->object_map[y][x]->get_name() == desc.get_name()) && d->object_map[y][x]->get_artifact()))
 		      {
 			eligible_object = false;
 		      }
@@ -1116,7 +1116,7 @@ object *create_object(dungeon_t *d) {
 	      }
 	    for(uint32_t i = 0; i < d->invalid_objects.size(); i++)
 	      {
-		if(desc.get_name() == d->invalid_objects[i])
+		if(desc.get_name() == d->invalid_objects[i].get_name())
 		  {
 		    eligible_object = false;
 		  }
@@ -1224,7 +1224,7 @@ object *create_object(dungeon_t *d) {
 npc *create_npc(dungeon_t *d) {
 	npc *m;
 
-	std::vector<monster_description> &monster_vector = d->monster_descriptions;
+	//std::vector<monster_description> &monster_vector = d->monster_descriptions;
 
 	m = new npc();
 
@@ -1237,8 +1237,6 @@ npc *create_npc(dungeon_t *d) {
 	bool eligible_monster = true;
 	bool valid_and_eligible = false;
 	//char desc_type;
-	monster_description *desc;
-	desc = (monster_description *) malloc(sizeof(monster_description));
 
 	//To make sure the object generated is valid and eligible
 	//Check for if description is used, not object due to dungeon
@@ -1250,16 +1248,16 @@ npc *create_npc(dungeon_t *d) {
 
 	    while(!valid_monster)
 	      {
-		if(monster_vector.size() > 0)
+		if(d->monster_descriptions.size() > 0)
 		  {
-		    random = rand() % monster_vector.size();
+		    random = rand() % d->monster_descriptions.size();
 		  }
 
 		mon_rarity = rand() % 100;
 		
-		desc = &monster_vector[random];
+		//desc = &monster_vector[random];
 		
-		if(desc->get_rarity() >= mon_rarity)
+		if(d->monster_descriptions[random].get_rarity() >= mon_rarity)
 		  {
 		    valid_monster = true;
 		  }
@@ -1269,7 +1267,7 @@ npc *create_npc(dungeon_t *d) {
 	      {
 		for(int x = 0; x < DUNGEON_X; x++)
 		  {
-		    if(d->character_map[y][x] && (d->character_map[y][x]->name == desc->get_name() && ((desc->get_abilities() & 0x00000080) != 0)))
+		    if(d->character_map[y][x] && (d->character_map[y][x]->name == d->monster_descriptions[random].get_name() && ((d->monster_descriptions[random].get_abilities() & 0x00000080) != 0)))
 		      {
 			eligible_monster = false;
 		      }
@@ -1277,7 +1275,7 @@ npc *create_npc(dungeon_t *d) {
 	      }
 	    for(uint32_t i = 0; i < d->invalid_monsters.size(); i++)
 	      {
-		if(desc->get_name() == d->invalid_monsters[i] && ((desc->get_abilities() & 0x00000080) != 0))
+		if(d->monster_descriptions[random].get_name() == d->invalid_monsters[i].name && ((d->monster_descriptions[random].get_abilities() & 0x00000080) != 0))
 		  {
 		    eligible_monster = false;
 		  }
@@ -1297,23 +1295,26 @@ npc *create_npc(dungeon_t *d) {
 	  }
 	}
 
+	monster_description &desc = d->monster_descriptions[random];
+
 	pos[dim_y] = yPos;
 	pos[dim_x] = xPos;
 
 	m->position[dim_y] = pos[dim_y];
 	m->position[dim_x] = pos[dim_x];
-	m->speed = desc->get_speed().roll();
+	m->speed = desc.get_speed().roll();
 	m->alive = 1;
-	m->hp = desc->get_hitpoints().roll();
-	m->damage = desc->get_damage();
+	m->hp = desc.get_hitpoints().roll();
+	m->damage = desc.get_damage();
 	m->sequence_number = ++d->character_sequence_number;
-	m->characteristics = desc->get_abilities();
+	m->characteristics = desc.get_abilities();
 	m->have_seen_pc = 0;
 	m->pc_last_known_position[dim_y] = pos[dim_y];
 	m->pc_last_known_position[dim_x] = pos[dim_x];
-	m->description = desc->get_description();
-	m->name = (const char *) desc->get_name().c_str();
-	m->color = desc->get_color();
+	m->description = desc.get_description();
+	m->name = desc.get_name().c_str();
+	m->color = desc.get_color();
+	m->symbol = desc.symbol;
 
 	return m;
 }

@@ -10,6 +10,7 @@
 #include "npc.h"
 #include "move.h"
 #include "io.h"
+#include "object.h"
 
 const char *victory =
   "\n                                       o\n"
@@ -76,7 +77,7 @@ void usage(char *name)
 
 int main(int argc, char *argv[])
 {
-  dungeon_t d;
+  dungeon d;
   time_t seed;
   struct timeval tv;
   int32_t i;
@@ -87,10 +88,18 @@ int main(int argc, char *argv[])
   char *load_file;
   char *pgm_file;
 
-  d.num_objects = 10;
-
-  parse_descriptions(&d);
+  //memset(&d, 0, sizeof(d));
+  //parse_descriptions(&d);
   //print_descriptions(&d);
+  //io_init_terminal();
+  //memset(&d, 0, sizeof(d));
+  //d.max_monsters = MAX_MONSTERS;
+  //d.num_objects = 10;
+  //init_dungeon(&d);
+  //gen_dungeon(&d);
+  //config_pc(&d);
+  //gen_monsters(&d);
+  //create_objects(&d);
   //destroy_descriptions(&d);
 
   //return 0;
@@ -104,6 +113,7 @@ int main(int argc, char *argv[])
   do_seed = 1;
   save_file = load_file = NULL;
   d.max_monsters = MAX_MONSTERS;
+  d.num_objects = 10;
 
   /* The project spec requires '--load' and '--save'.  It's common  *
    * to have short and long forms of most switches (assuming you    *
@@ -225,6 +235,7 @@ int main(int argc, char *argv[])
   srand(seed);
 
   io_init_terminal();
+  parse_descriptions(&d);
   init_dungeon(&d);
 
   if (do_load) {
@@ -237,7 +248,7 @@ int main(int argc, char *argv[])
 
   config_pc(&d);
   gen_monsters(&d);
-  gen_objects(&d);
+  create_objects(&d);
 
   io_display(&d);
   io_queue_message("Seed is %u.", seed);

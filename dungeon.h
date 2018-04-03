@@ -72,10 +72,10 @@ class dungeon {
   uint8_t pc_tunnel[DUNGEON_Y][DUNGEON_X];
   character *character_map[DUNGEON_Y][DUNGEON_X];
   //This is created to hold all the names of the monsters who have died to avoid replacement in new dungeon
-  std::vector<std::string> invalid_monsters;
+  std::vector<character> invalid_monsters;
   object *object_map[DUNGEON_Y][DUNGEON_X];
   //This is created to hold all the names of the objects who have been picked up by the PC
-  std::vector<std::string> invalid_objects;
+  std::vector<object> invalid_objects;
   pc *PC;
   heap_t events;
   uint16_t num_monsters;

@@ -30,6 +30,7 @@ private:
 	int yPos;
 
 public:
+
 	pair_t position;
 
 	std::string get_name();
@@ -116,5 +117,7 @@ public:
 
 	//pair_t get_pos();
 };
+
+	void create_objects(dungeon *d);
 
 #endif
