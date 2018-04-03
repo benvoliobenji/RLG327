@@ -47,7 +47,8 @@ void config_pc(dungeon_t *d)
   d->PC->hp = 100;
   d->PC->damage = dam_dice;
   d->PC->name = "Henry the Hero";
-  d->PC->color.push_back(COLOR_WHITE);
+  //This is the color white in ncurses
+  d->PC->color.push_back(7);
 
 
   d->character_map[character_get_y(d->PC)][character_get_x(d->PC)] = d->PC;

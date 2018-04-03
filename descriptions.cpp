@@ -15,6 +15,7 @@
 #include "dice.h"
 #include "character.h"
 #include "utils.h"
+#include "object.h"
 
 #define MONSTER_FILE_SEMANTIC          "RLG327 MONSTER DESCRIPTION"
 #define MONSTER_FILE_VERSION           1U
@@ -1069,13 +1070,14 @@ object *create_object(dungeon_t *d) {
 
 	std::vector<object_description> object_vector = d->object_descriptions;
 
-	int random, obj_rarity;
+	int random;
+	uint32_t obj_rarity;
 	int xPos, yPos;
 	bool placed = false;
 	bool valid_object = false;
 	bool eligible_object = true;
 	bool valid_and_eligible = false;
-	char desc_type;
+	//char desc_type;
 	object_description desc;
 
 	//To make sure the object generated is valid and eligible
@@ -1093,7 +1095,7 @@ object *create_object(dungeon_t *d) {
 		
 		desc = object_vector[random];
 		
-		if(desc.rarity >= obj_rarity)
+		if(desc.get_rarity() >= obj_rarity)
 		  {
 		    valid_object = true;
 		  }
@@ -1103,20 +1105,20 @@ object *create_object(dungeon_t *d) {
 	      {
 		for(int x = 0; x < DUNGEON_X; x++)
 		  {
-		    if(d->object_map[y][x] && (d->object_map[y][x].name == desc.name) && d->object_map[y][x].get_picked_up())
+		    if(d->object_map[y][x] && (d->object_map[y][x]->get_name() == desc.get_name()) && d->object_map[y][x]->get_picked_up())
 		      {
 			eligible_object = false;
 		      }
 		  }
 	      }
-	    for(int i = 0; i < d->invalid_objects.size(); i++)
+	    for(uint32_t i = 0; i < d->invalid_objects.size(); i++)
 	      {
-		if(desc.name == d->invalid_objects[i])
+		if(desc.get_name() == d->invalid_objects[i])
 		  {
 		    eligible_object = false;
 		  }
 	      }
-	    if(valid_object = true && eligible_object = true)
+	    if(valid_object == true && eligible_object == true)
 	      {
 		valid_and_eligible = true;
 	      }
@@ -1126,11 +1128,12 @@ object *create_object(dungeon_t *d) {
 		xPos = rand() % DUNGEON_X;
 		yPos = rand() % DUNGEON_Y;
 
-		if (d->dungeon_hardness[yPos][xPos] == 0) {
+		if (d->hardness[yPos][xPos] == 0) {
 			placed = true;
 		}
 	}
 
+	/*
 	switch(desc.get_type()){
 	case 'objtype_no_type':
 	  desc_type = '*';
@@ -1190,26 +1193,27 @@ object *create_object(dungeon_t *d) {
 	  desc_type = '%';
 	  break;
 	}
+	*/
 
 	o = new object;
-	o.set_name(desc.name);
-	o.set_description(desc->get_description());
-	o.set_type(desc_type);
-	o.set_color(desc.get_color());
-	o.set_hp(desc.get_hit());
-	o.set_dodge(desc.get_dodge());
-	o.set_defence(desc.get_defence());
-	o.set_weight(desc.get_weight());
-	o.set_speed(desc.get_speed());
-	o.set_attribute(desc.get_attribute());
-	o.set_value(desc.get_value());
-	o.set_damage(desc.damage);
-	o.set_artifact(desc.artifact);
-	o.set_rarity(desc.rarity);
-	o.on_floor();
-	o.set_xPos(xPos);
-	o.set_yPos(yPos);
-	o.not_seen();
+	o->set_name(desc.get_name());
+	o->set_description(desc.get_description());
+	o->set_type(object_symbol[desc.get_type()]);
+	o->set_color(desc.get_color());
+	o->set_hp(desc.get_hit());
+	o->set_dodge(desc.get_dodge());
+	o->set_defence(desc.get_defence());
+	o->set_weight(desc.get_weight());
+	o->set_speed(desc.get_speed());
+	o->set_attribute(desc.get_attribute());
+	o->set_value(desc.get_value());
+	o->set_damage(desc.get_damage());
+	o->set_artifact(desc.get_artifact());
+	o->set_rarity(desc.get_rarity());
+	o->on_floor();
+	o->set_xPos(xPos);
+	o->set_yPos(yPos);
+	o->not_seen();
 
 	return o;
 }
@@ -1223,13 +1227,13 @@ npc *create_npc(dungeon_t *d) {
 
 	pair_t pos;
 	int xPos, yPos;
-	bool placed = false;
-	int random, mon_rarity;
+	int random;
+	uint32_t mon_rarity;
 	bool placed = false;
 	bool valid_monster = false;
 	bool eligible_monster = true;
 	bool valid_and_eligible = false;
-	char desc_type;
+	//char desc_type;
 	monster_description desc;
 
 	//To make sure the object generated is valid and eligible
@@ -1237,19 +1241,19 @@ npc *create_npc(dungeon_t *d) {
 	//regeneration
 	while(!valid_and_eligible)
 	  {
-	    valid_object = false;
-	    eligible_object = true;
+	    valid_monster = false;
+	    eligible_monster = true;
 
-	    while(!valid_object)
+	    while(!valid_monster)
 	      {
 		random = rand() % monster_vector.size();
 		mon_rarity = rand() % 100;
 		
 		desc = monster_vector[random];
 		
-		if(desc.rarity >= mon_rarity)
+		if(desc.get_rarity() >= mon_rarity)
 		  {
-		    valid_object = true;
+		    valid_monster = true;
 		  }
 	      }
 	    
@@ -1257,42 +1261,51 @@ npc *create_npc(dungeon_t *d) {
 	      {
 		for(int x = 0; x < DUNGEON_X; x++)
 		  {
-		    if(d->character_map[y][x] && (d->character_map[y][x].name == desc.name && (desc.abilities & 0x00000080 != 0)))
+		    if(d->character_map[y][x] && (d->character_map[y][x]->name == desc.get_name() && ((desc.get_abilities() & 0x00000080) != 0)))
 		      {
-			eligible_object = false;
+			eligible_monster = false;
 		      }
 		  }
 	      }
-	    for(int i = 0; i < d->invalid_monsters.size(); i++)
+	    for(uint32_t i = 0; i < d->invalid_monsters.size(); i++)
 	      {
-		if(desc.name == d->invalid_monsters[i] && (desc.abilities & 0x00000080 != 0)
+		if(desc.get_name() == d->invalid_monsters[i] && ((desc.get_abilities() & 0x00000080) != 0))
 		  {
-		    eligible_object = false;
+		    eligible_monster = false;
 		  }
 	      }
-	    if(valid_object = true && eligible_object = true)
+	    if(valid_monster == true && eligible_monster == true)
 	      {
 		valid_and_eligible = true;
 	      }
 	  }
 
+	while (!placed) {
+	  xPos = rand() % DUNGEON_X;
+	  yPos = rand() % DUNGEON_Y;
+	  
+	  if (d->hardness[yPos][xPos] == 0) {
+	    placed = true;
+	  }
+	}
 
 	pos[dim_y] = yPos;
 	pos[dim_x] = xPos;
 
-	m.position = pos;
-	m.speed = desc.speed.roll();
-	m.alive = 1;
-	m.hp = desc.hitpoints.roll();
-	m.damage = desc.damage;
-	m.sequence_number = ++d->sequence_number;
-	m.characteristics = desc.abilities;
-	m.have_seen_pc = 0;
-	m.pc_last_known_position = pos;
-	m.description = desc.discription;
-	m.name = desc.name;
-	m.rarity = desc.rarity;
-	m.color = desc.color;
+	m->position[dim_y] = pos[dim_y];
+	m->position[dim_x] = pos[dim_x];
+	m->speed = desc.get_speed().roll();
+	m->alive = 1;
+	m->hp = desc.get_hitpoints().roll();
+	m->damage = desc.get_damage();
+	m->sequence_number = ++d->character_sequence_number;
+	m->characteristics = desc.get_abilities();
+	m->have_seen_pc = 0;
+	m->pc_last_known_position[dim_y] = pos[dim_y];
+	m->pc_last_known_position[dim_x] = pos[dim_x];
+	m->description = desc.get_description();
+	m->name = desc.get_name();
+	m->color = desc.get_color();
 
 	return m;
 }

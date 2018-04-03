@@ -11,6 +11,8 @@
 
 typedef struct dungeon dungeon_t;
 
+class object;
+
 uint32_t parse_descriptions(dungeon_t *d);
 uint32_t print_descriptions(dungeon_t *d);
 uint32_t destroy_descriptions(dungeon_t *d);
@@ -65,6 +67,14 @@ class monster_description {
            const uint32_t rarity);
   std::ostream &print(std::ostream &o);
   char get_symbol() { return symbol; }
+  inline const uint32_t get_rarity() const  { return rarity; }
+  inline const std::string &get_name() const { return name; }
+  inline const uint32_t get_abilities() const { return abilities; }
+  inline const dice &get_speed() const { return speed; }
+  inline const dice &get_hitpoints() const { return hitpoints; }
+  inline const dice &get_damage() const { return damage; }
+  inline const std::string &get_description() const { return description; }
+  inline const std::vector<uint32_t> &get_color() const { return color; }
 };
 
 class object_description {
@@ -104,6 +114,8 @@ class object_description {
   inline const std::string &get_description() const { return description; }
   inline const object_type_t get_type() const { return type; }
   inline const uint32_t get_color() const { return color; }
+  inline const uint32_t get_rarity() const { return rarity; }
+  inline const bool get_artifact() const { return artifact; }
   inline const dice &get_hit() const { return hit; }
   inline const dice &get_damage() const { return damage; }
   inline const dice &get_dodge() const { return dodge; }
@@ -113,6 +125,7 @@ class object_description {
   inline const dice &get_attribute() const { return attribute; }
   inline const dice &get_value() const { return value; }
 };
+
 
 std::ostream &operator<<(std::ostream &o, monster_description &m);
 std::ostream &operator<<(std::ostream &o, object_description &od);

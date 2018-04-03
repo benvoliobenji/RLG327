@@ -4,6 +4,9 @@
 # include <string>
 # include "descriptions.h"
 # include "dims.h"
+# include "dice.h"
+
+class dungeon;
 
 class object {
 private:
@@ -91,7 +94,7 @@ public:
 
 	bool get_picked_up();
 
-	bool pick_up();
+	bool pick_up(dungeon *d);
 
 	bool on_floor();
 
@@ -113,4 +116,5 @@ public:
 
 	//pair_t get_pos();
 };
+
 #endif
