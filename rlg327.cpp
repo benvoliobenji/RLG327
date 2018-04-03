@@ -237,6 +237,7 @@ int main(int argc, char *argv[])
 
   config_pc(&d);
   gen_monsters(&d);
+  gen_objects(&d);
 
   io_display(&d);
   io_queue_message("Seed is %u.", seed);

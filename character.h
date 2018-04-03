@@ -16,7 +16,7 @@ typedef enum kill_type {
 
 class character {
  public:
-  std::string name;
+  const char *name;
   char symbol;
   pair_t position;
   int32_t speed;
