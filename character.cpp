@@ -36,14 +36,9 @@ int16_t character_set_x(character *c, int16_t x)
   return c->position[dim_x] = x;
 }
 
-void character_die(character *c, dungeon *d)
+void character_die(character *c)
 {
   c->alive = 0;
-  
-  if(c != d->PC)
-    {
-      d->invalid_monsters.push_back(*c);
-    }
 }
 
 int character_is_alive(const character *c)
@@ -79,6 +74,11 @@ uint32_t character_increment_dkills(character *c)
 uint32_t character_increment_ikills(character *c, uint32_t k)
 {
   return c->kills[kill_avenged] += k;
+}
+
+const char *character_get_name(const character *c)
+{
+  return c->name;
 }
 
 uint32_t can_see(dungeon *d, pair_t voyeur, pair_t exhibitionist,
@@ -139,6 +139,7 @@ uint32_t can_see(dungeon *d, pair_t voyeur, pair_t exhibitionist,
     for (i = 0; i <= del[dim_x]; i++) {
       if (learn) {
         pc_learn_terrain(d->PC, first, mappair(first));
+        pc_see_object(d->PC, objpair(first));
       }
       if ((mappair(first) < ter_floor) && i && (i != del[dim_x])) {
         return 0;
@@ -160,6 +161,7 @@ uint32_t can_see(dungeon *d, pair_t voyeur, pair_t exhibitionist,
     for (i = 0; i <= del[dim_y]; i++) {
       if (learn) {
         pc_learn_terrain(d->PC, first, mappair(first));
+        pc_see_object(d->PC, objpair(first));
       }
       if ((mappair(first) < ter_floor) && i && (i != del[dim_y])) {
         return 0;

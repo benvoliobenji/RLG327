@@ -14,6 +14,7 @@
 #include "path.h"
 #include "event.h"
 #include "io.h"
+#include "npc.h"
 
 void do_combat(dungeon *d, character *atk, character *def)
 {
@@ -53,21 +54,26 @@ void do_combat(dungeon *d, character *atk, character *def)
   int part;
 
   if (def->alive) {
-    character_die(def, d);
-    //def->alive = 0;
+    def->alive = 0;
     charpair(def->position) = NULL;
-
+    
     if (def != d->PC) {
       d->num_monsters--;
     } else {
       if ((part = rand() % (sizeof (organs) / sizeof (organs[0]))) < 26) {
-        io_queue_message("As the %s eats your %s, "
-                         "you wonder if there is an afterlife.",
-                         atk->name, organs[part]);
+        io_queue_message("As %s%s eats your %s,", is_unique(atk) ? "" : "the ",
+                         atk->name, organs[rand() % (sizeof (organs) /
+                                                     sizeof (organs[0]))]);
+        io_queue_message("   ...you wonder if there is an afterlife.");
+        /* Queue an empty message, otherwise the game will not pause for *
+         * player to see above.                                          */
+        io_queue_message("");
       } else {
         io_queue_message("Your last thoughts fade away as "
-                         "the %s eats your %s...",
+                         "%s%s eats your %s...",
+                         is_unique(atk) ? "" : "the ",
                          atk->name, organs[part]);
+        io_queue_message("");
       }
       /* Queue an empty message, otherwise the game will not pause for *
        * player to see above.                                          */
@@ -79,7 +85,7 @@ void do_combat(dungeon *d, character *atk, character *def)
   }
 
   if (atk == d->PC) {
-    io_queue_message("You smite the %s!", def->name);
+    io_queue_message("You smite %s%s!", is_unique(def) ? "" : "the ", def->name);
   }
 
   can_see_atk = can_see(d, character_get_pos(d->PC),
@@ -89,15 +95,19 @@ void do_combat(dungeon *d, character *atk, character *def)
 
   if (atk != d->PC && def != d->PC) {
     if (can_see_atk && !can_see_def) {
-      io_queue_message("The %s callously murders some poor, "
-                       "defenseless creature.", atk->name);
+      io_queue_message("%s%s callously murders some poor, "
+                       "defenseless creature.",
+                       is_unique(atk) ? "" : "The ", atk->name);
     }
     if (can_see_def && !can_see_atk) {
-      io_queue_message("Something kills the helpless %s.", def->name);
+      io_queue_message("Something kills %s%s.",
+                       is_unique(def) ? "" : "the helpless ", def->name);
     }
     if (can_see_atk && can_see_def) {
-      io_queue_message("You watch in abject horror as the %s "
-                       "gruesomely murders the %s!", atk->name, def->name);
+      io_queue_message("You watch in abject horror as %s%s "
+                       "gruesomely murders %s%s!",
+                       is_unique(atk) ? "" : "the ", atk->name,
+                       is_unique(def) ? "" : "the ", def->name);
     }
   }
 }

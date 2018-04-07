@@ -3,10 +3,11 @@
 
 # include "heap.h"
 # include "macros.h"
+# undef swap
+# undef min
 # include "dims.h"
 # include "character.h"
 # include "descriptions.h"
-# include "object.h"
 
 #define DUNGEON_X              80
 #define DUNGEON_Y              21
@@ -20,6 +21,7 @@
 #define NPC_VISUAL_RANGE       15
 #define PC_SPEED               10
 #define MAX_MONSTERS           12
+#define MAX_OBJECTS            12
 #define SAVE_DIR               ".rlg327"
 #define DUNGEON_SAVE_FILE      "dungeon"
 #define DUNGEON_SAVE_SEMANTIC  "RLG327-S2018"
@@ -33,6 +35,8 @@
 #define hardnessxy(x, y) (d->hardness[y][x])
 #define charpair(pair) (d->character_map[pair[dim_y]][pair[dim_x]])
 #define charxy(x, y) (d->character_map[y][x])
+#define objpair(pair) (d->objmap[pair[dim_y]][pair[dim_x]])
+#define objxy(x, y) (d->objmap[y][x])
 
 typedef enum __attribute__ ((__packed__)) terrain_type {
   ter_debug,
@@ -53,6 +57,7 @@ typedef struct room {
 } room_t;
 
 class pc;
+class object;
 
 class dungeon {
  public:
@@ -71,16 +76,13 @@ class dungeon {
   uint8_t pc_distance[DUNGEON_Y][DUNGEON_X];
   uint8_t pc_tunnel[DUNGEON_Y][DUNGEON_X];
   character *character_map[DUNGEON_Y][DUNGEON_X];
-  //This is created to hold all the names of the monsters who have died to avoid replacement in new dungeon
-  std::vector<character> invalid_monsters;
-  object *object_map[DUNGEON_Y][DUNGEON_X];
-  //This is created to hold all the names of the objects who have been picked up by the PC
-  std::vector<object> invalid_objects;
+  object *objmap[DUNGEON_Y][DUNGEON_X];
   pc *PC;
   heap_t events;
   uint16_t num_monsters;
   uint16_t max_monsters;
   uint16_t num_objects;
+  uint16_t max_objects;
   uint32_t character_sequence_number;
   /* Game time isn't strictly necessary.  It's implicit in the turn number *
    * of the most recent thing removed from the event queue; however,       *
@@ -104,5 +106,7 @@ int read_dungeon(dungeon *d, char *file);
 int read_pgm(dungeon *d, char *pgm);
 void render_distance_map(dungeon *d);
 void render_tunnel_distance_map(dungeon *d);
+void init_dungeon(dungeon_t *d);
+void pc_see_object(character *the_pc, object *o);
 
 #endif

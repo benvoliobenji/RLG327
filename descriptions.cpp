@@ -15,6 +15,7 @@
 #include "dice.h"
 #include "character.h"
 #include "utils.h"
+#include "event.h"
 
 #define MONSTER_FILE_SEMANTIC          "RLG327 MONSTER DESCRIPTION"
 #define MONSTER_FILE_VERSION           1U
@@ -94,7 +95,7 @@ static const struct {
   { 0, objtype_no_type }
 };
 
-extern const char object_symbol[] = {
+const char object_symbol[] = {
   '*', /* objtype_no_type */
   '|', /* objtype_WEAPON */
   ')', /* objtype_OFFHAND */
@@ -1063,258 +1064,21 @@ std::ostream &operator<<(std::ostream &o, object_description &od)
   return od.print(o);
 }
 
+npc *monster_description::generate_monster(dungeon *d)
+{
+  npc *n;
+  std::vector<monster_description> &v = d->monster_descriptions;
+  uint32_t i;
 
-object *create_object(dungeon_t *d) {
-	object *o;
+  while (!v[(i = (rand() % v.size()))].can_be_generated() ||
+         !v[i].pass_rarity_roll())
+    ;
 
-	std::vector<object_description> &object_vector = d->object_descriptions;
+  monster_description &m = v[i];
 
-	int random = 0;
-	uint32_t obj_rarity;
-	int xPos, yPos;
-	bool placed = false;
-	bool valid_object = false;
-	bool eligible_object = true;
-	bool valid_and_eligible = false;
-	//char desc_type;
-	object_description &desc = object_vector[random];
+  n = new npc(d, m);
 
-	//To make sure the object generated is valid and eligible
-	//Check for if description is used, not object due to dungeon
-	//regeneration
-	while(!valid_and_eligible)
-	  {
-	    valid_object = false;
-	    eligible_object = true;
+  heap_insert(&d->events, new_event(d, event_character_turn, n, 0));
 
-	    while(!valid_object)
-	      {
-		if(object_vector.size() > 0)
-		  {
-		    random = std::rand() % object_vector.size();
-		  }
-
-		obj_rarity = std::rand() % 100;
-		
-		desc = object_vector[random];
-		
-		if(desc.get_rarity() >= obj_rarity)
-		  {
-		    valid_object = true;
-		  }
-	      }
-	    
-	    for(int y = 0; y < DUNGEON_Y; y++)
-	      {
-		for(int x = 0; x < DUNGEON_X; x++)
-		  {
-		    if(d->object_map[y][x] && ((d->object_map[y][x]->get_name() == desc.get_name()) && d->object_map[y][x]->get_artifact()))
-		      {
-			eligible_object = false;
-		      }
-		  }
-	      }
-	    for(uint32_t i = 0; i < d->invalid_objects.size(); i++)
-	      {
-		if(desc.get_name() == d->invalid_objects[i].get_name())
-		  {
-		    eligible_object = false;
-		  }
-	      }
-	    if(valid_object == true && eligible_object == true)
-	      {
-		valid_and_eligible = true;
-	      }
-	  }
-
-	while (!placed) {
-		xPos = rand() % DUNGEON_X;
-		yPos = rand() % DUNGEON_Y;
-
-		if (d->hardness[yPos][xPos] == 0) {
-			placed = true;
-		}
-	}
-
-	/*
-	switch(desc.get_type()){
-	case 'objtype_no_type':
-	  desc_type = '*';
-	  break;
-	case 'objtype_WEAPON':
-	  desc_type = '|':
-	  break;
-	case 'objtype_OFFHAND':
-	  desc_type = ')';
-	  break;
-	case 'objtype_RANGED':
-	  desc_type = '}';
-	  break;
-	case 'objtype_LIGHT':
-	  desc_type = '_';
-	  break;
-	case 'objtype_ARMOR':
-	  desc_type = '[';
-	  break;
-	case 'objtype_HELMET':
-	  desc_type = ']';
-	  break;
-	case 'objtype_CLOAK':
-	  desc_type = '(';
-	  break;
-	case 'objtype_BOOTS':
-	  desc_type = '\\';
-	  break;
-	case 'objtype_AMULET':
-	  desc_type = '"';
-	  break;
-	case 'objtype_RING':
-	  desc_type = '=';
-	  break;
-	case 'objtype_SCROLL':
-	  desc_type = '~';
-	  break;
-	case 'objtype_BOOK':
-	  desc_type = '?';
-	  break;
-	case 'objtype_FLASK':
-	  desc_type = '!';
-	  break;
-	case 'objtype_GOLD':
-	  desc_type = '$';
-	  break;
-	case 'objtype_AMMUNITION':
-	  desc_type = '/';
-	  break;
-	case 'objtype_FOOD':
-	  desc_type = ',';
-	  break;
-	case 'objtype_WAND':
-	  desc_type = '-';
-	  break;
-	case 'objtype_CONTAINER':
-	  desc_type = '%';
-	  break;
-	}
-	*/
-
-	o = new object;
-	o->set_name(desc.get_name());
-	o->set_description(desc.get_description());
-	o->set_type(object_symbol[desc.get_type()]);
-	o->set_color(desc.get_color());
-	o->set_hp(desc.get_hit());
-	o->set_dodge(desc.get_dodge());
-	o->set_defence(desc.get_defence());
-	o->set_weight(desc.get_weight());
-	o->set_speed(desc.get_speed());
-	o->set_attribute(desc.get_attribute());
-	o->set_value(desc.get_value());
-	o->set_damage(desc.get_damage());
-	o->set_artifact(desc.get_artifact());
-	o->set_rarity(desc.get_rarity());
-	o->on_floor();
-	o->set_xPos(xPos);
-	o->set_yPos(yPos);
-	o->not_seen();
-
-	return o;
-}
-
-npc *create_npc(dungeon_t *d) {
-	npc *m;
-
-	//std::vector<monster_description> &monster_vector = d->monster_descriptions;
-
-	m = new npc();
-
-	pair_t pos;
-	int xPos, yPos;
-	int random = 0;
-	uint32_t mon_rarity;
-	bool placed = false;
-	bool valid_monster = false;
-	bool eligible_monster = true;
-	bool valid_and_eligible = false;
-	//char desc_type;
-
-	//To make sure the object generated is valid and eligible
-	//Check for if description is used, not object due to dungeon
-	//regeneration
-	while(!valid_and_eligible)
-	  {
-	    valid_monster = false;
-	    eligible_monster = true;
-
-	    while(!valid_monster)
-	      {
-		if(d->monster_descriptions.size() > 0)
-		  {
-		    random = rand() % d->monster_descriptions.size();
-		  }
-
-		mon_rarity = rand() % 100;
-		
-		//desc = &monster_vector[random];
-		
-		if(d->monster_descriptions[random].get_rarity() >= mon_rarity)
-		  {
-		    valid_monster = true;
-		  }
-	      }
-	    
-	    for(int y = 0; y < DUNGEON_Y; y++)
-	      {
-		for(int x = 0; x < DUNGEON_X; x++)
-		  {
-		    if(d->character_map[y][x] && (d->character_map[y][x]->name == d->monster_descriptions[random].get_name() && ((d->monster_descriptions[random].get_abilities() & 0x00000080) != 0)))
-		      {
-			eligible_monster = false;
-		      }
-		  }
-	      }
-	    for(uint32_t i = 0; i < d->invalid_monsters.size(); i++)
-	      {
-		if(d->monster_descriptions[random].get_name() == d->invalid_monsters[i].name && ((d->monster_descriptions[random].get_abilities() & 0x00000080) != 0))
-		  {
-		    eligible_monster = false;
-		  }
-	      }
-	    if(valid_monster == true && eligible_monster == true)
-	      {
-		valid_and_eligible = true;
-	      }
-	  }
-
-	while (!placed) {
-	  xPos = rand() % DUNGEON_X;
-	  yPos = rand() % DUNGEON_Y;
-	  
-	  if (d->hardness[yPos][xPos] == 0) {
-	    placed = true;
-	  }
-	}
-
-	monster_description &desc = d->monster_descriptions[random];
-
-	pos[dim_y] = yPos;
-	pos[dim_x] = xPos;
-
-	m->position[dim_y] = pos[dim_y];
-	m->position[dim_x] = pos[dim_x];
-	m->speed = desc.get_speed().roll();
-	m->alive = 1;
-	m->hp = desc.get_hitpoints().roll();
-	m->damage = desc.get_damage();
-	m->sequence_number = ++d->character_sequence_number;
-	m->characteristics = desc.get_abilities();
-	m->have_seen_pc = 0;
-	m->pc_last_known_position[dim_y] = pos[dim_y];
-	m->pc_last_known_position[dim_x] = pos[dim_x];
-	m->description = desc.get_description();
-	m->name = desc.get_name().c_str();
-	m->color = desc.get_color();
-	m->symbol = desc.symbol;
-
-	return m;
+  return n;
 }

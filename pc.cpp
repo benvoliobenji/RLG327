@@ -1,7 +1,6 @@
 #include <stdlib.h>
-#include <string>
-
-#include "string.h"
+#include <ncurses.h>
+#include <string.h>
 
 #include "dungeon.h"
 #include "pc.h"
@@ -9,8 +8,7 @@
 #include "move.h"
 #include "path.h"
 #include "io.h"
-#include "dice.h"
-#include "descriptions.h"
+#include "object.h"
 
 uint32_t pc_is_alive(dungeon_t *d)
 {
@@ -28,15 +26,16 @@ void place_pc(dungeon_t *d)
 
   pc_init_known_terrain(d->PC);
   pc_observe_terrain(d->PC, d);
+
+  io_display(d);
 }
 
 void config_pc(dungeon_t *d)
 {
-  //PC rolls a 6 sided die for damage
-  dice dam_dice(0, 1, 6);
+  static dice pc_dice(0, 1, 4);
+
   d->PC = new pc;
 
-  memset(d->PC, 0, sizeof (*d->PC));
   d->PC->symbol = '@';
 
   place_pc(d);
@@ -45,12 +44,9 @@ void config_pc(dungeon_t *d)
   d->PC->alive = 1;
   d->PC->sequence_number = 0;
   d->PC->kills[kill_direct] = d->PC->kills[kill_avenged] = 0;
-  d->PC->hp = 100;
-  d->PC->damage = dam_dice;
-  d->PC->name = "Henry the Hero";
-  //This is the color white in ncurses
-  d->PC->color.push_back(7);
-
+  d->PC->color.push_back(COLOR_WHITE);
+  d->PC->damage = &pc_dice;
+  d->PC->name = "Isabella Garcia-Shapiro";
 
   d->character_map[character_get_y(d->PC)][character_get_x(d->PC)] = d->PC;
 
@@ -249,4 +245,11 @@ void pc_observe_terrain(pc *p, dungeon_t *d)
 int32_t is_illuminated(pc *p, int16_t y, int16_t x)
 {
   return p->visible[y][x];
+}
+
+void pc_see_object(character *the_pc, object *o)
+{
+  if (o) {
+    o->has_been_seen();
+  }
 }

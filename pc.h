@@ -9,6 +9,7 @@
 
 class pc : public character {
  public:
+  ~pc() {}
   terrain_type_t known_terrain[DUNGEON_Y][DUNGEON_X];
   uint8_t visible[DUNGEON_Y][DUNGEON_X];
 };
