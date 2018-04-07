@@ -120,3 +120,8 @@ int32_t object::get_type()
 {
   return type;
 }
+
+int object::roll_damage()
+{
+	return this->damage.roll();
+}

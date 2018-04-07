@@ -22,6 +22,7 @@ class pc : public character {
   int take_off(int equipment_pos);
   void drop(dungeon *d, int inventory_pos);
   void destroy(int inventory_pos);
+  int damage_roll();
 };
 
 void pc_delete(pc *pc);

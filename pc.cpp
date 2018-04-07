@@ -48,6 +48,18 @@ void config_pc(dungeon_t *d)
   d->PC->damage = &pc_dice;
   d->PC->name = "Isabella Garcia-Shapiro";
 
+  for (int i = 0; i < 11; i++) {
+	  object *o = NULL;
+
+	  d->PC->equipment.push_back(o);
+  }
+
+  for (int i = 0; i < 9; i++) {
+	  object *o = NULL;
+
+	  d->PC->inventory.push_back(o);
+  }
+
   d->character_map[character_get_y(d->PC)][character_get_x(d->PC)] = d->PC;
 
   dijkstra(d);
@@ -539,6 +551,21 @@ void pc::destroy(int inventory_pos)
 
 	this->inventory[inventory_pos].delete();
 	this->inventory[inventory_pos] = NULL;
+}
+
+int pc::damage_roll()
+{
+	int total_damage;
+
+	total_damage += this->damage->roll();
+
+	for (int i = 0; i < this->equipment.size(); i++) {
+		if (this->equipment[i] != NULL) {
+			total_damage += this->equipment[i]->roll_damage();
+		}
+	}
+
+	return total_damage;
 }
 
 

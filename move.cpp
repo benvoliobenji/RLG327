@@ -54,36 +54,128 @@ void do_combat(dungeon *d, character *atk, character *def)
   int part;
 
   if (def->alive) {
-    def->alive = 0;
-    charpair(def->position) = NULL;
+    //def->alive = 0;
+    //charpair(def->position) = NULL;
     
+	if (def != d->PC && atk != d->PC) {
+		//Swapping positions of attacker and defender
+		//Prof says this is legal, but buggy, may fix later
+		pair_t att_pos;
+		att_pos[dim_y] = atk->position[dim_y];
+		att_pos[dim_x] = atk->position[dim_x];
+
+		atk->position = def->position;
+		def->position = att_pos;
+
+		d->character_map[atk->position[dim_y]][atk->position[dim_x]] = atk;
+		d->character_map[def->position[dim_y]][def->position[dim_x]] = def;
+	  }
+
+	else {
+		int atk_roll;
+		int def_roll;
+
+		if (def == d->PC) {
+			atk_roll = atk->damage_roll();
+			def_roll = d->PC->damage_roll();
+		}
+
+		if (atk == d->PC) {
+			atk_roll = d->PC->damage_roll();
+			def_roll = d->PC->damage_roll();
+		}
+
+		if (atk_roll > def_roll) {
+			if (atk_roll - def_roll > def->hp) {
+				def->hp = 0;
+				character_die(def);
+
+				d->character_map[atk->position[dim_y]][atk->position[dim_x]] = NULL;
+				atk->position = def->position;
+				charpair(def->position) = NULL;
+				d->character_map[atk->position[dim_y]][atk->position[dim_x]] = atk;
+
+
+				atk->kills[kill_direct]++;
+				atk->kills[kill_avenged] += (def->kills[kill_direct] +
+				def->kills[kill_avenged]);
+
+				if (atk == d->PC) {
+					npc *dead = (npc)def;
+
+					if (has_characteristic(dead, NPC_BOSS)) {
+						d->boss_dead = true;
+					}
+				}
+			}
+			else {
+				def->hp -= (atk_roll - def_roll);
+			}
+		}
+
+		if (def_roll > atk_roll) {
+			if (def_roll - atk_roll > def->hp) {
+				atk->hp = 0;
+				character_die(atk);
+
+				d->character_map[atk->position[dim_y]][atk->position[dim_x]] = NULL;
+				charpair(atk->position) = NULL;
+
+				def->kills[kill_direct]++;
+				def->kills[kill_avenged] += (atk->kills[kill_direct] +
+					atk->kills[kill_avenged]);
+
+				if (def == d->PC) {
+					npc *dead = (npc)atk;
+
+					if (has_characteristic(dead, NPC_BOSS)) {
+						d->boss_dead = true;
+					}
+				}
+			}
+			else {
+				atk->hp -= (def_roll - atk_roll);
+			}
+		}
+	}
+	  /*
     if (def != d->PC) {
-      d->num_monsters--;
+		//Swapping positions of attacker and defender
+		//Prof says this is legal, but buggy, may fix later
+		pair_t att_pos;
+		att_pos[dim_y] = atk->position[dim_y];
+		att_pos[dim_x] = atk->position[dim_x];
+
+		atk->position = def->position;
+		def->position = att_pos;
+
     } else {
+
       if ((part = rand() % (sizeof (organs) / sizeof (organs[0]))) < 26) {
         io_queue_message("As %s%s eats your %s,", is_unique(atk) ? "" : "the ",
                          atk->name, organs[rand() % (sizeof (organs) /
                                                      sizeof (organs[0]))]);
-        io_queue_message("   ...you wonder if there is an afterlife.");
+        io_queue_message("   ...you wonder if there is an afterlife."); */
         /* Queue an empty message, otherwise the game will not pause for *
          * player to see above.                                          */
-        io_queue_message("");
+        /*io_queue_message("");
       } else {
         io_queue_message("Your last thoughts fade away as "
                          "%s%s eats your %s...",
                          is_unique(atk) ? "" : "the ",
                          atk->name, organs[part]);
         io_queue_message("");
-      }
+      } */
       /* Queue an empty message, otherwise the game will not pause for *
        * player to see above.                                          */
-      io_queue_message("");
-    }
-    atk->kills[kill_direct]++;
-    atk->kills[kill_avenged] += (def->kills[kill_direct] +
-                                  def->kills[kill_avenged]);
+      //io_queue_message("");
+    //}
+    //atk->kills[kill_direct]++;
+    //atk->kills[kill_avenged] += (def->kills[kill_direct] +
+                                  //def->kills[kill_avenged]);
   }
 
+  /*
   if (atk == d->PC) {
     io_queue_message("You smite %s%s!", is_unique(def) ? "" : "the ", def->name);
   }
@@ -110,6 +202,7 @@ void do_combat(dungeon *d, character *atk, character *def)
                        is_unique(def) ? "" : "the ", def->name);
     }
   }
+  */
 }
 
 void move_character(dungeon *d, character *c, pair_t next)
