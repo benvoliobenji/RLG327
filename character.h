@@ -2,8 +2,11 @@
 # define CHARACTER_H
 
 # include <stdint.h>
+# include <string>
+# include <vector>
 
 # include "dims.h"
+# include "dice.h"
 
 typedef enum kill_type {
   kill_direct,
@@ -13,10 +16,14 @@ typedef enum kill_type {
 
 class character {
  public:
+  const char *name;
   char symbol;
   pair_t position;
   int32_t speed;
   uint32_t alive;
+  int32_t hp;
+  dice damage;
+  std::vector<uint32_t> color;
   /* Characters use to have a next_turn for the move queue.  Now that it is *
    * an event queue, there's no need for that here.  Instead it's in the    *
    * event.  Similarly, sequence_number was introduced in order to ensure   *
@@ -41,7 +48,7 @@ int16_t character_set_y(character *c, int16_t y);
 int16_t character_get_x(const character *c);
 int16_t character_set_x(character *c, int16_t x);
 uint32_t character_get_next_turn(const character *c);
-void character_die(character *c);
+void character_die(character *c, dungeon *d);
 int character_is_alive(const character *c);
 void character_next_turn(character *c);
 void character_reset_turn(character *c);

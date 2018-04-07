@@ -9,6 +9,8 @@
 #include "event.h"
 #include "pc.h"
 
+//Not being used
+/*
 static uint32_t max_monster_cells(dungeon_t *d)
 {
   uint32_t i;
@@ -22,7 +24,8 @@ static uint32_t max_monster_cells(dungeon_t *d)
 
   return sum;
 }
-
+*/
+/*
 void gen_monsters(dungeon *d)
 {
   uint32_t i;
@@ -30,8 +33,10 @@ void gen_monsters(dungeon *d)
   uint32_t room;
   pair_t p;
   const static char symbol[] = "0123456789abcdef";
-
-  d->num_monsters = min(d->max_monsters, max_monster_cells(d));
+  uint32_t num_cells;
+  
+  num_cells = max_monster_cells(d);
+  d->num_monsters = d->max_monsters < num_cells ? d->max_monsters : num_cells;
 
   for (i = 0; i < d->num_monsters; i++) {
     m = new npc;
@@ -53,7 +58,9 @@ void gen_monsters(dungeon *d)
     m->alive = 1;
     m->sequence_number = ++d->character_sequence_number;
     m->characteristics = rand() & 0x0000000f;
+*/
     /*    m->npc->characteristics = 0xf;*/
+/*
     m->symbol = symbol[m->characteristics];
     m->have_seen_pc = 0;
     m->kills[kill_direct] = m->kills[kill_avenged] = 0;
@@ -62,6 +69,22 @@ void gen_monsters(dungeon *d)
 
     heap_insert(&d->events, new_event(d, event_character_turn, m, 0));
   }
+}
+
+*/
+
+void gen_monsters(dungeon *d) {
+	npc *m;
+
+	for (int i = 0; i < d->max_monsters; i++) {
+		m = create_npc(d);
+
+		d->character_map[m->position[dim_y]][m->position[dim_x]] = m;
+
+		heap_insert(&d->events, new_event(d, event_character_turn, m, 0));
+	}
+
+	d->num_monsters = d->max_monsters;
 }
 
 void npc_next_pos_rand_tunnel(dungeon_t *d, npc *c, pair_t next)
@@ -526,3 +549,4 @@ uint32_t dungeon_has_npcs(dungeon_t *d)
 {
   return d->num_monsters;
 }
+

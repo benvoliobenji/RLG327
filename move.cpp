@@ -53,20 +53,21 @@ void do_combat(dungeon *d, character *atk, character *def)
   int part;
 
   if (def->alive) {
-    def->alive = 0;
+    character_die(def, d);
+    //def->alive = 0;
     charpair(def->position) = NULL;
-    
+
     if (def != d->PC) {
       d->num_monsters--;
     } else {
       if ((part = rand() % (sizeof (organs) / sizeof (organs[0]))) < 26) {
-        io_queue_message("As the %c eats your %s, "
+        io_queue_message("As the %s eats your %s, "
                          "you wonder if there is an afterlife.",
-                         atk->symbol, organs[part]);
+                         atk->name, organs[part]);
       } else {
         io_queue_message("Your last thoughts fade away as "
-                         "the %c eats your %s...",
-                         atk->symbol, organs[part]);
+                         "the %s eats your %s...",
+                         atk->name, organs[part]);
       }
       /* Queue an empty message, otherwise the game will not pause for *
        * player to see above.                                          */
@@ -78,7 +79,7 @@ void do_combat(dungeon *d, character *atk, character *def)
   }
 
   if (atk == d->PC) {
-    io_queue_message("You smite the %c!", def->symbol);
+    io_queue_message("You smite the %s!", def->name);
   }
 
   can_see_atk = can_see(d, character_get_pos(d->PC),
@@ -88,15 +89,15 @@ void do_combat(dungeon *d, character *atk, character *def)
 
   if (atk != d->PC && def != d->PC) {
     if (can_see_atk && !can_see_def) {
-      io_queue_message("The %c callously murders some poor, "
-                       "defenseless creature.", atk->symbol);
+      io_queue_message("The %s callously murders some poor, "
+                       "defenseless creature.", atk->name);
     }
     if (can_see_def && !can_see_atk) {
-      io_queue_message("Something kills the helpless %c.", def->symbol);
+      io_queue_message("Something kills the helpless %s.", def->name);
     }
     if (can_see_atk && can_see_def) {
-      io_queue_message("You watch in abject horror as the %c "
-                       "gruesomely murders the %c!", atk->symbol, def->symbol);
+      io_queue_message("You watch in abject horror as the %s "
+                       "gruesomely murders the %s!", atk->name, def->name);
     }
   }
 }

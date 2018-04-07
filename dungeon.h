@@ -5,6 +5,8 @@
 # include "macros.h"
 # include "dims.h"
 # include "character.h"
+# include "descriptions.h"
+# include "object.h"
 
 #define DUNGEON_X              80
 #define DUNGEON_Y              21
@@ -22,6 +24,8 @@
 #define DUNGEON_SAVE_FILE      "dungeon"
 #define DUNGEON_SAVE_SEMANTIC  "RLG327-S2018"
 #define DUNGEON_SAVE_VERSION   0U
+#define MONSTER_DESC_FILE      "monster_desc.txt"
+#define OBJECT_DESC_FILE       "object_desc.txt"
 
 #define mappair(pair) (d->map[pair[dim_y]][pair[dim_x]])
 #define mapxy(x, y) (d->map[y][x])
@@ -67,10 +71,16 @@ class dungeon {
   uint8_t pc_distance[DUNGEON_Y][DUNGEON_X];
   uint8_t pc_tunnel[DUNGEON_Y][DUNGEON_X];
   character *character_map[DUNGEON_Y][DUNGEON_X];
+  //This is created to hold all the names of the monsters who have died to avoid replacement in new dungeon
+  std::vector<character> invalid_monsters;
+  object *object_map[DUNGEON_Y][DUNGEON_X];
+  //This is created to hold all the names of the objects who have been picked up by the PC
+  std::vector<object> invalid_objects;
   pc *PC;
   heap_t events;
   uint16_t num_monsters;
   uint16_t max_monsters;
+  uint16_t num_objects;
   uint32_t character_sequence_number;
   /* Game time isn't strictly necessary.  It's implicit in the turn number *
    * of the most recent thing removed from the event queue; however,       *
@@ -80,6 +90,8 @@ class dungeon {
   uint32_t time;
   uint32_t is_new;
   uint32_t quit;
+  std::vector<monster_description> monster_descriptions;
+  std::vector<object_description> object_descriptions;
 };
 
 void init_dungeon(dungeon *d);

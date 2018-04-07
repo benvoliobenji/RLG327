@@ -36,9 +36,14 @@ int16_t character_set_x(character *c, int16_t x)
   return c->position[dim_x] = x;
 }
 
-void character_die(character *c)
+void character_die(character *c, dungeon *d)
 {
   c->alive = 0;
+  
+  if(c != d->PC)
+    {
+      d->invalid_monsters.push_back(*c);
+    }
 }
 
 int character_is_alive(const character *c)

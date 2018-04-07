@@ -164,7 +164,7 @@ static void heap_link(heap_t *h, heap_node_t *node, heap_node_t *root)
 static void heap_consolidate(heap_t *h)
 {
   uint32_t i;
-  heap_node_t *x, *y, *n;
+  heap_node_t *x, *y, *n, *temp;
   heap_node_t *a[64]; /* Need ceil(lg(h->size)), so this is good  *
                        * to the limit of a 64-bit address space,  *
                        * and much faster than any lg calculation. */
@@ -179,7 +179,11 @@ static void heap_consolidate(heap_t *h)
     while (a[x->degree]) {
       y = a[x->degree];
       if (h->compare(x->datum, y->datum) > 0) {
-        swap(x, y);
+        //swap(x, y);
+	temp = x;
+	x = y;
+	y = temp;
+	//memswap(x, y);
       }
       a[x->degree] = NULL;
       heap_link(h, y, x);
