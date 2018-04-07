@@ -293,6 +293,10 @@ void pc::pick_up(dungeon *d)
 
 void pc::equip(object *o)
 {
+	if (o == NULL) {
+		return;
+	}
+
 	switch (o->get_type()) {
 
 	//For WEAPON

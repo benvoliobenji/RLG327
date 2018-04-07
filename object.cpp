@@ -123,5 +123,10 @@ int32_t object::get_type()
 
 int object::roll_damage()
 {
-	return this->damage.roll();
+	return damage.roll();
+}
+
+const char * object::get_desc()
+{
+	return description.c_str();
 }

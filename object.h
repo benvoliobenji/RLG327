@@ -43,6 +43,7 @@ class object {
   void has_been_seen() { seen = true; }
   int16_t *get_position() { return position; }
   int roll_damage();
+  const char *get_desc();
 };
 
 void gen_objects(dungeon_t *d);
