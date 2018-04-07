@@ -253,3 +253,292 @@ void pc_see_object(character *the_pc, object *o)
     o->has_been_seen();
   }
 }
+
+void pc::pick_up(dungeon *d)
+{
+	if (d->objmap[d->PC->position[dim_y]][d->PC->position[dim_x]] == NULL) {
+		return;
+	}
+
+	bool full_inventory = true;
+	int open_slot;
+
+	for (int i = 0; i < this->inventory.size(); i++) {
+		if (this->inventory[i] == NULL) {
+			full_inventory = false;
+			open_slot = i;
+		}
+	}
+
+	if (full_inventory) {
+		return;
+	}
+
+	this->inventory[open_slot] = d->objmap[d->PC->position[dim_y]][d->PC->position[dim_x]];
+	d->objmap[d->PC->position[dim_y]][d->PC->position[dim_x]] = NULL;
+
+}
+
+void pc::equip(object *o)
+{
+	switch (o->get_type()) {
+
+	//For WEAPON
+	case 1 :
+		if (this->equipment[0] == NULL) {
+			this->equipment[0] = o;
+		}
+		else {
+			object *old_equipment = this->equipment[0];
+
+			for (int i = 0; i < this->inventory.size(); i++) {
+				if (this->inventory[i]->get_name() == o->get_name()) {
+					this->inventory[i] = old_equipment;
+					this->equipment[0] = o;
+				}
+			}
+		}
+
+		break;
+
+	//For OFFHAND
+	case 2:
+		if (this->equipment[1] == NULL) {
+			this->equipment[1] = o;
+		}
+		else {
+			object *old_equipment = this->equipment[1];
+
+			for (int i = 0; i < this->inventory.size(); i++) {
+				if (this->inventory[i]->get_name() == o->get_name()) {
+					this->inventory[i] = old_equipment;
+					this->equipment[1] = o;
+				}
+			}
+		}
+
+		break;
+
+	//For RANGED
+	case 3:
+		if (this->equipment[2] == NULL) {
+			this->equipment[2] = o;
+		}
+		else {
+			object *old_equipment = this->equipment[2];
+
+			for (int i = 0; i < this->inventory.size(); i++) {
+				if (this->inventory[i]->get_name() == o->get_name()) {
+					this->inventory[i] = old_equipment;
+					this->equipment[2] = o;
+				}
+			}
+		}
+
+		break;
+
+	//For LIGHT
+	case 4:
+		if (this->equipment[3] == NULL) {
+			this->equipment[3] = o;
+		}
+		else {
+			object *old_equipment = this->equipment[3];
+
+			for (int i = 0; i < this->inventory.size(); i++) {
+				if (this->inventory[i]->get_name() == o->get_name()) {
+					this->inventory[i] = old_equipment;
+					this->equipment[3] = o;
+				}
+			}
+		}
+
+		break;
+
+	//For ARMOR
+	case 5:
+		if (this->equipment[4] == NULL) {
+			this->equipment[4] = o;
+		}
+		else {
+			object *old_equipment = this->equipment[4];
+
+			for (int i = 0; i < this->inventory.size(); i++) {
+				if (this->inventory[i]->get_name() == o->get_name()) {
+					this->inventory[i] = old_equipment;
+					this->equipment[4] = o;
+				}
+			}
+		}
+
+		break;
+
+	//For HELMET
+	case 6:
+		if (this->equipment[5] == NULL) {
+			this->equipment[5] = o;
+		}
+		else {
+			object *old_equipment = this->equipment[5];
+
+			for (int i = 0; i < this->inventory.size(); i++) {
+				if (this->inventory[i]->get_name() == o->get_name()) {
+					this->inventory[i] = old_equipment;
+					this->equipment[5] = o;
+				}
+			}
+		}
+
+		break;
+
+	//For CLOAK
+	case 7:
+		if (this->equipment[6] == NULL) {
+			this->equipment[6] = o;
+		}
+		else {
+			object *old_equipment = this->equipment[6];
+
+			for (int i = 0; i < this->inventory.size(); i++) {
+				if (this->inventory[i]->get_name() == o->get_name()) {
+					this->inventory[i] = old_equipment;
+					this->equipment[6] = o;
+				}
+			}
+		}
+
+		break;
+
+	//For GLOVES
+	case 8:
+		if (this->equipment[7] == NULL) {
+			this->equipment[7] = o;
+		}
+		else {
+			object *old_equipment = this->equipment[7];
+
+			for (int i = 0; i < this->inventory.size(); i++) {
+				if (this->inventory[i]->get_name() == o->get_name()) {
+					this->inventory[i] = old_equipment;
+					this->equipment[7] = o;
+				}
+			}
+		}
+
+		break;
+
+	//For BOOTS
+	case 9:
+		if (this->equipment[8] == NULL) {
+			this->equipment[8] = o;
+		}
+		else {
+			object *old_equipment = this->equipment[8];
+
+			for (int i = 0; i < this->inventory.size(); i++) {
+				if (this->inventory[i]->get_name() == o->get_name()) {
+					this->inventory[i] = old_equipment;
+					this->equipment[8] = o;
+				}
+			}
+		}
+
+		break;
+
+	//For AMULET
+	case 10:
+		if (this->equipment[9] == NULL) {
+			this->equipment[9] = o;
+		}
+		else {
+			object *old_equipment = this->equipment[9];
+
+			for (int i = 0; i < this->inventory.size(); i++) {
+				if (this->inventory[i]->get_name() == o->get_name()) {
+					this->inventory[i] = old_equipment;
+					this->equipment[9] = o;
+				}
+			}
+		}
+
+		break;
+
+	//For RING
+	case 11:
+		if (this->equipment[10] == NULL) {
+			this->equipment[10] = o;
+		}
+		else if (this->equipment[11] == NULL) {
+			this->equipment[11] = o;
+		}
+		else {
+			object *old_equipment = this->equipment[1];
+
+			for (int i = 0; i < this->inventory.size(); i++) {
+				if (this->inventory[i]->get_name() == o->get_name()) {
+					this->inventory[i] = old_equipment;
+					this->equipment[10] = o;
+				}
+			}
+		}
+
+		break;
+	}
+}
+
+
+int pc::take_off(int equipment_pos)
+{
+	bool full_inventory = true;
+	int open_slot;
+
+	//Test to see if given position to remove is NULL
+	if (this->equipment[equipment_pos] == NULL) {
+		return 1;
+	}
+
+	//Test to see if there is a full inventory
+	for (int i = 0; i < this->inventory.size(); i++) {
+		if (this->inventory[i] == NULL) {
+			full_inventory = false;
+			open_slot = i;
+		}
+	}
+
+	if (full_inventory) {
+		return 2;
+	}
+
+	this->inventory[open_slot] = this->equipment[equipment_pos];
+	this->equipment[equipment_pos] = NULL;
+
+	return 0;
+}
+
+void pc::drop(dungeon * d, int inventory_pos)
+{
+	if (this->inventory[inventory_pos] == NULL) {
+		return;
+	}
+
+	if (d->objmap[d->PC->position[dim_y]][d->PC->position[dim_x]] == NULL) {
+		d->objmap[d->PC->position[dim_y]][d->PC->position[dim_x]] = this->inventory[inventory_pos];
+	}
+	else {
+		d->objmap[d->PC->position[dim_y]][d->PC->position[dim_x]]->next = this->inventory[inventory_pos];
+	}
+
+	this->inventory[inventory_pos] = NULL;
+}
+
+void pc::destroy(int inventory_pos)
+{
+	if (this->inventory[inventory_pos] == NULL) {
+		return;
+	}
+
+	this->inventory[inventory_pos].delete();
+	this->inventory[inventory_pos] = NULL;
+}
+
+
