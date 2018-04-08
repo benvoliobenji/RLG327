@@ -18,40 +18,40 @@
 
 void do_combat(dungeon *d, character *atk, character *def)
 {
-  int can_see_atk, can_see_def;
-  const char *organs[] = {
-    "liver",                   /*  0 */
-    "pancreas",                /*  1 */
-    "heart",                   /*  2 */
-    "eye",                     /*  3 */
-    "arm",                     /*  4 */
-    "leg",                     /*  5 */
-    "intestines",              /*  6 */
-    "gall bladder",            /*  7 */
-    "lungs",                   /*  8 */
-    "hand",                    /*  9 */
-    "foot",                    /* 10 */
-    "spinal cord",             /* 11 */
-    "pituitary gland",         /* 12 */
-    "thyroid",                 /* 13 */
-    "tongue",                  /* 14 */
-    "bladder",                 /* 15 */
-    "diaphram",                /* 16 */
-    "stomach",                 /* 17 */
-    "pharynx",                 /* 18 */
-    "esophagus",               /* 19 */
-    "trachea",                 /* 20 */
-    "urethra",                 /* 21 */
-    "spleen",                  /* 22 */
-    "ganglia",                 /* 23 */
-    "ear",                     /* 24 */
-    "subcutaneous tissue"      /* 25 */
-    "cerebellum",              /* 26 */ /* Brain parts begin here */
-    "hippocampus",             /* 27 */
-    "frontal lobe",            /* 28 */
-    "brain",                   /* 29 */
-  };
-  int part;
+  //int can_see_atk, can_see_def;
+  //const char *organs[] = {
+  //"liver",                   /*  0 */
+    //"pancreas",                /*  1 */
+    //"heart",                   /*  2 */
+    //"eye",                     /*  3 */
+    //"arm",                     /*  4 */
+    //"leg",                     /*  5 */
+    //"intestines",              /*  6 */
+    //"gall bladder",            /*  7 */
+    //"lungs",                   /*  8 */
+    //"hand",                    /*  9 */
+    //"foot",                    /* 10 */
+    //"spinal cord",             /* 11 */
+    //"pituitary gland",         /* 12 */
+    //"thyroid",                 /* 13 */
+    //"tongue",                  /* 14 */
+    //"bladder",                 /* 15 */
+    //"diaphram",                /* 16 */
+    //"stomach",                 /* 17 */
+    //"pharynx",                 /* 18 */
+    //"esophagus",               /* 19 */
+    //"trachea",                 /* 20 */
+    //"urethra",                 /* 21 */
+    //"spleen",                  /* 22 */
+    //"ganglia",                 /* 23 */
+    //"ear",                     /* 24 */
+    //"subcutaneous tissue"      /* 25 */
+    //"cerebellum",              /* 26 */ /* Brain parts begin here */
+    //"hippocampus",             /* 27 */
+    //"frontal lobe",            /* 28 */
+    //"brain",                   /* 29 */
+  // };
+  //int part;
 
   if (def->alive) {
     //def->alive = 0;
@@ -64,8 +64,11 @@ void do_combat(dungeon *d, character *atk, character *def)
 		att_pos[dim_y] = atk->position[dim_y];
 		att_pos[dim_x] = atk->position[dim_x];
 
-		atk->position = def->position;
-		def->position = att_pos;
+		atk->position[dim_y] = def->position[dim_y];
+		atk->position[dim_x] = def->position[dim_x];
+
+		def->position[dim_y] = att_pos[dim_y];
+		def->position[dim_x] = att_pos[dim_x];
 
 		d->character_map[atk->position[dim_y]][atk->position[dim_x]] = atk;
 		d->character_map[def->position[dim_y]][def->position[dim_x]] = def;
@@ -86,12 +89,13 @@ void do_combat(dungeon *d, character *atk, character *def)
 		}
 
 		if (atk_roll > def_roll) {
-			if (atk_roll - def_roll > def->hp) {
+		  if (atk_roll - def_roll > (int)def->hp) {
 				def->hp = 0;
 				character_die(def);
 
 				d->character_map[atk->position[dim_y]][atk->position[dim_x]] = NULL;
-				atk->position = def->position;
+				atk->position[dim_y] = def->position[dim_y];
+				atk->position[dim_x] = def->position[dim_x];
 				charpair(def->position) = NULL;
 				d->character_map[atk->position[dim_y]][atk->position[dim_x]] = atk;
 
@@ -101,9 +105,9 @@ void do_combat(dungeon *d, character *atk, character *def)
 				def->kills[kill_avenged]);
 
 				if (atk == d->PC) {
-					npc *dead = (npc)def;
+					npc *dead = (npc *)def;
 
-					if (has_characteristic(dead, NPC_BOSS)) {
+					if (has_characteristic(dead, BOSS)) {
 						d->boss_dead = true;
 					}
 				}
@@ -114,7 +118,7 @@ void do_combat(dungeon *d, character *atk, character *def)
 		}
 
 		if (def_roll > atk_roll) {
-			if (def_roll - atk_roll > def->hp) {
+		  if (def_roll - atk_roll > (int)def->hp) {
 				atk->hp = 0;
 				character_die(atk);
 
@@ -126,9 +130,9 @@ void do_combat(dungeon *d, character *atk, character *def)
 					atk->kills[kill_avenged]);
 
 				if (def == d->PC) {
-					npc *dead = (npc)atk;
+					npc *dead = (npc *)atk;
 
-					if (has_characteristic(dead, NPC_BOSS)) {
+					if (has_characteristic(dead, BOSS)) {
 						d->boss_dead = true;
 					}
 				}

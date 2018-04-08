@@ -275,7 +275,7 @@ void pc::pick_up(dungeon *d)
 	bool full_inventory = true;
 	int open_slot;
 
-	for (int i = 0; i < this->inventory.size(); i++) {
+	for (int i = 0; i < (int)this->inventory.size(); i++) {
 		if (this->inventory[i] == NULL) {
 			full_inventory = false;
 			open_slot = i;
@@ -307,7 +307,7 @@ void pc::equip(object *o)
 		else {
 			object *old_equipment = this->equipment[0];
 
-			for (int i = 0; i < this->inventory.size(); i++) {
+			for (int i = 0; i < (int)this->inventory.size(); i++) {
 				if (this->inventory[i]->get_name() == o->get_name()) {
 					this->inventory[i] = old_equipment;
 					this->equipment[0] = o;
@@ -325,7 +325,7 @@ void pc::equip(object *o)
 		else {
 			object *old_equipment = this->equipment[1];
 
-			for (int i = 0; i < this->inventory.size(); i++) {
+			for (int i = 0; i < (int)this->inventory.size(); i++) {
 				if (this->inventory[i]->get_name() == o->get_name()) {
 					this->inventory[i] = old_equipment;
 					this->equipment[1] = o;
@@ -343,7 +343,7 @@ void pc::equip(object *o)
 		else {
 			object *old_equipment = this->equipment[2];
 
-			for (int i = 0; i < this->inventory.size(); i++) {
+			for (int i = 0; i < (int)this->inventory.size(); i++) {
 				if (this->inventory[i]->get_name() == o->get_name()) {
 					this->inventory[i] = old_equipment;
 					this->equipment[2] = o;
@@ -361,7 +361,7 @@ void pc::equip(object *o)
 		else {
 			object *old_equipment = this->equipment[3];
 
-			for (int i = 0; i < this->inventory.size(); i++) {
+			for (int i = 0; i < (int)this->inventory.size(); i++) {
 				if (this->inventory[i]->get_name() == o->get_name()) {
 					this->inventory[i] = old_equipment;
 					this->equipment[3] = o;
@@ -379,7 +379,7 @@ void pc::equip(object *o)
 		else {
 			object *old_equipment = this->equipment[4];
 
-			for (int i = 0; i < this->inventory.size(); i++) {
+			for (int i = 0; i < (int)this->inventory.size(); i++) {
 				if (this->inventory[i]->get_name() == o->get_name()) {
 					this->inventory[i] = old_equipment;
 					this->equipment[4] = o;
@@ -397,7 +397,7 @@ void pc::equip(object *o)
 		else {
 			object *old_equipment = this->equipment[5];
 
-			for (int i = 0; i < this->inventory.size(); i++) {
+			for (int i = 0; i < (int)this->inventory.size(); i++) {
 				if (this->inventory[i]->get_name() == o->get_name()) {
 					this->inventory[i] = old_equipment;
 					this->equipment[5] = o;
@@ -415,7 +415,7 @@ void pc::equip(object *o)
 		else {
 			object *old_equipment = this->equipment[6];
 
-			for (int i = 0; i < this->inventory.size(); i++) {
+			for (int i = 0; i < (int)this->inventory.size(); i++) {
 				if (this->inventory[i]->get_name() == o->get_name()) {
 					this->inventory[i] = old_equipment;
 					this->equipment[6] = o;
@@ -433,7 +433,7 @@ void pc::equip(object *o)
 		else {
 			object *old_equipment = this->equipment[7];
 
-			for (int i = 0; i < this->inventory.size(); i++) {
+			for (int i = 0; i < (int)this->inventory.size(); i++) {
 				if (this->inventory[i]->get_name() == o->get_name()) {
 					this->inventory[i] = old_equipment;
 					this->equipment[7] = o;
@@ -451,7 +451,7 @@ void pc::equip(object *o)
 		else {
 			object *old_equipment = this->equipment[8];
 
-			for (int i = 0; i < this->inventory.size(); i++) {
+			for (int i = 0; i < (int)this->inventory.size(); i++) {
 				if (this->inventory[i]->get_name() == o->get_name()) {
 					this->inventory[i] = old_equipment;
 					this->equipment[8] = o;
@@ -469,7 +469,7 @@ void pc::equip(object *o)
 		else {
 			object *old_equipment = this->equipment[9];
 
-			for (int i = 0; i < this->inventory.size(); i++) {
+			for (int i = 0; i < (int)this->inventory.size(); i++) {
 				if (this->inventory[i]->get_name() == o->get_name()) {
 					this->inventory[i] = old_equipment;
 					this->equipment[9] = o;
@@ -490,7 +490,7 @@ void pc::equip(object *o)
 		else {
 			object *old_equipment = this->equipment[1];
 
-			for (int i = 0; i < this->inventory.size(); i++) {
+			for (int i = 0; i < (int)this->inventory.size(); i++) {
 				if (this->inventory[i]->get_name() == o->get_name()) {
 					this->inventory[i] = old_equipment;
 					this->equipment[10] = o;
@@ -514,7 +514,7 @@ int pc::take_off(int equipment_pos)
 	}
 
 	//Test to see if there is a full inventory
-	for (int i = 0; i < this->inventory.size(); i++) {
+	for (int i = 0; i < (int)this->inventory.size(); i++) {
 		if (this->inventory[i] == NULL) {
 			full_inventory = false;
 			open_slot = i;
@@ -541,7 +541,7 @@ void pc::drop(dungeon * d, int inventory_pos)
 		d->objmap[d->PC->position[dim_y]][d->PC->position[dim_x]] = this->inventory[inventory_pos];
 	}
 	else {
-		d->objmap[d->PC->position[dim_y]][d->PC->position[dim_x]]->next = this->inventory[inventory_pos];
+	  d->objmap[d->PC->position[dim_y]][d->PC->position[dim_x]]->set_next(this->inventory[inventory_pos]);
 	}
 
 	this->inventory[inventory_pos] = NULL;
@@ -553,17 +553,17 @@ void pc::destroy(int inventory_pos)
 		return;
 	}
 
-	this->inventory[inventory_pos].delete();
+        delete this->inventory[inventory_pos];
 	this->inventory[inventory_pos] = NULL;
 }
 
 int pc::damage_roll()
 {
-	int total_damage;
+	int total_damage = 0;
 
 	total_damage += this->damage->roll();
 
-	for (int i = 0; i < this->equipment.size(); i++) {
+	for (int i = 0; i < (int)this->equipment.size(); i++) {
 		if (this->equipment[i] != NULL) {
 			total_damage += this->equipment[i]->roll_damage();
 		}

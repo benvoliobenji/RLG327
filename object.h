@@ -29,9 +29,14 @@ class object {
   {
     return damage.get_number();
   }
+
   inline int32_t get_damage_sides() const
   {
     return damage.get_sides();
+  }
+  inline void set_next(object *o)
+  {
+    next = o;
   }
   char get_symbol();
   uint32_t get_color();
