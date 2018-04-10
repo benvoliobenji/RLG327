@@ -918,6 +918,7 @@ static void io_display_wear(dungeon *d)
 	}
 
 	delwin(wear_window);
+	io_display(d);
 	refresh();
 }
 
@@ -940,13 +941,33 @@ static void io_display_take_off(dungeon *d)
 	while (!exit_code) {
 	  for (int i = 0; i < (int)d->PC->equipment.size(); i++)
 		{
-			if (d->PC->inventory[i]) {
-				mvwprintw(take_off_window, i, 0, "%d) %s", i, d->PC->equipment[i]->get_name());
-			}
+		  if(i == 10) {
+		    if (d->PC->equipment[i]) {
+		      mvwprintw(take_off_window, i, 0, "a) %s", d->PC->equipment[i]->get_name());
+		    }
 
-			else {
-				mvwprintw(take_off_window, i, 0, "%d)", i);
-			}
+		    else {
+		      mvwprintw(take_off_window, i, 0, "a)");
+		    }
+		  }
+		  else if(i == 11) {
+		    if (d->PC->equipment[i]) {
+		      mvwprintw(take_off_window, i, 0, "l) %s", d->PC->equipment[i]->get_name());
+		    }
+		    
+		    else {
+		      mvwprintw(take_off_window, i, 0, "l)");
+		    }
+		  }
+		  else {
+		    if (d->PC->equipment[i]) {
+		      mvwprintw(take_off_window, i, 0, "%d) %s", i, d->PC->equipment[i]->get_name());
+		    }
+		    
+		    else {
+		      mvwprintw(take_off_window, i, 0, "%d)", i);
+		    }
+		  }
 		}
 
 		mvwprintw(take_off_window, 12, 0, "Please select an item to take off");
@@ -1011,6 +1032,7 @@ static void io_display_take_off(dungeon *d)
 	}
 
 	delwin(take_off_window);
+	io_display(d);
 	refresh();
 }
 
@@ -1095,6 +1117,7 @@ static void io_display_drop(dungeon *d)
 	}
 
 	delwin(drop_window);
+	io_display(d);
 	refresh();
 }
 
@@ -1179,6 +1202,7 @@ static void io_display_delete(dungeon *d)
 	}
 
 	delwin(destroy_window);
+	io_display(d);
 	refresh();
 }
 
@@ -1220,6 +1244,7 @@ static void io_display_inventory(dungeon *d)
 	}
 
 	delwin(display_inventory_window);
+	io_display(d);
 	refresh();
 }
 
@@ -1242,13 +1267,33 @@ static void io_display_equipment(dungeon *d)
 	while (!exit_code) {
 	  for (int i = 0; i < (int)d->PC->equipment.size(); i++)
 		{
-			if (d->PC->inventory[i]) {
-				mvwprintw(display_equipment_window, i, 0, "%d) %s", i, d->PC->equipment[i]->get_name());
-			}
+		  if(i == 10) {
+		    if (d->PC->equipment[i]) {
+		      mvwprintw(display_equipment_window, i, 0, "a) %s", d->PC->equipment[i]->get_name());
+		    }
 
-			else {
-				mvwprintw(display_equipment_window, i, 0, "%d)", i);
-			}
+		    else {
+		      mvwprintw(display_equipment_window, i, 0, "a)");
+		    }
+		  }
+		  else if(i == 11) {
+		    if (d->PC->equipment[i]) {
+		      mvwprintw(display_equipment_window, i, 0, "l) %s", d->PC->equipment[i]->get_name());
+		    }
+		    
+		    else {
+		      mvwprintw(display_equipment_window, i, 0, "l)");
+		    }
+		  }
+		  else {
+		    if (d->PC->equipment[i]) {
+		      mvwprintw(display_equipment_window, i, 0, "%d) %s", i, d->PC->equipment[i]->get_name());
+		    }
+		    
+		    else {
+		      mvwprintw(display_equipment_window, i, 0, "%d)", i);
+		    }
+		  }
 		}
 
 		wrefresh(display_equipment_window);
@@ -1263,6 +1308,7 @@ static void io_display_equipment(dungeon *d)
 	}
 
 	delwin(display_equipment_window);
+	io_display(d);
 	refresh();
 }
 
@@ -1272,7 +1318,7 @@ static void io_display_description(const char *desc)
 	int c;
 	bool exit_code = false;
 
-	desc_window = newwin(10, 40, 5, 20);
+	desc_window = newwin(15, 60, 5, 10);
 	initscr();
 	raw();
 	noecho();
@@ -1378,6 +1424,7 @@ static void io_display_object_description(dungeon *d)
 	}
 
 	delwin(object_description_window);
+	io_display(d);
 	refresh();
 }
 
@@ -1629,7 +1676,7 @@ void io_handle_input(dungeon *d)
       io_display(d);
       fail_code = 1;
       break;
-    case 'R':
+    case 'g':
       /* Teleport the PC to a random place in the dungeon.              */
       io_teleport_pc(d);
       fail_code = 1;

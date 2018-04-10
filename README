@@ -1,12 +1,14 @@
-For this assignment, I created a class to specifically handle object descriptions, object.cpp
-and object.h. Afterwards, I modified npc and monster to handle the extra information that's
-held within monster_description. I then created factory methods within descriptions.cpp for
-both objects and descriptions. Within those factories, I check to make sure the randomly
-selected item is within the randomly generated rarity and not an artifact already
-generated (for objects) or not already in the dungeon and unique (monster). It then places
-the object or monster and then returns a pointer to an instance of the object or monster
-to the gen_monsters() in npc or create_objects() in object. After that, it was mostly changing
-io.cpp to display the items as well as colors of the objects and monsters as well as a few
-small changes to rlg327, specifically where memset was in order to deal with the descriptions
-and new vectors I added. In dungeon, I added new object and monster vectors to hold the identities
-of monsters and objects that should not be regenerated.
+For this assignment, I added two vectors for pc to deal with the inventory and the equipment.
+When I constructed the PC, I filled the vectors with NULL object pointers to set the size of
+the vectors since those shouldn't change. I decided to use vectors over arrays this time
+because I could use the .size() method instead of having ints all over the place. Outside of
+that I added the methods to pick up, put on, take off, drop, and delete items in the inventory
+and equipment. I also changed io in order to display menus for all of the different options.
+Each option for wear, take off, etc. brings up its own menu and doesn't run off of displaying
+the inventory or the equipment menu. The only thing I warn is that the display doesn't fully
+revert after looking at a monster description and not fully backing out of the cursor mode. It
+works just fine, it's just how the dungeon is being rendered after deleting the window that
+the description is printed on. The final touch ups I did was changing how the combat system works
+so that the NPC's don't fight and they deal damage based on differences in dice rolls to the
+PC. The PC also uses his/her's equiped objects to modify their damage output. Finally, I
+changed the win conditions for each side.

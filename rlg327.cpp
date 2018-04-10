@@ -245,6 +245,31 @@ int main(int argc, char *argv[])
   pc_observe_terrain(d.PC, &d);
   d.boss_dead = false;
 
+  /*
+  object *o;
+
+  for(int y = 0; y < DUNGEON_Y; y++) {
+    for(int x = 0; x < DUNGEON_X; x++) {
+      if(d.objmap[y][x] != NULL) {
+	o = d.objmap[y][x];
+      }
+    }
+  }
+
+    d.PC->inventory[0] = o;
+    std::cout << o->get_type() << std::endl;
+    d.PC->equip(d.PC->inventory[0]);
+    for(int i = 0; i < (int)d.PC->equipment.size(); i++) {
+      if(d.PC->equipment[i]) {
+	std::cout << d.PC->equipment[i]->get_name() << std::endl;
+      }
+      else {
+	std::cout << "Empty slot" << std::endl;
+      }
+    }
+
+    return 0;
+  */
   io_display(&d);
   io_queue_message("Seed is %u.", seed);
   while (pc_is_alive(&d) && !d.boss_dead && !d.quit) {

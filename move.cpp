@@ -88,6 +88,8 @@ void do_combat(dungeon *d, character *atk, character *def)
 			def_roll = d->PC->damage_roll();
 		}
 
+		io_queue_message("The attacker hits with %d and the defender hits with %d!", atk_roll, def_roll);
+
 		if (atk_roll > def_roll) {
 		  if (atk_roll - def_roll > (int)def->hp) {
 				def->hp = 0;
@@ -227,6 +229,7 @@ void move_character(dungeon *d, character *c, pair_t next)
   if (c == d->PC) {
     pc_reset_visibility(d->PC);
     pc_observe_terrain(d->PC, d);
+    d->PC->pick_up(d);
   }
 }
 

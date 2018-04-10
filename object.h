@@ -38,6 +38,10 @@ class object {
   {
     next = o;
   }
+  inline object *get_next()
+  {
+    return next;
+  }
   char get_symbol();
   uint32_t get_color();
   const char *get_name();

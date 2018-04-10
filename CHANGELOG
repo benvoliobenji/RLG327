@@ -40,4 +40,9 @@
 4/01/2018: Created object and monster factories in descriptions.cpp
 4/02/2018: Modified io.cpp to render objects and colors
 4/02/2018: Started bugfixing
-4/03/2018: Finished bugfixing for assignmetn1.08
+4/03/2018: Finished bugfixing for assignment1.08
+4/07/2018: Changed pc.cpp to carry vectors of objects for inventory and equipment
+4/07/2018: Added methods to pc.cpp to wear, drop, take off, pick up, delete objects
+4/07/2018: Changed io.cpp to display and work with the new commands for inventory and equipment
+4/08/2018: Started bugfixing
+4/09/2018: Finished bugfixing for assignment1.09
