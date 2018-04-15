@@ -9,8 +9,20 @@
 
 class pc : public character {
  public:
+  ~pc() {}
   terrain_type_t known_terrain[DUNGEON_Y][DUNGEON_X];
   uint8_t visible[DUNGEON_Y][DUNGEON_X];
+
+  std::vector<object *> equipment;
+  std::vector<object *> inventory;
+
+  void pick_up(dungeon *d);
+  void equip(object *o);
+  //int equip(int inventory_pos);
+  int take_off(int equipment_pos);
+  void drop(dungeon *d, int inventory_pos);
+  void destroy(int inventory_pos);
+  int damage_roll();
 };
 
 void pc_delete(pc *pc);
