@@ -1,6 +1,6 @@
 #include <stdlib.h>
 #include <ncurses.h>
-#include <string.h>
+#include <string>
 
 #include "dungeon.h"
 #include "pc.h"
@@ -9,7 +9,55 @@
 #include "path.h"
 #include "io.h"
 #include "object.h"
-#include "macros.h"
+
+const char *eq_slot_name[num_eq_slots] = {
+  "weapon",
+  "offhand",
+  "ranged",
+  "light",
+  "armor",
+  "helmet",
+  "cloak",
+  "gloves",
+  "boots",
+  "amulet",
+  "lh ring",
+  "rh ring"
+};
+
+pc::pc()
+{
+  uint32_t i;
+
+  for (i = 0; i < num_eq_slots; i++) {
+    eq[i] = 0;
+  }
+
+  for (i = 0; i < MAX_INVENTORY; i++) {
+    in[i] = 0;
+  }
+
+  hp = 1000;
+}
+
+pc::~pc()
+{
+  uint32_t i;
+
+  for (i = 0; i < MAX_INVENTORY; i++) {
+    if (in[i]) {
+      delete in[i];
+      in[i] = NULL;
+    }
+  }
+    
+  for (i = 0; i < num_eq_slots; i++) {
+    if (eq[i]) {
+      delete eq[i];
+      eq[i] = NULL;
+    }
+  }
+}
 
 uint32_t pc_is_alive(dungeon_t *d)
 {
@@ -48,18 +96,6 @@ void config_pc(dungeon_t *d)
   d->PC->color.push_back(COLOR_WHITE);
   d->PC->damage = &pc_dice;
   d->PC->name = "Isabella Garcia-Shapiro";
-
-  for (int i = 0; i < 12; i++) {
-	  object *o = NULL;
-
-	  d->PC->equipment.push_back(o);
-  }
-
-  for (int i = 0; i < 10; i++) {
-	  object *o = NULL;
-
-	  d->PC->inventory.push_back(o);
-  }
 
   d->character_map[character_get_y(d->PC)][character_get_x(d->PC)] = d->PC;
 
@@ -267,449 +303,157 @@ void pc_see_object(character *the_pc, object *o)
   }
 }
 
-void pc::pick_up(dungeon *d)
+void pc::recalculate_speed()
 {
-	if (d->objmap[d->PC->position[dim_y]][d->PC->position[dim_x]] == NULL) {
-		return;
-	}
+  int i;
 
-	bool full_inventory = true;
-	int open_slot;
-
-	for (int i = 0; i < (int)this->inventory.size(); i++) {
-		if (this->inventory[i] == NULL) {
-			full_inventory = false;
-			open_slot = i;
-		}
-	}
-
-	if (full_inventory) {
-		return;
-	}
-
-	this->inventory[open_slot] = d->objmap[d->PC->position[dim_y]][d->PC->position[dim_x]];
-
-	if(this->inventory[open_slot]->get_next()) {
-	  d->objmap[d->PC->position[dim_y]][d->PC->position[dim_x]] = this->inventory[open_slot]->get_next();
-	  this->inventory[open_slot]->set_next(NULL);
-	  d->PC->pick_up(d);
-	}
-	else {
-	d->objmap[d->PC->position[dim_y]][d->PC->position[dim_x]] = NULL;
-	}
-
-}
-
-void pc::equip(object *o)
-{
-  std::cout<< o->get_type() << std::endl;
-  if (o == NULL) {
-    return;
+  for (speed = PC_SPEED, i = 0; i < num_eq_slots; i++) {
+    if (eq[i]) {
+      speed += eq[i]->get_speed();
+    }
   }
-  
-  switch (o->get_type()) {
-    
-    //For WEAPON
-  case 1:
-    if (this->equipment[0] == NULL) {
-      this->equipment[0] = o;
-      this->speed += o->get_speed();
 
-      for(int i = 0; i < (int)this->inventory.size(); i++)
-	{
-	  if(this->inventory[i] == o) {
-	    this->inventory[i] = NULL;
-	  }
-	}
-    }
-    else {
-      object *old_equipment = this->equipment[0];
-      
-      for (int i = 0; i < (int)this->inventory.size(); i++) {
-	if (this->inventory[i] == o) {
-	  this->speed -= this->equipment[0]->get_speed();
-	  this->equipment[0] = this->inventory[i];
-	  this->inventory[i] = old_equipment;
-	  this->speed += this->equipment[0]->get_speed();
-	  //memswap(this->inventory[i], this->equipment[0]);
-	}
-      }
-    }
-    
-    break;
-    
-    //For OFFHAND
-  case 2:
-    if (this->equipment[1] == NULL) {
-      this->equipment[1] = o;
-      this->speed += this->equipment[1]->get_speed();
-
-      for(int i = 0; i < (int)this->inventory.size(); i++)
-	{
-	  if(this->inventory[i] == o) {
-	    this->inventory[i] = NULL;
-	  }
-	}
-    }
-    else {
-      object *old_equipment = this->equipment[1];
-      
-      for (int i = 0; i < (int)this->inventory.size(); i++) {
-	if (this->inventory[i] == o) {
-	  this->speed -= this->equipment[1]->get_speed();
-	  this->equipment[1] = this->inventory[i];
-	  this->inventory[i] = old_equipment;
-	  this->speed += this->equipment[1]->get_speed();
-	  //memswap(this->inventory[i], this->equipment[0]);
-	}
-      }
-    }
-    
-    break;
-    
-    //For RANGED
-  case 3:
-    if (this->equipment[2] == NULL) {
-      this->equipment[2] = o;
-      this->speed += this->equipment[2]->get_speed();
-
-      for(int i = 0; i < (int)this->inventory.size(); i++)
-	{
-	  if(this->inventory[i] == o) {
-	    this->inventory[i] = NULL;
-	  }
-	}
-    }
-    else {
-      object *old_equipment = this->equipment[2];
-      
-      for (int i = 0; i < (int)this->inventory.size(); i++) {
-	if (this->inventory[i] == o) {
-	  this->speed -= this->equipment[2]->get_speed();
-	  this->equipment[2] = this->inventory[i];
-	  this->inventory[i] = old_equipment;
-	  this->speed += this->equipment[2]->get_speed();
-	  //memswap(this->inventory[i], this->equipment[0]);
-	}
-      }
-    }
-    
-    break;
-    
-    //For LIGHT
-  case 4:
-    if (this->equipment[3] == NULL) {
-      this->equipment[3] = o;
-      this->speed += this->equipment[3]->get_speed();
-
-      for(int i = 0; i < (int)this->inventory.size(); i++)
-	{
-	  if(this->inventory[i] == o) {
-	    this->inventory[i] = NULL;
-	  }
-	}
-    }
-    else {
-      object *old_equipment = this->equipment[3];
-      
-      for (int i = 0; i < (int)this->inventory.size(); i++) {
-	if (this->inventory[i] == o) {
-	  this->speed -= this->equipment[3]->get_speed();
-	  this->equipment[3] = this->inventory[i];
-	  this->inventory[i] = old_equipment;
-	  this->speed += this->equipment[3]->get_speed();
-	  //memswap(this->inventory[i], this->equipment[0]);
-	}
-      }
-    }
-    
-    break;
-    
-    //For ARMOR
-  case 5:
-    if (this->equipment[4] == NULL) {
-      this->equipment[4] = o;
-      this->speed += this->equipment[4]->get_speed();
-
-      for(int i = 0; i < (int)this->inventory.size(); i++)
-	{
-	  if(this->inventory[i] == o) {
-	    this->inventory[i] = NULL;
-	  }
-	}
-    }
-    else {
-      object *old_equipment = this->equipment[4];
-      
-      for (int i = 0; i < (int)this->inventory.size(); i++) {
-	if (this->inventory[i] == o) {
-	  this->speed -= this->equipment[4]->get_speed();
-	  this->equipment[4] = this->inventory[i];
-	  this->inventory[i] = old_equipment;
-	  this->speed += this->equipment[4]->get_speed();
-	  //memswap(this->inventory[i], this->equipment[0]);
-	}
-      }
-    }
-    
-    break;
-    
-    //For HELMET
-  case 6:
-    if (this->equipment[5] == NULL) {
-      this->equipment[5] = o;
-      this->speed += this->equipment[5]->get_speed();
-
-      for(int i = 0; i < (int)this->inventory.size(); i++)
-	{
-	  if(this->inventory[i] == o) {
-	    this->inventory[i] = NULL;
-	  }
-	}
-    }
-    else {
-      object *old_equipment = this->equipment[5];
-      
-      for (int i = 0; i < (int)this->inventory.size(); i++) {
-	if (this->inventory[i] == o) {
-	  this->speed -= this->equipment[5]->get_speed();
-	  this->equipment[5] = this->inventory[i];
-	  this->inventory[i] = old_equipment;
-	  this->speed += this->equipment[5]->get_speed();
-	  //memswap(this->inventory[i], this->equipment[0]);
-	}
-      }
-    }
-    
-    break;
-    
-    //For CLOAK
-  case 7:
-    if (this->equipment[6] == NULL) {
-      this->equipment[6] = o;
-      this->speed += this->equipment[6]->get_speed();
-
-      for(int i = 0; i < (int)this->inventory.size(); i++)
-	{
-	  if(this->inventory[i] == o) {
-	    this->inventory[i] = NULL;
-	  }
-	}
-    }
-    else {
-      object *old_equipment = this->equipment[6];
-      
-      for (int i = 0; i < (int)this->inventory.size(); i++) {
-	if (this->inventory[i] == o) {
-	  this->speed -= this->equipment[6]->get_speed();
-	  this->equipment[6] = this->inventory[i];
-	  this->inventory[i] = old_equipment;
-	  this->speed += this->equipment[6]->get_speed();
-	  //memswap(this->inventory[i], this->equipment[0]);
-	}
-      }
-    }
-    
-    break;
-    
-    //For GLOVES
-  case 8:
-    if (this->equipment[7] == NULL) {
-      this->equipment[7] = o;
-      this->speed += this->equipment[7]->get_speed();
-
-      for(int i = 0; i < (int)this->inventory.size(); i++)
-	{
-	  if(this->inventory[i] == o) {
-	    this->inventory[i] = NULL;
-	  }
-	}
-    }
-    else {
-      object *old_equipment = this->equipment[7];
-      
-      for (int i = 0; i < (int)this->inventory.size(); i++) {
-	if (this->inventory[i] == o) {
-	  this->speed -= this->equipment[7]->get_speed();
-	  this->equipment[7] = this->inventory[i];
-	  this->inventory[i] = old_equipment;
-	  this->speed += this->equipment[7]->get_speed();
-	  //memswap(this->inventory[i], this->equipment[0]);
-	}
-      }
-    }
-    
-    break;
-    
-    //For BOOTS
-  case 9:
-    if (this->equipment[8] == NULL) {
-      this->equipment[8] = o;
-      this->speed += this->equipment[8]->get_speed();
-
-      for(int i = 0; i < (int)this->inventory.size(); i++)
-	{
-	  if(this->inventory[i] == o) {
-	    this->inventory[i] = NULL;
-	  }
-	}
-    }
-    else {
-      object *old_equipment = this->equipment[8];
-      
-      for (int i = 0; i < (int)this->inventory.size(); i++) {
-	if (this->inventory[i] == o) {
-	  this->speed -= this->equipment[8]->get_speed();
-	  this->equipment[8] = this->inventory[i];
-	  this->inventory[i] = old_equipment;
-	  this->speed += this->equipment[8]->get_speed();
-	  //memswap(this->inventory[i], this->equipment[0]);
-	}
-      }
-    }
-    
-    break;
-    
-    //For AMULET
-  case 10:
-    if (this->equipment[9] == NULL) {
-      this->equipment[9] = o;
-      this->speed += this->equipment[9]->get_speed();
-
-      for(int i = 0; i < (int)this->inventory.size(); i++)
-	{
-	  if(this->inventory[i] == o) {
-	    this->inventory[i] = NULL;
-	  }
-	}
-    }
-    else {
-      object *old_equipment = this->equipment[9];
-      
-      for (int i = 0; i < (int)this->inventory.size(); i++) {
-	if (this->inventory[i] == o) {
-	  this->speed -= this->equipment[9]->get_speed();
-	  this->equipment[9] = this->inventory[i];
-	  this->inventory[i] = old_equipment;
-	  this->speed += this->equipment[9]->get_speed();
-	  //memswap(this->inventory[i], this->equipment[0]);
-	}
-      }
-    }
-    
-    break;
-    
-    //For RING
-  case 11:
-    if (this->equipment[10] == NULL) {
-      this->equipment[10] = o;
-      this->speed += this->equipment[10]->get_speed();
-
-      for(int i = 0; i < (int)this->inventory.size(); i++)
-	{
-	  if(this->inventory[i] == o) {
-	    this->inventory[i] = NULL;
-	  }
-	}
-    }
-    else if (this->equipment[11] == NULL) {
-      this->equipment[11] = o;
-      this->speed += this->equipment[11]->get_speed();
-
-      for(int i = 0; i < (int)this->inventory.size(); i++)
-	{
-	  if(this->inventory[i] == o) {
-	    this->inventory[i] = NULL;
-	  }
-	}
-    }
-    else {
-      object *old_equipment = this->equipment[10];
-      
-      for (int i = 0; i < (int)this->inventory.size(); i++) {
-	if (this->inventory[i] == o) {
-	  this->speed -= this->equipment[10]->get_speed();
-	  this->equipment[10] = this->inventory[i];
-	  this->inventory[i] = old_equipment;
-	  this->speed += this->equipment[10]->get_speed();
-	  //memswap(this->inventory[i], this->equipment[0]);
-	}
-      }
-    }
-    
-    break;
+  if (speed <= 0) {
+    speed = 1;
   }
 }
 
-
-int pc::take_off(int equipment_pos)
+uint32_t pc::wear_in(uint32_t slot)
 {
-	bool full_inventory = true;
-	int open_slot;
+  object *tmp;
+  uint32_t i;
 
-	//Test to see if given position to remove is NULL
-	if (this->equipment[equipment_pos] == NULL) {
-		return 1;
-	}
+  if (!in[slot] || !in[slot]->is_equipable()) {
+    return 1;
+  }
 
-	//Test to see if there is a full inventory
-	for (int i = 0; i < (int)this->inventory.size(); i++) {
-		if (this->inventory[i] == NULL) {
-			full_inventory = false;
-			open_slot = i;
-		}
-	}
+  /* Rings are tricky since there are two slots.  We will alwas favor *
+   * an empty slot, and if there is no empty slot, we'll use the      *
+   * first slot.                                                      */
+  i = in[slot]->get_eq_slot_index();
+  if (eq[i] &&
+      ((eq[i]->get_type() == objtype_RING) &&
+       !eq[i + 1])) {
+    i++;
+  }
 
-	if (full_inventory) {
-		return 2;
-	}
+  tmp = in[slot];
+  in[slot] = eq[i];
+  eq[i] = tmp;
 
-	this->speed -= this->equipment[open_slot]->get_speed();
-	this->inventory[open_slot] = this->equipment[equipment_pos];
-	this->equipment[equipment_pos] = NULL;
+  io_queue_message("You wear %s.", eq[i]->get_name());
 
-	return 0;
+  recalculate_speed();
+
+  return 0;
 }
 
-void pc::drop(dungeon * d, int inventory_pos)
+uint32_t pc::has_open_inventory_slot()
 {
-	if (this->inventory[inventory_pos] == NULL) {
-		return;
-	}
+  int i;
 
-	if (d->objmap[d->PC->position[dim_y]][d->PC->position[dim_x]] == NULL) {
-		d->objmap[d->PC->position[dim_y]][d->PC->position[dim_x]] = this->inventory[inventory_pos];
-	}
-	else {
-	  d->objmap[d->PC->position[dim_y]][d->PC->position[dim_x]]->set_next(this->inventory[inventory_pos]);
-	}
+  for (i = 0; i < MAX_INVENTORY; i++) {
+    if (!in[i]) {
+      return 1;
+    }
+  }
 
-	this->inventory[inventory_pos] = NULL;
+  return 0;
 }
 
-void pc::destroy(int inventory_pos)
+int32_t pc::get_first_open_inventory_slot()
 {
-	if (this->inventory[inventory_pos] == NULL) {
-		return;
-	}
+  int i;
 
-        delete this->inventory[inventory_pos];
-	this->inventory[inventory_pos] = NULL;
+  for (i = 0; i < MAX_INVENTORY; i++) {
+    if (!in[i]) {
+      return i;
+    }
+  }
+
+  return -1;
 }
 
-int pc::damage_roll()
+uint32_t pc::remove_eq(uint32_t slot)
 {
-	int total_damage = 0;
+  if (!eq[slot]                      ||
+      !in[slot]->is_removable() ||
+      !has_open_inventory_slot()) {
+    io_queue_message("You can't remove %s, because you have nowhere to put it.",
+                     eq[slot]->get_name());
 
-	total_damage += this->damage->roll();
+    return 1;
+  }
 
-	for (int i = 0; i < (int)this->equipment.size(); i++) {
-		if (this->equipment[i] != NULL) {
-			total_damage += this->equipment[i]->roll_damage();
-		}
-	}
+  io_queue_message("You remove %s.", eq[slot]->get_name());
 
-	return total_damage;
+  in[get_first_open_inventory_slot()] = eq[slot];
+  eq[slot] = NULL;
+
+
+  recalculate_speed();
+
+  return 0;
 }
 
+uint32_t pc::drop_in(dungeon_t *d, uint32_t slot)
+{
+  if (!in[slot] || !in[slot]->is_dropable()) {
+    return 1;
+  }
 
+  io_queue_message("You drop %s.", in[slot]->get_name());
+
+  in[slot]->to_pile(d, position);
+  in[slot] = NULL;
+
+  return 0;
+}
+
+uint32_t pc::destroy_in(uint32_t slot)
+{
+  if (!in[slot] || !in[slot]->is_destructable()) {
+    return 1;
+  }
+
+  io_queue_message("You destroy %s.", in[slot]->get_name());
+
+  delete in[slot];
+  in[slot] = NULL;
+
+  return 0;
+}
+
+uint32_t pc::pick_up(dungeon_t *d)
+{
+  object *o;
+
+  while (has_open_inventory_slot() &&
+         d->objmap[position[dim_y]][position[dim_x]]) {
+    io_queue_message("You pick up %s.",
+                     d->objmap[position[dim_y]][position[dim_x]]->get_name());
+    d->objmap[position[dim_y]][position[dim_x]]->pick_up();
+    in[get_first_open_inventory_slot()] =
+      from_pile(d, position);
+  }
+
+  for (o = d->objmap[position[dim_y]][position[dim_x]];
+       o;
+       o = o->get_next()) {
+    io_queue_message("You have no room for %s.", o->get_name());
+  }
+
+  return 0;
+}
+
+object *pc::from_pile(dungeon_t *d, pair_t pos)
+{
+  object *o;
+
+  if ((o = (object *) d->objmap[pos[dim_y]][pos[dim_x]])) {
+    d->objmap[pos[dim_y]][pos[dim_x]] = o->get_next();
+    o->set_next(0);
+  }
+
+  return o;
+}

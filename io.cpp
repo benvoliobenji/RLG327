@@ -2,6 +2,7 @@
 #include <ncurses.h>
 #include <ctype.h>
 #include <stdlib.h>
+#include <assert.h>
 
 #include "io.h"
 #include "move.h"
@@ -158,7 +159,7 @@ void io_display_hardness(dungeon *d)
   refresh();
 }
 
-static void io_redisplay_visible_monsters(dungeon *d)
+static void io_redisplay_visible_monsters(dungeon *d, pair_t cursor)
 {
   /* This was initially supposed to only redisplay visible monsters.  After *
    * implementing that (comparitivly simple) functionality and testing, I   *
@@ -192,7 +193,11 @@ static void io_redisplay_visible_monsters(dungeon *d)
                                         d->PC->position[dim_x] + pos[dim_x]))) {
         attron(A_BOLD);
       }
-      if (d->character_map[d->PC->position[dim_y] + pos[dim_y]]
+      if (cursor[dim_y] == d->PC->position[dim_y] + pos[dim_y] &&
+          cursor[dim_x] == d->PC->position[dim_x] + pos[dim_x]) {
+        mvaddch(d->PC->position[dim_y] + pos[dim_y] + 1,
+                d->PC->position[dim_x] + pos[dim_x], '*');
+      } else if (d->character_map[d->PC->position[dim_y] + pos[dim_y]]
                           [d->PC->position[dim_x] + pos[dim_x]] &&
           can_see(d, d->PC->position,
                   d->character_map[d->PC->position[dim_y] + pos[dim_y]]
@@ -296,6 +301,7 @@ static character *io_nearest_visible_monster(dungeon *d)
     for (x = 1; x < DUNGEON_X - 1; x++) {
       if (d->character_map[y][x] && d->character_map[y][x] != d->PC) {
         c[count++] = d->character_map[y][x];
+        assert(count <= d->num_monsters);
       }
     }
   }
@@ -340,6 +346,7 @@ void io_display(dungeon *d)
                   character_get_pos(d->PC),
                   character_get_pos(d->character_map[pos[dim_y]]
                                                     [pos[dim_x]]), 1, 0)) {
+
         visible_monsters++;
         attron(COLOR_PAIR((color = d->character_map[pos[dim_y]]
                                                    [pos[dim_x]]->get_color())));
@@ -400,7 +407,7 @@ void io_display(dungeon *d)
            character_get_x(d->PC), character_get_y(d->PC));
 
   mvprintw(22, 1, "%d known %s.", visible_monsters,
-           visible_monsters > 1 ? "monsters" : "monster");
+           !visible_monsters || visible_monsters > 1 ? "monsters" : "monster");
   if ((c = io_nearest_visible_monster(d))) {
     mvprintw(22, 30, "Nearest visible monster: %c at %d %c by %d %c.",
              c->symbol,
@@ -505,7 +512,7 @@ void io_display_no_fog(dungeon *d)
   mvprintw(23, 1, "PC position is (%2d,%2d).",
            d->PC->position[dim_x], d->PC->position[dim_y]);
   mvprintw(22, 1, "%d known %s.", d->num_monsters,
-           d->num_monsters > 1 ? "monsters" : "monster");
+           !d->num_monsters || d->num_monsters > 1 ? "monsters" : "monster");
   if ((c = io_nearest_visible_monster(d))) {
     mvprintw(22, 30, "Nearest visible monster: %c at %d %c by %d %c.",
              c->symbol,
@@ -837,608 +844,325 @@ static void io_list_monsters(dungeon *d)
   io_display(d);
 }
 
-static void io_display_wear(dungeon *d)
+void io_display_ch(dungeon_t *d)
 {
-	WINDOW *wear_window;
-	int c;
-
-	wear_window = newwin(11, 40, 5, 20);
-	initscr();
-	raw();
-	noecho();
-	curs_set(0);
-	keypad(wear_window, TRUE);
-
-	wrefresh(wear_window);
-
-	bool exit_code = false;
-
-	while (!exit_code) {
-	  for (int i = 0; i < (int)d->PC->inventory.size(); i++)
-		{
-			if (d->PC->inventory[i]) {
-				mvwprintw(wear_window, i, 0, "%d) %s", i, d->PC->inventory[i]->get_name());
-			}
-
-			else {
-				mvwprintw(wear_window, i, 0, "%d)", i);
-			}
-		}
-		mvwprintw(wear_window, 10, 0, "Please select an item to equip");
-
-		wrefresh(wear_window);
-
-		c = wgetch(wear_window);
-		switch (c) {
-		case '0':
-			d->PC->equip(d->PC->inventory[0]);
-			exit_code = true;
-			break;
-		case '1':
-			d->PC->equip(d->PC->inventory[1]);
-			exit_code = true;
-			break;
-		case '2':
-			d->PC->equip(d->PC->inventory[2]);
-			exit_code = true;
-			break;
-		case '3':
-			d->PC->equip(d->PC->inventory[3]);
-			exit_code = true;
-			break;
-		case '4':
-			d->PC->equip(d->PC->inventory[4]);
-			exit_code = true;
-			break;
-		case '5':
-			d->PC->equip(d->PC->inventory[5]);
-			exit_code = true;
-			break;
-		case '6':
-			d->PC->equip(d->PC->inventory[6]);
-			exit_code = true;
-			break;
-		case '7':
-			d->PC->equip(d->PC->inventory[7]);
-			exit_code = true;
-			break;
-		case '8':
-			d->PC->equip(d->PC->inventory[8]);
-			exit_code = true;
-			break;
-		case '9':
-			d->PC->equip(d->PC->inventory[9]);
-			exit_code = true;
-			break;
-		case 27:
-			exit_code = true;
-			break;
-		}
-		wrefresh(wear_window);
-	}
-
-	delwin(wear_window);
-	io_display(d);
-	refresh();
+  mvprintw(11, 33, " HP:    %5d ", d->PC->hp);
+  mvprintw(12, 33, " Speed: %5d ", d->PC->speed);
+  mvprintw(14, 27, " Hit any key to continue. ");
+  refresh();
+  getch();
+  io_display(d);
 }
 
-static void io_display_take_off(dungeon *d)
+void io_object_to_string(object *o, char *s, uint32_t size)
 {
-	WINDOW *take_off_window;
-	int c;
-
-	take_off_window = newwin(13, 40, 5, 20);
-	initscr();
-	raw();
-	noecho();
-	curs_set(0);
-	keypad(take_off_window, TRUE);
-
-	wrefresh(take_off_window);
-
-	bool exit_code = false;
-
-	while (!exit_code) {
-	  for (int i = 0; i < (int)d->PC->equipment.size(); i++)
-		{
-		  if(i == 10) {
-		    if (d->PC->equipment[i]) {
-		      mvwprintw(take_off_window, i, 0, "a) %s", d->PC->equipment[i]->get_name());
-		    }
-
-		    else {
-		      mvwprintw(take_off_window, i, 0, "a)");
-		    }
-		  }
-		  else if(i == 11) {
-		    if (d->PC->equipment[i]) {
-		      mvwprintw(take_off_window, i, 0, "l) %s", d->PC->equipment[i]->get_name());
-		    }
-		    
-		    else {
-		      mvwprintw(take_off_window, i, 0, "l)");
-		    }
-		  }
-		  else {
-		    if (d->PC->equipment[i]) {
-		      mvwprintw(take_off_window, i, 0, "%d) %s", i, d->PC->equipment[i]->get_name());
-		    }
-		    
-		    else {
-		      mvwprintw(take_off_window, i, 0, "%d)", i);
-		    }
-		  }
-		}
-
-		mvwprintw(take_off_window, 12, 0, "Please select an item to take off");
-
-		wrefresh(take_off_window);
-
-		c = wgetch(take_off_window);
-		switch (c) {
-		case '0':
-			d->PC->take_off(0);
-			exit_code = true;
-			break;
-		case '1':
-			d->PC->take_off(1);
-			exit_code = true;
-			break;
-		case '2':
-			d->PC->take_off(2);
-			exit_code = true;
-			break;
-		case '3':
-			d->PC->take_off(3);
-			exit_code = true;
-			break;
-		case '4':
-			d->PC->take_off(4);
-			exit_code = true;
-			break;
-		case '5':
-			d->PC->take_off(5);
-			exit_code = true;
-			break;
-		case '6':
-			d->PC->take_off(6);
-			exit_code = true;
-			break;
-		case '7':
-			d->PC->take_off(7);
-			exit_code = true;
-			break;
-		case '8':
-			d->PC->take_off(8);
-			exit_code = true;
-			break;
-		case '9':
-			d->PC->take_off(9);
-			exit_code = true;
-			break;
-		case 'a':
-			d->PC->take_off(10);
-			exit_code = true;
-			break;
-		case 'l':
-			d->PC->take_off(11);
-			exit_code = true;
-			break;
-		case 27:
-			exit_code = true;
-			break;
-		}
-		wrefresh(take_off_window);
-	}
-
-	delwin(take_off_window);
-	io_display(d);
-	refresh();
+  if (o) {
+    snprintf(s, size, "%s (sp: %d, dmg: %d+%dd%d)",
+             o->get_name(), o->get_speed(), o->get_damage_base(),
+             o->get_damage_number(), o->get_damage_sides());
+  } else {
+    *s = '\0';
+  }
 }
 
-static void io_display_drop(dungeon *d)
+uint32_t io_wear_eq(dungeon_t *d)
 {
-	WINDOW *drop_window;
-	int c;
+  uint32_t i, key;
+  char s[61];
 
-	drop_window = newwin(11, 40, 5, 20);
-	initscr();
-	raw();
-	noecho();
-	curs_set(0);
-	keypad(drop_window, TRUE);
+  for (i = 0; i < MAX_INVENTORY; i++) {
+    /* We'll write 12 lines, 10 of inventory, 1 blank, and 1 prompt. *
+     * We'll limit width to 60 characters, so very long object names *
+     * will be truncated.  In an 80x24 terminal, this gives offsets  *
+     * at 10 x and 6 y to start printing things.  Same principal in  *
+     * other functions, below.                                       */
+    io_object_to_string(d->PC->in[i], s, 61);
+    mvprintw(i + 6, 10, " %c) %-55s ", '0' + i, s);
+  }
+  mvprintw(16, 10, " %-58s ", "");
+  mvprintw(17, 10, " %-58s ", "Wear which item (ESC to cancel)?");
+  refresh();
 
-	wrefresh(drop_window);
+  while (1) {
+    if ((key = getch()) == 27 /* ESC */) {
+      io_display(d);
+      return 1;
+    }
 
-	bool exit_code = false;
+    if (key < '0' || key > '9') {
+      if (isprint(key)) {
+        snprintf(s, 61, "Invalid input: '%c'.  Enter 0-9 or ESC to cancel.",
+                 key);
+        mvprintw(18, 10, " %-58s ", s);
+      } else {
+        mvprintw(18, 10, " %-58s ",
+                 "Invalid input.  Enter 0-9 or ESC to cancel.");
+      }
+      refresh();
+      continue;
+    }
 
-	while (!exit_code) {
-	  for (int i = 0; i < (int) d->PC->inventory.size(); i++)
-		{
-			if (d->PC->inventory[i]) {
-				mvwprintw(drop_window, i, 0, "%d) %s", i, d->PC->inventory[i]->get_name());
-			}
+    if (!d->PC->in[key - '0']) {
+      mvprintw(18, 10, " %-58s ", "Empty inventory slot.  Try again.");
+      continue;
+    }
 
-			else {
-				mvwprintw(drop_window, i, 0, "%d)", i);
-			}
-		}
-		mvwprintw(drop_window, 10, 0, "Please select an item to drop");
+    if (!d->PC->wear_in(key - '0')) {
+      return 0;
+    }
 
-		wrefresh(drop_window);
+    snprintf(s, 61, "Can't wear %s.  Try again.",
+             d->PC->in[key - '0']->get_name());
+    mvprintw(18, 10, " %-58s ", s);
+    refresh();
+  }
 
-		c = wgetch(drop_window);
-		switch (c) {
-		case '0':
-			d->PC->drop(d, 0);
-			exit_code = true;
-			break;
-		case '1':
-			d->PC->drop(d, 1);
-			exit_code = true;
-			break;
-		case '2':
-			d->PC->drop(d, 2);
-			exit_code = true;
-			break;
-		case '3':
-			d->PC->drop(d, 3);
-			exit_code = true;
-			break;
-		case '4':
-			d->PC->drop(d, 4);
-			exit_code = true;
-			break;
-		case '5':
-			d->PC->drop(d, 5);
-			exit_code = true;
-			break;
-		case '6':
-			d->PC->drop(d, 6);
-			exit_code = true;
-			break;
-		case '7':
-			d->PC->drop(d, 7);
-			exit_code = true;
-			break;
-		case '8':
-			d->PC->drop(d, 8);
-			exit_code = true;
-			break;
-		case '9':
-			d->PC->drop(d, 9);
-			exit_code = true;
-			break;
-		case 27:
-			exit_code = true;
-			break;
-		}
-		wrefresh(drop_window);
-	}
-
-	delwin(drop_window);
-	io_display(d);
-	refresh();
+  return 1;
 }
 
-static void io_display_delete(dungeon *d)
+void io_display_in(dungeon_t *d)
 {
-	WINDOW *destroy_window;
-	int c;
+  uint32_t i;
+  char s[61];
 
-	destroy_window = newwin(11, 40, 5, 20);
-	initscr();
-	raw();
-	noecho();
-	curs_set(0);
-	keypad(destroy_window, TRUE);
+  for (i = 0; i < MAX_INVENTORY; i++) {
+    io_object_to_string(d->PC->in[i], s, 61);
+    mvprintw(i + 7, 10, " %c) %-55s ", '0' + i, s);
+  }
 
-	wrefresh(destroy_window);
+  mvprintw(17, 10, " %-58s ", "");
+  mvprintw(18, 10, " %-58s ", "Hit any key to continue.");
 
-	bool exit_code = false;
+  refresh();
 
-	while (!exit_code) {
-	  for (int i = 0; i < (int)d->PC->inventory.size(); i++)
-		{
-			if (d->PC->inventory[i]) {
-				mvwprintw(destroy_window, i, 0, "%d) %s", i, d->PC->inventory[i]->get_name());
-			}
+  getch();
 
-			else {
-				mvwprintw(destroy_window, i, 0, "%d)", i);
-			}
-		}
-		mvwprintw(destroy_window, 10, 0, "Please select an item to destroy");
-
-		wrefresh(destroy_window);
-
-		c = wgetch(destroy_window);
-		switch (c) {
-		case '0':
-			d->PC->destroy(0);
-			exit_code = true;
-			break;
-		case '1':
-			d->PC->destroy(1);
-			exit_code = true;
-			break;
-		case '2':
-			d->PC->destroy(2);
-			exit_code = true;
-			break;
-		case '3':
-			d->PC->destroy(3);
-			exit_code = true;
-			break;
-		case '4':
-			d->PC->destroy(4);
-			exit_code = true;
-			break;
-		case '5':
-			d->PC->destroy(5);
-			exit_code = true;
-			break;
-		case '6':
-			d->PC->destroy(6);
-			exit_code = true;
-			break;
-		case '7':
-			d->PC->destroy(7);
-			exit_code = true;
-			break;
-		case '8':
-			d->PC->destroy(8);
-			exit_code = true;
-			break;
-		case '9':
-			d->PC->destroy(9);
-			exit_code = true;
-			break;
-		case 27:
-			exit_code = true;
-			break;
-		}
-		wrefresh(destroy_window);
-	}
-
-	delwin(destroy_window);
-	io_display(d);
-	refresh();
+  io_display(d);
 }
 
-static void io_display_inventory(dungeon *d)
+uint32_t io_remove_eq(dungeon_t *d)
 {
-	WINDOW *display_inventory_window;
-	int c;
+  uint32_t i, key;
+  char s[61], t[61];
 
-	display_inventory_window = newwin(11, 40, 5, 20);
-	initscr();
-	raw();
-	noecho();
-	curs_set(0);
-	keypad(display_inventory_window, TRUE);
+  for (i = 0; i < num_eq_slots; i++) {
+    sprintf(s, "[%s]", eq_slot_name[i]);
+    io_object_to_string(d->PC->eq[i], t, 61);
+    mvprintw(i + 5, 10, " %c %-9s) %-45s ", 'a' + i, s, t);
+  }
+  mvprintw(17, 10, " %-58s ", "");
+  mvprintw(18, 10, " %-58s ", "Take off which item (ESC to cancel)?");
+  refresh();
 
-	wrefresh(display_inventory_window);
+  while (1) {
+    if ((key = getch()) == 27 /* ESC */) {
+      io_display(d);
+      return 1;
+    }
 
-	bool exit_code = false;
+    if (key < 'a' || key > 'l') {
+      if (isprint(key)) {
+        snprintf(s, 61, "Invalid input: '%c'.  Enter a-l or ESC to cancel.",
+                 key);
+        mvprintw(18, 10, " %-58s ", s);
+      } else {
+        mvprintw(18, 10, " %-58s ",
+                 "Invalid input.  Enter a-l or ESC to cancel.");
+      }
+      refresh();
+      continue;
+    }
 
-	while (!exit_code) {
-	  for (int i = 0; i < (int)d->PC->inventory.size(); i++)
-		{
-			if (d->PC->inventory[i]) {
-				mvwprintw(display_inventory_window, i, 0, "%d) %s", i, d->PC->inventory[i]->get_name());
-			}
+    if (!d->PC->eq[key - 'a']) {
+      mvprintw(18, 10, " %-58s ", "Empty equipment slot.  Try again.");
+      continue;
+    }
 
-			else {
-				mvwprintw(display_inventory_window, i, 0, "%d)", i);
-			}
-		}
-		wrefresh(display_inventory_window);
+    if (!d->PC->remove_eq(key - 'a')) {
+      return 0;
+    }
 
-		c = wgetch(display_inventory_window);
-		
-		if (c == 27) {
-			exit_code = true;
-		}
-		wrefresh(display_inventory_window);
-	}
+    snprintf(s, 61, "Can't take off %s.  Try again.",
+             d->PC->eq[key - 'a']->get_name());
+    mvprintw(19, 10, " %-58s ", s);
+  }
 
-	delwin(display_inventory_window);
-	io_display(d);
-	refresh();
+  return 1;
 }
 
-static void io_display_equipment(dungeon *d)
+void io_display_eq(dungeon_t *d)
 {
-	WINDOW *display_equipment_window;
-	int c;
+  uint32_t i;
+  char s[61], t[61];
 
-	display_equipment_window = newwin(13, 40, 5, 20);
-	initscr();
-	raw();
-	noecho();
-	curs_set(0);
-	keypad(display_equipment_window, TRUE);
+  for (i = 0; i < num_eq_slots; i++) {
+    sprintf(s, "[%s]", eq_slot_name[i]);
+    io_object_to_string(d->PC->eq[i], t, 61);
+    mvprintw(i + 5, 10, " %c %-9s) %-45s ", 'a' + i, s, t);
+  }
+  mvprintw(17, 10, " %-58s ", "");
+  mvprintw(18, 10, " %-58s ", "Hit any key to continue.");
 
-	wrefresh(display_equipment_window);
+  refresh();
 
-	bool exit_code = false;
+  getch();
 
-	while (!exit_code) {
-	  for (int i = 0; i < (int)d->PC->equipment.size(); i++)
-		{
-		  if(i == 10) {
-		    if (d->PC->equipment[i]) {
-		      mvwprintw(display_equipment_window, i, 0, "a) %s", d->PC->equipment[i]->get_name());
-		    }
-
-		    else {
-		      mvwprintw(display_equipment_window, i, 0, "a)");
-		    }
-		  }
-		  else if(i == 11) {
-		    if (d->PC->equipment[i]) {
-		      mvwprintw(display_equipment_window, i, 0, "l) %s", d->PC->equipment[i]->get_name());
-		    }
-		    
-		    else {
-		      mvwprintw(display_equipment_window, i, 0, "l)");
-		    }
-		  }
-		  else {
-		    if (d->PC->equipment[i]) {
-		      mvwprintw(display_equipment_window, i, 0, "%d) %s", i, d->PC->equipment[i]->get_name());
-		    }
-		    
-		    else {
-		      mvwprintw(display_equipment_window, i, 0, "%d)", i);
-		    }
-		  }
-		}
-
-		wrefresh(display_equipment_window);
-
-		c = wgetch(display_equipment_window);
-
-		if (c == 27) {
-			exit_code = true;
-		}
-
-		wrefresh(display_equipment_window);
-	}
-
-	delwin(display_equipment_window);
-	io_display(d);
-	refresh();
+  io_display(d);
 }
 
-static void io_display_description(const char *desc)
+uint32_t io_drop_in(dungeon_t *d)
 {
-	WINDOW *desc_window;
-	int c;
-	bool exit_code = false;
+  uint32_t i, key;
+  char s[61];
 
-	desc_window = newwin(15, 60, 5, 10);
-	initscr();
-	raw();
-	noecho();
-	curs_set(0);
-	keypad(desc_window, TRUE);
+  for (i = 0; i < MAX_INVENTORY; i++) {
+      mvprintw(i + 6, 10, " %c) %-55s ", '0' + i,
+               d->PC->in[i] ? d->PC->in[i]->get_name() : "");
+  }
+  mvprintw(16, 10, " %-58s ", "");
+  mvprintw(17, 10, " %-58s ", "Drop which item (ESC to cancel)?");
+  refresh();
 
-	wrefresh(desc_window);
+  while (1) {
+    if ((key = getch()) == 27 /* ESC */) {
+      io_display(d);
+      return 1;
+    }
 
-	mvwprintw(desc_window, 0, 0, desc);
+    if (key < '0' || key > '9') {
+      if (isprint(key)) {
+        snprintf(s, 61, "Invalid input: '%c'.  Enter 0-9 or ESC to cancel.",
+                 key);
+        mvprintw(18, 10, " %-58s ", s);
+      } else {
+        mvprintw(18, 10, " %-58s ",
+                 "Invalid input.  Enter 0-9 or ESC to cancel.");
+      }
+      refresh();
+      continue;
+    }
 
-	while (!exit_code) {
-		c = wgetch(desc_window);
+    if (!d->PC->in[key - '0']) {
+      mvprintw(18, 10, " %-58s ", "Empty inventory slot.  Try again.");
+      continue;
+    }
 
-		if (c == 27) {
-			exit_code = true;
-		}
+    if (!d->PC->drop_in(d, key - '0')) {
+      return 0;
+    }
 
-		wrefresh(desc_window);
-	}
+    snprintf(s, 61, "Can't drop %s.  Try again.",
+             d->PC->in[key - '0']->get_name());
+    mvprintw(18, 10, " %-58s ", s);
+    refresh();
+  }
 
-	delwin(desc_window);
-	refresh();
+  return 1;
 }
 
-static void io_display_object_description(dungeon *d)
+static uint32_t io_display_obj_info(object *o)
 {
-	WINDOW *object_description_window;
-	int c;
+  char s[80];
+  uint32_t i, l;
+  uint32_t n;
 
-	object_description_window = newwin(11, 40, 5, 20);
-	initscr();
-	raw();
-	noecho();
-	curs_set(0);
-	keypad(object_description_window, TRUE);
+  for (i = 0; i < 79; i++) {
+    s[i] = ' ';
+  }
+  s[79] = '\0';
 
-	wrefresh(object_description_window);
+  l = strlen(o->get_description());
+  for (i = n = 0; i < l; i++) {
+    if (o->get_description()[i] == '\n') {
+      n++;
+    }
+  }
 
-	bool exit_code = false;
+  for (i = 0; i < n + 4; i++) {
+    mvprintw(i, 0, s);
+  }
 
-	while (!exit_code) {
-	  for (int i = 0; i < (int)d->PC->inventory.size(); i++)
-		{
-			if (d->PC->inventory[i]) {
-				mvwprintw(object_description_window, i, 0, "%d) %s", i, d->PC->inventory[i]->get_name());
-			}
+  io_object_to_string(o, s, 80);
+  mvprintw(1, 0, s);
+  mvprintw(3, 0, o->get_description());
 
-			else {
-				mvwprintw(object_description_window, i, 0, "%d)", i);
-			}
-		}
-		mvwprintw(object_description_window, 10, 0, "Please select an item to view description");
+  mvprintw(n + 5, 0, "Hit any key to continue.");
 
-		wrefresh(object_description_window);
+  refresh();
+  getch();
 
-		c = wgetch(object_description_window);
-		switch (c) {
-		case '0':
-			io_display_description(d->PC->inventory[0]->get_desc());
-			exit_code = true;
-			break;
-		case '1':
-			io_display_description(d->PC->inventory[1]->get_desc());
-			exit_code = true;
-			break;
-		case '2':
-			io_display_description(d->PC->inventory[2]->get_desc());
-			exit_code = true;
-			break;
-		case '3':
-			io_display_description(d->PC->inventory[3]->get_desc());
-			exit_code = true;
-			break;
-		case '4':
-			io_display_description(d->PC->inventory[4]->get_desc());
-			exit_code = true;
-			break;
-		case '5':
-			io_display_description(d->PC->inventory[5]->get_desc());
-			exit_code = true;
-			break;
-		case '6':
-			io_display_description(d->PC->inventory[6]->get_desc());
-			exit_code = true;
-			break;
-		case '7':
-			io_display_description(d->PC->inventory[7]->get_desc());
-			exit_code = true;
-			break;
-		case '8':
-			io_display_description(d->PC->inventory[8]->get_desc());
-			exit_code = true;
-			break;
-		case '9':
-			io_display_description(d->PC->inventory[9]->get_desc());
-			exit_code = true;
-			break;
-		case 27:
-			exit_code = true;
-			break;
-		}
-		wrefresh(object_description_window);
-	}
-
-	delwin(object_description_window);
-	io_display(d);
-	refresh();
+  return 0;  
 }
 
-static void io_display_monster_description(dungeon *d)
+static uint32_t io_inspect_eq(dungeon_t *d);
+
+static uint32_t io_inspect_in(dungeon_t *d)
 {
-	//A slightly modified version of teleport
-	pair_t dest;
+  uint32_t i, key;
+  char s[61];
+
+  for (i = 0; i < MAX_INVENTORY; i++) {
+    io_object_to_string(d->PC->in[i], s, 61);
+    mvprintw(i + 6, 10, " %c) %-55s ", '0' + i,
+             d->PC->in[i] ? d->PC->in[i]->get_name() : "");
+  }
+  mvprintw(16, 10, " %-58s ", "");
+  mvprintw(17, 10, " %-58s ", "Inspect which item (ESC to cancel, '/' for equipment)?");
+  refresh();
+
+  while (1) {
+    if ((key = getch()) == 27 /* ESC */) {
+      io_display(d);
+      return 1;
+    }
+
+    if (key == '/') {
+      io_display(d);
+      io_inspect_eq(d);
+      return 1;
+    }
+
+    if (key < '0' || key > '9') {
+      if (isprint(key)) {
+        snprintf(s, 61, "Invalid input: '%c'.  Enter 0-9 or ESC to cancel.",
+                 key);
+        mvprintw(18, 10, " %-58s ", s);
+      } else {
+        mvprintw(18, 10, " %-58s ",
+                 "Invalid input.  Enter 0-9 or ESC to cancel.");
+      }
+      refresh();
+      continue;
+    }
+
+    if (!d->PC->in[key - '0']) {
+      mvprintw(18, 10, " %-58s ", "Empty inventory slot.  Try again.");
+      refresh();
+      continue;
+    }
+
+    io_display(d);
+    io_display_obj_info(d->PC->in[key - '0']);
+    io_display(d);
+    return 1;
+  }
+
+  return 1;
+}
+
+static uint32_t io_inspect_monster(dungeon_t *d)
+{
+  uint32_t n;
+  pair_t dest, tmp;
   int c;
   fd_set readfs;
   struct timeval tv;
+  char s[80];
+  const char *p;
 
-  io_display_no_fog(d);
+  io_display(d);
 
-  mvprintw(0, 0, "Choose a location.  't' to list a monster's description.");
+  mvprintw(0, 0, "Choose a monster.  't' to select; 'ESC' to cancel.");
 
   dest[dim_y] = d->PC->position[dim_y];
   dest[dim_x] = d->PC->position[dim_x];
@@ -1454,7 +1178,7 @@ static void io_display_monster_description(dungeon *d)
       tv.tv_sec = 0;
       tv.tv_usec = 125000; /* An eigth of a second */
 
-      io_redisplay_non_terrain(d, dest);
+      io_redisplay_visible_monsters(d, dest);
     } while (!select(STDIN_FILENO + 1, &readfs, NULL, NULL, &tv));
     /* Can simply draw the terrain when we move the cursor away, *
      * because if it is a character or object, the refresh       *
@@ -1486,91 +1210,244 @@ static void io_display_monster_description(dungeon *d)
   * not otherwise used.                                                 */
       mvaddch(dest[dim_y] + 1, dest[dim_x], '0');
     }
+    tmp[dim_y] = dest[dim_y];
+    tmp[dim_x] = dest[dim_x];
     switch ((c = getch())) {
     case '7':
     case 'y':
     case KEY_HOME:
-      if (dest[dim_y] != 1) {
+      tmp[dim_y]--;
+      tmp[dim_x]--;
+      if (dest[dim_y] != 1 &&
+          can_see(d, d->PC->position, tmp, 1, 0)) {
         dest[dim_y]--;
       }
-      if (dest[dim_x] != 1) {
+      if (dest[dim_x] != 1 &&
+          can_see(d, d->PC->position, tmp, 1, 0)) {
         dest[dim_x]--;
       }
       break;
     case '8':
     case 'k':
     case KEY_UP:
-      if (dest[dim_y] != 1) {
+      tmp[dim_y]--;
+      if (dest[dim_y] != 1 &&
+          can_see(d, d->PC->position, tmp, 1, 0)) {
         dest[dim_y]--;
       }
       break;
     case '9':
     case 'u':
     case KEY_PPAGE:
-      if (dest[dim_y] != 1) {
+      tmp[dim_y]--;
+      tmp[dim_x]++;
+      if (dest[dim_y] != 1 &&
+          can_see(d, d->PC->position, tmp, 1, 0)) {
         dest[dim_y]--;
       }
-      if (dest[dim_x] != DUNGEON_X - 2) {
+      if (dest[dim_x] != DUNGEON_X - 2 &&
+          can_see(d, d->PC->position, tmp, 1, 0)) {
         dest[dim_x]++;
       }
       break;
     case '6':
     case 'l':
     case KEY_RIGHT:
-      if (dest[dim_x] != DUNGEON_X - 2) {
+      tmp[dim_x]++;
+      if (dest[dim_x] != DUNGEON_X - 2 &&
+          can_see(d, d->PC->position, tmp, 1, 0)) {
         dest[dim_x]++;
       }
       break;
     case '3':
     case 'n':
     case KEY_NPAGE:
-      if (dest[dim_y] != DUNGEON_Y - 2) {
+      tmp[dim_y]++;
+      tmp[dim_x]++;
+      if (dest[dim_y] != DUNGEON_Y - 2 &&
+          can_see(d, d->PC->position, tmp, 1, 0)) {
         dest[dim_y]++;
       }
-      if (dest[dim_x] != DUNGEON_X - 2) {
+      if (dest[dim_x] != DUNGEON_X - 2 &&
+          can_see(d, d->PC->position, tmp, 1, 0)) {
         dest[dim_x]++;
       }
       break;
     case '2':
     case 'j':
     case KEY_DOWN:
-      if (dest[dim_y] != DUNGEON_Y - 2) {
+      tmp[dim_y]++;
+      if (dest[dim_y] != DUNGEON_Y - 2 &&
+          can_see(d, d->PC->position, tmp, 1, 0)) {
         dest[dim_y]++;
       }
       break;
     case '1':
     case 'b':
     case KEY_END:
-      if (dest[dim_y] != DUNGEON_Y - 2) {
+      tmp[dim_y]++;
+      tmp[dim_x]--;
+      if (dest[dim_y] != DUNGEON_Y - 2 &&
+          can_see(d, d->PC->position, tmp, 1, 0)) {
         dest[dim_y]++;
       }
-      if (dest[dim_x] != 1) {
+      if (dest[dim_x] != 1 &&
+          can_see(d, d->PC->position, tmp, 1, 0)) {
         dest[dim_x]--;
       }
       break;
     case '4':
     case 'h':
     case KEY_LEFT:
-      if (dest[dim_x] != 1) {
+      tmp[dim_x]--;
+      if (dest[dim_x] != 1 &&
+          can_see(d, d->PC->position, tmp, 1, 0)) {
         dest[dim_x]--;
       }
       break;
-
-	case 't':
-		if (d->character_map[dest[dim_y]][dest[dim_x]] != NULL) {
-			npc *m = (npc *)d->character_map[dest[dim_y]][dest[dim_x]];
-			io_display_description(m->description);
-		}
     }
-  } while (c != 27);
+  } while ((c == 't' && (!charpair(dest) || charpair(dest) == d->PC)) ||
+           (c != 't' && c != 27 /* ESC */));
 
-  //pc_observe_terrain(d->PC, d);
-  //dijkstra(d);
-  //dijkstra_tunnel(d);
+  if (c == 27 /* ESC */) {
+    io_display(d);
+    return 1;
+  }
+
+  snprintf(s, 80,"%s, %d speed, %d HP, %d+%dd%d damage                                  ",
+           charpair(dest)->name,
+           charpair(dest)->speed,
+           charpair(dest)->hp,
+           charpair(dest)->damage->get_base(),
+           charpair(dest)->damage->get_number(),
+           charpair(dest)->damage->get_sides());
+
+  for (n = 0, p = ((npc *) charpair(dest))->description; *p; p++) {
+    if (*p == '\n') {
+      n++;
+    }
+  }
+
+  mvprintw(0, 0, s);
+  mvprintw(2, 0, ((npc *) charpair(dest))->description);
+  mvprintw(n + 4, 0, "Hit any key to continue. ");
+
+  refresh();
+  
+  getch();
 
   io_display(d);
 
-  return;
+  return 0;  
+}
+
+static uint32_t io_inspect_eq(dungeon_t *d)
+{
+  uint32_t i, key;
+  char s[61], t[61];
+
+  for (i = 0; i < num_eq_slots; i++) {
+    sprintf(s, "[%s]", eq_slot_name[i]);
+    io_object_to_string(d->PC->eq[i], t, 61);
+    mvprintw(i + 5, 10, " %c %-9s) %-45s ", 'a' + i, s, t);
+  }
+  mvprintw(17, 10, " %-58s ", "");
+  mvprintw(18, 10, " %-58s ", "Inspect which item (ESC to cancel, '/' for inventory)?");
+  refresh();
+
+  while (1) {
+    if ((key = getch()) == 27 /* ESC */) {
+      io_display(d);
+      return 1;
+    }
+
+    if (key == '/') {
+      io_display(d);
+      io_inspect_in(d);
+      return 1;
+    }
+
+    if (key < 'a' || key > 'l') {
+      if (isprint(key)) {
+        snprintf(s, 61, "Invalid input: '%c'.  Enter a-l or ESC to cancel.",
+                 key);
+        mvprintw(18, 10, " %-58s ", s);
+      } else {
+        mvprintw(18, 10, " %-58s ",
+                 "Invalid input.  Enter a-l or ESC to cancel.");
+      }
+      refresh();
+      continue;
+    }
+
+    if (!d->PC->eq[key - 'a']) {
+      mvprintw(18, 10, " %-58s ", "Empty equipment slot.  Try again.");
+      continue;
+    }
+
+    io_display(d);
+    io_display_obj_info(d->PC->eq[key - 'a']);
+    io_display(d);
+    return 1;
+  }
+
+  return 1;
+}
+
+uint32_t io_expunge_in(dungeon_t *d)
+{
+  uint32_t i, key;
+  char s[61];
+
+  for (i = 0; i < MAX_INVENTORY; i++) {
+    /* We'll write 12 lines, 10 of inventory, 1 blank, and 1 prompt. *
+     * We'll limit width to 60 characters, so very long object names *
+     * will be truncated.  In an 80x24 terminal, this gives offsets  *
+     * at 10 x and 6 y to start printing things.                     */
+      mvprintw(i + 6, 10, " %c) %-55s ", '0' + i,
+               d->PC->in[i] ? d->PC->in[i]->get_name() : "");
+  }
+  mvprintw(16, 10, " %-58s ", "");
+  mvprintw(17, 10, " %-58s ", "Destroy which item (ESC to cancel)?");
+  refresh();
+
+  while (1) {
+    if ((key = getch()) == 27 /* ESC */) {
+      io_display(d);
+      return 1;
+    }
+
+    if (key < '0' || key > '9') {
+      if (isprint(key)) {
+        snprintf(s, 61, "Invalid input: '%c'.  Enter 0-9 or ESC to cancel.",
+                 key);
+        mvprintw(18, 10, " %-58s ", s);
+      } else {
+        mvprintw(18, 10, " %-58s ",
+                 "Invalid input.  Enter 0-9 or ESC to cancel.");
+      }
+      refresh();
+      continue;
+    }
+
+    if (!d->PC->in[key - '0']) {
+      mvprintw(18, 10, " %-58s ", "Empty inventory slot.  Try again.");
+      continue;
+    }
+
+    if (!d->PC->destroy_in(key - '0')) {
+      io_display(d);
+
+      return 1;
+    }
+
+    snprintf(s, 61, "Can't destroy %s.  Try again.",
+             d->PC->in[key - '0']->get_name());
+    mvprintw(18, 10, " %-58s ", s);
+    refresh();
+  }
+
+  return 1;
 }
 
 void io_handle_input(dungeon *d)
@@ -1594,7 +1471,7 @@ void io_handle_input(dungeon *d)
         /* Out-of-bounds cursor will not be rendered. */
         io_redisplay_non_terrain(d, tmp);
       } else {
-        io_redisplay_visible_monsters(d);
+        io_redisplay_visible_monsters(d, tmp);
       }
     } while (!select(STDIN_FILENO + 1, &readfs, NULL, NULL, &tv));
     fog_off = 0;
@@ -1690,38 +1567,38 @@ void io_handle_input(dungeon *d)
       fog_off = 1;
       fail_code = 1;
       break;
-	case 'w':
-		io_display_wear(d);
-		fail_code = 1;
-		break;
-	case 't':
-		io_display_take_off(d);
-		fail_code = 1;
-		break;
-	case 'd':
-		io_display_drop(d);
-		fail_code = 1;
-		break;
-	case 'x':
-		io_display_delete(d);
-		fail_code = 1;
-		break;
-	case 'i':
-		io_display_inventory(d);
-		fail_code = 1;
-		break;
-	case 'e':
-		io_display_equipment(d);
-		fail_code = 1;
-		break;
-	case 'I':
-		io_display_object_description(d);
-		fail_code = 1;
-		break;
-	case 'L':
-		io_display_monster_description(d);
-		fail_code = 1;
-		break;
+    case 'w':
+      fail_code = io_wear_eq(d);
+      break;
+    case 't':
+      fail_code = io_remove_eq(d);
+      break;
+    case 'd':
+      fail_code = io_drop_in(d);
+      break;
+    case 'x':
+      fail_code = io_expunge_in(d);
+      break;
+    case 'i':
+      io_display_in(d);
+      fail_code = 1;
+      break;
+    case 'e':
+      io_display_eq(d);
+      fail_code = 1;
+      break;
+    case 'c':
+      io_display_ch(d);
+      fail_code = 1;
+      break;
+    case 'I':
+      io_inspect_in(d);
+      fail_code = 1;
+      break;
+    case 'L':
+      io_inspect_monster(d);
+      fail_code = 1;
+      break;
     case 'q':
       /* Demonstrate use of the message queue.  You can use this for *
        * printf()-style debugging (though gdb is probably a better   *

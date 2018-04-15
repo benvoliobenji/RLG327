@@ -180,8 +180,3 @@ uint32_t can_see(dungeon *d, pair_t voyeur, pair_t exhibitionist,
 
   return 1;
 }
-
-int character::damage_roll()
-{
-	return this->damage->roll();
-}

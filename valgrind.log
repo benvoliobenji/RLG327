@@ -1,0 +1,382 @@
+==23468== Memcheck, a memory error detector
+==23468== Copyright (C) 2002-2017, and GNU GPL'd, by Julian Seward et al.
+==23468== Using Valgrind-3.13.0 and LibVEX; rerun with -h for copyright info
+==23468== Command: ./rlg327
+==23468== Parent PID: 1574
+==23468== 
+==23468== 
+==23468== HEAP SUMMARY:
+==23468==     in use at exit: 138,583 bytes in 261 blocks
+==23468==   total heap usage: 4,605,240 allocs, 4,604,979 frees, 81,298,203 bytes allocated
+==23468== 
+==23468== 6 bytes in 1 blocks are still reachable in loss record 1 of 37
+==23468==    at 0x4C2CB56: malloc (vg_replace_malloc.c:299)
+==23468==    by 0x59B4D19: strdup (in /lib64/libc-2.23.so)
+==23468==    by 0x4E68551: _nc_setupterm (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4E56469: newterm (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4E52E62: initscr (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4147CA: io_init_terminal() (io.cpp:30)
+==23468==    by 0x403840: main (rlg327.cpp:231)
+==23468== 
+==23468== 8 bytes in 1 blocks are still reachable in loss record 2 of 37
+==23468==    at 0x4C2E8E8: calloc (vg_replace_malloc.c:711)
+==23468==    by 0x4E58E45: _nc_setupscreen (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4E564AD: newterm (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4E52E62: initscr (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4147CA: io_init_terminal() (io.cpp:30)
+==23468==    by 0x403840: main (rlg327.cpp:231)
+==23468== 
+==23468== 15 bytes in 1 blocks are still reachable in loss record 3 of 37
+==23468==    at 0x4C2CB56: malloc (vg_replace_malloc.c:299)
+==23468==    by 0x59B4D19: strdup (in /lib64/libc-2.23.so)
+==23468==    by 0x4E65B72: ??? (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4E65E3E: _nc_first_db (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4E6E1EC: _nc_read_entry (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4E681D5: _nc_setup_tinfo (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4E68501: _nc_setupterm (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4E56469: newterm (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4E52E62: initscr (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4147CA: io_init_terminal() (io.cpp:30)
+==23468==    by 0x403840: main (rlg327.cpp:231)
+==23468== 
+==23468== 24 bytes in 1 blocks are still reachable in loss record 4 of 37
+==23468==    at 0x4C2E8E8: calloc (vg_replace_malloc.c:711)
+==23468==    by 0x4E640AA: _nc_add_to_try (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4E665D3: _nc_init_keytry (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4E676A3: _nc_keypad (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4147F2: io_init_terminal() (io.cpp:34)
+==23468==    by 0x403840: main (rlg327.cpp:231)
+==23468== 
+==23468== 27 bytes in 1 blocks are still reachable in loss record 5 of 37
+==23468==    at 0x4C2CB56: malloc (vg_replace_malloc.c:299)
+==23468==    by 0x4E66534: _nc_home_terminfo (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4E65E28: _nc_first_db (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4E6E1EC: _nc_read_entry (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4E681D5: _nc_setup_tinfo (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4E68501: _nc_setupterm (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4E56469: newterm (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4E52E62: initscr (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4147CA: io_init_terminal() (io.cpp:30)
+==23468==    by 0x403840: main (rlg327.cpp:231)
+==23468== 
+==23468== 32 bytes in 1 blocks are still reachable in loss record 6 of 37
+==23468==    at 0x4C2E8E8: calloc (vg_replace_malloc.c:711)
+==23468==    by 0x4E65F23: _nc_first_db (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4E6E1EC: _nc_read_entry (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4E681D5: _nc_setup_tinfo (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4E68501: _nc_setupterm (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4E56469: newterm (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4E52E62: initscr (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4147CA: io_init_terminal() (io.cpp:30)
+==23468==    by 0x403840: main (rlg327.cpp:231)
+==23468== 
+==23468== 44 bytes in 1 blocks are still reachable in loss record 7 of 37
+==23468==    at 0x4C2E8E8: calloc (vg_replace_malloc.c:711)
+==23468==    by 0x4E6D957: _nc_read_termtype (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4E6E0CB: ??? (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4E6E24B: _nc_read_entry (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4E681D5: _nc_setup_tinfo (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4E68501: _nc_setupterm (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4E56469: newterm (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4E52E62: initscr (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4147CA: io_init_terminal() (io.cpp:30)
+==23468==    by 0x403840: main (rlg327.cpp:231)
+==23468== 
+==23468== 66 bytes in 1 blocks are still reachable in loss record 8 of 37
+==23468==    at 0x4C2EAEB: realloc (vg_replace_malloc.c:785)
+==23468==    by 0x4E66252: _nc_doalloc (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4E6ABE8: tparm (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4E55EAE: _nc_mvcur_init (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4E56622: newterm (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4E52E62: initscr (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4147CA: io_init_terminal() (io.cpp:30)
+==23468==    by 0x403840: main (rlg327.cpp:231)
+==23468== 
+==23468== 74 bytes in 1 blocks are still reachable in loss record 9 of 37
+==23468==    at 0x4C2CB56: malloc (vg_replace_malloc.c:299)
+==23468==    by 0x4E65E8B: _nc_first_db (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4E6E1EC: _nc_read_entry (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4E681D5: _nc_setup_tinfo (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4E68501: _nc_setupterm (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4E56469: newterm (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4E52E62: initscr (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4147CA: io_init_terminal() (io.cpp:30)
+==23468==    by 0x403840: main (rlg327.cpp:231)
+==23468== 
+==23468== 78 bytes in 1 blocks are still reachable in loss record 10 of 37
+==23468==    at 0x4C2E8E8: calloc (vg_replace_malloc.c:711)
+==23468==    by 0x4E6D9BC: _nc_read_termtype (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4E6E0CB: ??? (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4E6E24B: _nc_read_entry (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4E681D5: _nc_setup_tinfo (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4E68501: _nc_setupterm (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4E56469: newterm (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4E52E62: initscr (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4147CA: io_init_terminal() (io.cpp:30)
+==23468==    by 0x403840: main (rlg327.cpp:231)
+==23468== 
+==23468== 96 bytes in 1 blocks are still reachable in loss record 11 of 37
+==23468==    at 0x4C2CB56: malloc (vg_replace_malloc.c:299)
+==23468==    by 0x4E4C32E: _nc_scroll_optimize (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4E62B00: doupdate (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4E57DE8: wrefresh (in /lib64/libncurses.so.5.9)
+==23468==    by 0x415BA9: io_redisplay_visible_monsters(dungeon*, short*) (io.cpp:278)
+==23468==    by 0x41A34E: io_handle_input(dungeon*) (io.cpp:1474)
+==23468==    by 0x4141F7: do_moves(dungeon*) (move.cpp:301)
+==23468==    by 0x403957: main (rlg327.cpp:250)
+==23468== 
+==23468== 101 bytes in 1 blocks are still reachable in loss record 12 of 37
+==23468==    at 0x4C2EAEB: realloc (vg_replace_malloc.c:785)
+==23468==    by 0x4E66252: _nc_doalloc (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4E6960E: _nc_tparm_analyze (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4E6982B: tparm (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4E5B1F0: vidputs (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4E5F067: ??? (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4E607AC: ??? (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4E610F9: ??? (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4E621B9: doupdate (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4E57DE8: wrefresh (in /lib64/libncurses.so.5.9)
+==23468==    by 0x416709: io_display(dungeon*) (io.cpp:426)
+==23468==    by 0x40D391: place_pc(dungeon*) (pc.cpp:79)
+==23468== 
+==23468== 112 bytes in 1 blocks are still reachable in loss record 13 of 37
+==23468==    at 0x4C2E8E8: calloc (vg_replace_malloc.c:711)
+==23468==    by 0x4E56AD6: _nc_makenew (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4E56D50: newwin (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4E59243: _nc_setupscreen (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4E564AD: newterm (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4E52E62: initscr (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4147CA: io_init_terminal() (io.cpp:30)
+==23468==    by 0x403840: main (rlg327.cpp:231)
+==23468== 
+==23468== 112 bytes in 1 blocks are still reachable in loss record 14 of 37
+==23468==    at 0x4C2E8E8: calloc (vg_replace_malloc.c:711)
+==23468==    by 0x4E56AD6: _nc_makenew (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4E56D50: newwin (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4E59264: _nc_setupscreen (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4E564AD: newterm (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4E52E62: initscr (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4147CA: io_init_terminal() (io.cpp:30)
+==23468==    by 0x403840: main (rlg327.cpp:231)
+==23468== 
+==23468== 112 bytes in 1 blocks are still reachable in loss record 15 of 37
+==23468==    at 0x4C2E8E8: calloc (vg_replace_malloc.c:711)
+==23468==    by 0x4E56AD6: _nc_makenew (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4E56D50: newwin (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4E593C4: _nc_setupscreen (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4E564AD: newterm (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4E52E62: initscr (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4147CA: io_init_terminal() (io.cpp:30)
+==23468==    by 0x403840: main (rlg327.cpp:231)
+==23468== 
+==23468== 128 bytes in 1 blocks are still reachable in loss record 16 of 37
+==23468==    at 0x4C2E8E8: calloc (vg_replace_malloc.c:711)
+==23468==    by 0x4E58E12: _nc_setupscreen (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4E564AD: newterm (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4E52E62: initscr (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4147CA: io_init_terminal() (io.cpp:30)
+==23468==    by 0x403840: main (rlg327.cpp:231)
+==23468== 
+==23468== 128 bytes in 1 blocks are still reachable in loss record 17 of 37
+==23468==    at 0x4C2E8E8: calloc (vg_replace_malloc.c:711)
+==23468==    by 0x4E4F40B: start_color (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4147F7: io_init_terminal() (io.cpp:35)
+==23468==    by 0x403840: main (rlg327.cpp:231)
+==23468== 
+==23468== 192 bytes in 1 blocks are still reachable in loss record 18 of 37
+==23468==    at 0x4C2E8E8: calloc (vg_replace_malloc.c:711)
+==23468==    by 0x4E4D0AD: _nc_hash_map (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4E4C255: _nc_scroll_optimize (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4E62B00: doupdate (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4E57DE8: wrefresh (in /lib64/libncurses.so.5.9)
+==23468==    by 0x415BA9: io_redisplay_visible_monsters(dungeon*, short*) (io.cpp:278)
+==23468==    by 0x41A34E: io_handle_input(dungeon*) (io.cpp:1474)
+==23468==    by 0x4141F7: do_moves(dungeon*) (move.cpp:301)
+==23468==    by 0x403957: main (rlg327.cpp:250)
+==23468== 
+==23468== 192 bytes in 1 blocks are still reachable in loss record 19 of 37
+==23468==    at 0x4C2E8E8: calloc (vg_replace_malloc.c:711)
+==23468==    by 0x4E4D0E1: _nc_hash_map (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4E4C255: _nc_scroll_optimize (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4E62B00: doupdate (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4E57DE8: wrefresh (in /lib64/libncurses.so.5.9)
+==23468==    by 0x415BA9: io_redisplay_visible_monsters(dungeon*, short*) (io.cpp:278)
+==23468==    by 0x41A34E: io_handle_input(dungeon*) (io.cpp:1474)
+==23468==    by 0x4141F7: do_moves(dungeon*) (move.cpp:301)
+==23468==    by 0x403957: main (rlg327.cpp:250)
+==23468== 
+==23468== 208 bytes in 1 blocks are still reachable in loss record 20 of 37
+==23468==    at 0x4C2E8E8: calloc (vg_replace_malloc.c:711)
+==23468==    by 0x4E684EA: _nc_setupterm (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4E56469: newterm (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4E52E62: initscr (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4147CA: io_init_terminal() (io.cpp:30)
+==23468==    by 0x403840: main (rlg327.cpp:231)
+==23468== 
+==23468== 324 bytes in 1 blocks are still reachable in loss record 21 of 37
+==23468==    at 0x4C2E8E8: calloc (vg_replace_malloc.c:711)
+==23468==    by 0x4E4F3EB: start_color (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4147F7: io_init_terminal() (io.cpp:35)
+==23468==    by 0x403840: main (rlg327.cpp:231)
+==23468== 
+==23468== 384 bytes in 1 blocks are still reachable in loss record 22 of 37
+==23468==    at 0x4C2E8E8: calloc (vg_replace_malloc.c:711)
+==23468==    by 0x4E56B05: _nc_makenew (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4E56D50: newwin (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4E59243: _nc_setupscreen (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4E564AD: newterm (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4E52E62: initscr (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4147CA: io_init_terminal() (io.cpp:30)
+==23468==    by 0x403840: main (rlg327.cpp:231)
+==23468== 
+==23468== 384 bytes in 1 blocks are still reachable in loss record 23 of 37
+==23468==    at 0x4C2E8E8: calloc (vg_replace_malloc.c:711)
+==23468==    by 0x4E56B05: _nc_makenew (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4E56D50: newwin (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4E59264: _nc_setupscreen (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4E564AD: newterm (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4E52E62: initscr (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4147CA: io_init_terminal() (io.cpp:30)
+==23468==    by 0x403840: main (rlg327.cpp:231)
+==23468== 
+==23468== 384 bytes in 1 blocks are still reachable in loss record 24 of 37
+==23468==    at 0x4C2E8E8: calloc (vg_replace_malloc.c:711)
+==23468==    by 0x4E56B05: _nc_makenew (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4E56D50: newwin (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4E593C4: _nc_setupscreen (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4E564AD: newterm (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4E52E62: initscr (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4147CA: io_init_terminal() (io.cpp:30)
+==23468==    by 0x403840: main (rlg327.cpp:231)
+==23468== 
+==23468== 1,024 bytes in 1 blocks are still reachable in loss record 25 of 37
+==23468==    at 0x4C2E8E8: calloc (vg_replace_malloc.c:711)
+==23468==    by 0x4E58DF3: _nc_setupscreen (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4E564AD: newterm (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4E52E62: initscr (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4147CA: io_init_terminal() (io.cpp:30)
+==23468==    by 0x403840: main (rlg327.cpp:231)
+==23468== 
+==23468== 1,200 bytes in 1 blocks are still reachable in loss record 26 of 37
+==23468==    at 0x4C2CB56: malloc (vg_replace_malloc.c:299)
+==23468==    by 0x4E4CC47: _nc_hash_map (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4E4C255: _nc_scroll_optimize (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4E62B00: doupdate (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4E57DE8: wrefresh (in /lib64/libncurses.so.5.9)
+==23468==    by 0x415BA9: io_redisplay_visible_monsters(dungeon*, short*) (io.cpp:278)
+==23468==    by 0x41A34E: io_handle_input(dungeon*) (io.cpp:1474)
+==23468==    by 0x4141F7: do_moves(dungeon*) (move.cpp:301)
+==23468==    by 0x403957: main (rlg327.cpp:250)
+==23468== 
+==23468== 1,411 bytes in 1 blocks are still reachable in loss record 27 of 37
+==23468==    at 0x4C2CB56: malloc (vg_replace_malloc.c:299)
+==23468==    by 0x4E6D876: _nc_read_termtype (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4E6E0CB: ??? (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4E6E24B: _nc_read_entry (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4E681D5: _nc_setup_tinfo (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4E68501: _nc_setupterm (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4E56469: newterm (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4E52E62: initscr (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4147CA: io_init_terminal() (io.cpp:30)
+==23468==    by 0x403840: main (rlg327.cpp:231)
+==23468== 
+==23468== 1,672 bytes in 1 blocks are still reachable in loss record 28 of 37
+==23468==    at 0x4C2E8E8: calloc (vg_replace_malloc.c:711)
+==23468==    by 0x4E58DCE: _nc_setupscreen (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4E564AD: newterm (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4E52E62: initscr (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4147CA: io_init_terminal() (io.cpp:30)
+==23468==    by 0x403840: main (rlg327.cpp:231)
+==23468== 
+==23468== 1,680 bytes in 70 blocks are still reachable in loss record 29 of 37
+==23468==    at 0x4C2E8E8: calloc (vg_replace_malloc.c:711)
+==23468==    by 0x4E63FD5: _nc_add_to_try (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4E665D3: _nc_init_keytry (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4E676A3: _nc_keypad (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4147F2: io_init_terminal() (io.cpp:34)
+==23468==    by 0x403840: main (rlg327.cpp:231)
+==23468== 
+==23468== 1,945 bytes in 1 blocks are still reachable in loss record 30 of 37
+==23468==    at 0x4C2CB56: malloc (vg_replace_malloc.c:299)
+==23468==    by 0x4E5C078: _nc_printf_string (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4E577BE: vwprintw (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4E579C4: mvprintw (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4165A3: io_display(dungeon*) (io.cpp:407)
+==23468==    by 0x40D391: place_pc(dungeon*) (pc.cpp:79)
+==23468==    by 0x40D425: config_pc(dungeon*) (pc.cpp:90)
+==23468==    by 0x4038A9: main (rlg327.cpp:242)
+==23468== 
+==23468== 2,088 bytes in 87 blocks are still reachable in loss record 31 of 37
+==23468==    at 0x4C2E8E8: calloc (vg_replace_malloc.c:711)
+==23468==    by 0x4E6403A: _nc_add_to_try (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4E665D3: _nc_init_keytry (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4E676A3: _nc_keypad (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4147F2: io_init_terminal() (io.cpp:34)
+==23468==    by 0x403840: main (rlg327.cpp:231)
+==23468== 
+==23468== 2,236 bytes in 1 blocks are still reachable in loss record 32 of 37
+==23468==    at 0x4C2CB56: malloc (vg_replace_malloc.c:299)
+==23468==    by 0x4E58F04: _nc_setupscreen (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4E564AD: newterm (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4E52E62: initscr (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4147CA: io_init_terminal() (io.cpp:30)
+==23468==    by 0x403840: main (rlg327.cpp:231)
+==23468== 
+==23468== 3,312 bytes in 1 blocks are still reachable in loss record 33 of 37
+==23468==    at 0x4C2E8E8: calloc (vg_replace_malloc.c:711)
+==23468==    by 0x4E6DA1C: _nc_read_termtype (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4E6E0CB: ??? (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4E6E24B: _nc_read_entry (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4E681D5: _nc_setup_tinfo (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4E68501: _nc_setupterm (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4E56469: newterm (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4E52E62: initscr (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4147CA: io_init_terminal() (io.cpp:30)
+==23468==    by 0x403840: main (rlg327.cpp:231)
+==23468== 
+==23468== 15,360 bytes in 24 blocks are still reachable in loss record 34 of 37
+==23468==    at 0x4C2E8E8: calloc (vg_replace_malloc.c:711)
+==23468==    by 0x4E56D8C: newwin (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4E59243: _nc_setupscreen (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4E564AD: newterm (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4E52E62: initscr (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4147CA: io_init_terminal() (io.cpp:30)
+==23468==    by 0x403840: main (rlg327.cpp:231)
+==23468== 
+==23468== 15,360 bytes in 24 blocks are still reachable in loss record 35 of 37
+==23468==    at 0x4C2E8E8: calloc (vg_replace_malloc.c:711)
+==23468==    by 0x4E56D8C: newwin (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4E59264: _nc_setupscreen (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4E564AD: newterm (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4E52E62: initscr (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4147CA: io_init_terminal() (io.cpp:30)
+==23468==    by 0x403840: main (rlg327.cpp:231)
+==23468== 
+==23468== 15,360 bytes in 24 blocks are still reachable in loss record 36 of 37
+==23468==    at 0x4C2E8E8: calloc (vg_replace_malloc.c:711)
+==23468==    by 0x4E56D8C: newwin (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4E593C4: _nc_setupscreen (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4E564AD: newterm (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4E52E62: initscr (in /lib64/libncurses.so.5.9)
+==23468==    by 0x4147CA: io_init_terminal() (io.cpp:30)
+==23468==    by 0x403840: main (rlg327.cpp:231)
+==23468== 
+==23468== 72,704 bytes in 1 blocks are still reachable in loss record 37 of 37
+==23468==    at 0x4C2CB56: malloc (vg_replace_malloc.c:299)
+==23468==    by 0x511901F: ??? (in /usr/lib64/libstdc++.so.6.0.21)
+==23468==    by 0x51BDEF5: ??? (in /usr/lib64/libstdc++.so.6.0.21)
+==23468==    by 0x5115ADE: ??? (in /usr/lib64/libstdc++.so.6.0.21)
+==23468==    by 0x1FFEFFFB97: ???
+==23468==    by 0x40102F9: call_init.part.0 (in /lib64/ld-2.23.so)
+==23468==    by 0x401044A: _dl_init (in /lib64/ld-2.23.so)
+==23468==    by 0x4000C99: ??? (in /lib64/ld-2.23.so)
+==23468== 
+==23468== LEAK SUMMARY:
+==23468==    definitely lost: 0 bytes in 0 blocks
+==23468==    indirectly lost: 0 bytes in 0 blocks
+==23468==      possibly lost: 0 bytes in 0 blocks
+==23468==    still reachable: 138,583 bytes in 261 blocks
+==23468==         suppressed: 0 bytes in 0 blocks
+==23468== 
+==23468== For counts of detected and suppressed errors, rerun with: -v
+==23468== ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 0 from 0)

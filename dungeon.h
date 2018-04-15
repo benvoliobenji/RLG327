@@ -28,6 +28,7 @@
 #define DUNGEON_SAVE_VERSION   0U
 #define MONSTER_DESC_FILE      "monster_desc.txt"
 #define OBJECT_DESC_FILE       "object_desc.txt"
+#define MAX_INVENTORY          10
 
 #define mappair(pair) (d->map[pair[dim_y]][pair[dim_x]])
 #define mapxy(x, y) (d->map[y][x])
@@ -94,7 +95,6 @@ class dungeon {
   uint32_t quit;
   std::vector<monster_description> monster_descriptions;
   std::vector<object_description> object_descriptions;
-  bool boss_dead;
 };
 
 void init_dungeon(dungeon *d);
