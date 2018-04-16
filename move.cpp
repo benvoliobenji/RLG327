@@ -91,7 +91,7 @@ void do_combat(dungeon_t *d, character *atk, character *def)
 
   character *defender = def;
 
-  //TODO
+
   if (character_is_alive(defender)) {
     if (atk != d->PC && defender == d->PC) {
 		if (d->PC->dave_following.size() == 0) {
@@ -154,8 +154,7 @@ void do_combat(dungeon_t *d, character *atk, character *def)
       if (defender != d->PC && defender->get_name() != "Dave") {
         d->num_monsters--;
       }
-      //FINISH
-      else if(pc_is_alive(d)) {
+      else if(pc_is_alive(d) && defender->get_name() == "Dave") {
         int i = 0;
         //Accounting for the deaths of multiple Daves
         for(i < d->PC->dave_following.size()) {
