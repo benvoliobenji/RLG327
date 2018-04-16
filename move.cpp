@@ -105,10 +105,16 @@ void do_combat(dungeon_t *d, character *atk, character *def)
 		else {
 			damage = atk->damage->roll();
 
+      io_queue_message("Dave heroically");
+      io_queue_message("jumps in front of you");
+      io_queue_message("to block %d damage!", damage);
 			defender = d->PC->dave_following.back();
-
-		}
-    } else {
+    }
+    }
+    else if (atk != d->PC && defender != d->PC) {
+      io_queue_message("Dave is taking %d damage!", damage);
+      damage = atk->damage->roll();
+    }else {
       for (i = damage = 0; i < num_eq_slots; i++) {
         if (i == eq_slot_weapon && !d->PC->eq[i]) {
           damage += atk->damage->roll();
@@ -121,7 +127,7 @@ void do_combat(dungeon_t *d, character *atk, character *def)
     }
 
     if (damage >= defender->hp) {
-      if (atk != d->PC) {
+      if (atk != d->PC && defender == d->PC) {
         io_queue_message("You die.");
         io_queue_message("As %s%s eats your %s,", is_unique(atk) ? "" : "the ",
                          atk->name, organs[rand() % (sizeof (organs) /
@@ -130,7 +136,14 @@ void do_combat(dungeon_t *d, character *atk, character *def)
         /* Queue an empty message, otherwise the game will not pause for *
          * player to see above.                                          */
         io_queue_message("");
-      } else {
+      }
+      else if(atk != d->PC && defender != d->PC) {
+        (dave *) exploding_dave = (dave *) defender;
+        io_queue_message("Dave takes a killing blow,"
+        io_queue_message("setting off a massive explosion!");
+        exploding_dave->explode(d);
+      }
+      else {
         io_queue_message("%s%s dies.", is_unique(def) ? "" : "The ", def->name);
       }
       defender->hp = 0;
@@ -138,8 +151,22 @@ void do_combat(dungeon_t *d, character *atk, character *def)
       character_increment_dkills(atk);
       character_increment_ikills(atk, (character_get_dkills(def) +
                                        character_get_ikills(def)));
-      if (defender != d->PC) {
+      if (defender != d->PC && defender->get_name() != "Dave") {
         d->num_monsters--;
+      }
+      //FINISH
+      else if(pc_is_alive(d)) {
+        int i = 0;
+        //Accounting for the deaths of multiple Daves
+        for(i < d->PC->dave_following.size()) {
+          if(character_is_alive(d->PC->dave_following[i]) == 0) {
+            d->PC->dave_following[i].erase(d->PC->dave_following.begin() + i);
+            i = 0;
+          }
+          else {
+            i++;
+          }
+        }
       }
       charpair(defender->position) = NULL;
     } else {

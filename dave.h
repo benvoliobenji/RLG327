@@ -14,7 +14,7 @@ private:
 
 public:
 	dave();
-	int explode();
+	void explode(dungeon *d);
 	int give_reward();
 	void follow();
 	bool is_following();

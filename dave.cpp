@@ -26,7 +26,7 @@ dave::dave() {
 	this->name = "Dave";
 }
 
-int dave::explode()
+void dave::explode(dungeon *d)
 {
 	return this->explosives->roll();
 }
