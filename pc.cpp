@@ -57,6 +57,8 @@ pc::~pc()
       eq[i] = NULL;
     }
   }
+
+  this->dave_following.clear();
 }
 
 uint32_t pc_is_alive(dungeon_t *d)
@@ -456,4 +458,26 @@ object *pc::from_pile(dungeon_t *d, pair_t pos)
   }
 
   return o;
+}
+
+//This should show the Dave's following the PC
+void pc::update_dave_positions(dungeon *d, pair_t startPosition) {
+	pair_t prev_position;
+	prev_position[dim_y] = startPosition[dim_y];
+	prev_position[dim_x] = startPosition[dim_x];
+
+	for (int i = 0; i < this->dave_following.size(); i++) {
+		pair_t new_prev_position;
+
+		new_prev_position[dim_y] = this->dave_following[i]->position[dim_y];
+		new_prev_position[dim_x] = this->dave_following[i]->position[dim_x];
+
+		this->dave_following[i].position[dim_y] = prev_position[dim_y];
+		this->dave_following[i].position[dim_x] = prev_position[dim_x];
+
+		d->character_map[prev_position[dim_y]][prev_position[dim_x]] = this->dave_following[i];
+
+		prev_position[dim_y] = new_prev_position[dim_y];
+		prev_position[dim_x] = new_prev_position[dim_x];
+	}
 }

@@ -16,6 +16,7 @@
 #include "io.h"
 #include "npc.h"
 #include "object.h"
+#include "dave.h"
 
 void do_combat(dungeon_t *d, character *atk, character *def)
 {
@@ -87,14 +88,26 @@ void do_combat(dungeon_t *d, character *atk, character *def)
     "pokes",
     "anoints",
   };
-  if (character_is_alive(def)) {
-    if (atk != d->PC) {
-      damage = atk->damage->roll();
-      io_queue_message("%s%s %s your %s for %d.", is_unique(atk) ? "" : "The ",
-                       atk->name, attacks[rand() % (sizeof (attacks) /
-                                                    sizeof (attacks[0]))],
-                       organs[rand() % (sizeof (organs) /
-                                        sizeof (organs[0]))], damage);
+
+  character *defender = def;
+
+  //TODO
+  if (character_is_alive(defender)) {
+    if (atk != d->PC && defender == d->PC) {
+		if (d->PC->dave_following.size() == 0) {
+			damage = atk->damage->roll();
+			io_queue_message("%s%s %s your %s for %d.", is_unique(atk) ? "" : "The ",
+				atk->name, attacks[rand() % (sizeof(attacks) /
+					sizeof(attacks[0]))],
+				organs[rand() % (sizeof(organs) /
+					sizeof(organs[0]))], damage);
+		}
+		else {
+			damage = atk->damage->roll();
+
+			defender = d->PC->dave_following.back();
+
+		}
     } else {
       for (i = damage = 0; i < num_eq_slots; i++) {
         if (i == eq_slot_weapon && !d->PC->eq[i]) {
@@ -107,7 +120,7 @@ void do_combat(dungeon_t *d, character *atk, character *def)
                        def->name, damage);
     }
 
-    if (damage >= def->hp) {
+    if (damage >= defender->hp) {
       if (atk != d->PC) {
         io_queue_message("You die.");
         io_queue_message("As %s%s eats your %s,", is_unique(atk) ? "" : "the ",
@@ -120,17 +133,17 @@ void do_combat(dungeon_t *d, character *atk, character *def)
       } else {
         io_queue_message("%s%s dies.", is_unique(def) ? "" : "The ", def->name);
       }
-      def->hp = 0;
-      def->alive = 0;
+      defender->hp = 0;
+      defender->alive = 0;
       character_increment_dkills(atk);
       character_increment_ikills(atk, (character_get_dkills(def) +
                                        character_get_ikills(def)));
-      if (def != d->PC) {
+      if (defender != d->PC) {
         d->num_monsters--;
       }
-      charpair(def->position) = NULL;
+      charpair(defender->position) = NULL;
     } else {
-      def->hp -= damage;
+      defender->hp -= damage;
     }
   }
 }
@@ -139,6 +152,7 @@ void move_character(dungeon_t *d, character *c, pair_t next)
 {
   int can_see_atk, can_see_def;
   pair_t displacement;
+  pair_t prev;
   uint32_t found_cell;
   pair_t order[9] = {
     { -1, -1 },
@@ -156,9 +170,29 @@ void move_character(dungeon_t *d, character *c, pair_t next)
   if (charpair(next) &&
       ((next[dim_y] != c->position[dim_y]) ||
        (next[dim_x] != c->position[dim_x]))) {
-    if ((charpair(next) == d->PC) ||
-        c == d->PC) {
-      do_combat(d, c, charpair(next));
+	  if (c == d->PC && d->character_map[next[dim_y]][next[dim_x]]->name == "Dave") {
+		  dave *dungeon_dave = (dave *)d->character_map[next[dim_y]][next[dim_x]];
+
+		  //Adding a new Dave to the party
+		  if (!dungeon_dave->is_following()) {
+			  dungeon_dave->follow();
+			  d->PC->dave_following.push_back(dungeon_dave);
+		  }
+
+		  prev[dim_y] = c->position[dim_y];
+		  prev[dim_x] = c->position[dim_x];
+
+		  d->character_map[c->position[dim_y]][c->position[dim_x]] = NULL;
+		  c->position[dim_y] = next[dim_y];
+		  c->position[dim_x] = next[dim_x];
+		  d->character_map[c->position[dim_y]][c->position[dim_x]] = c;
+	}
+	  else if ((charpair(next) == d->PC) ||
+		  c == d->PC) {
+		  do_combat(d, c, charpair(next));
+	  }
+	else if (d->character_map[next[dim_y]][next[dim_x]]->name == "Dave" && c != d->PC) {
+		do_combat(d, c, charpair(next));
     } else {
       /* Easiest way for a monster to displace another monster is *
        * to swap them.  This could lead to some strangeness where *
@@ -234,6 +268,10 @@ void move_character(dungeon_t *d, character *c, pair_t next)
   if (c == d->PC) {
     pc_reset_visibility((pc *) c);
     pc_observe_terrain((pc *) c, d);
+
+	if (d->PC->dave_following.size() != 0) {
+		d->PC->update_dave_positions(d, prev);
+	}
   }
 }
 

@@ -2,10 +2,12 @@
 # define PC_H
 
 # include <stdint.h>
+# include <vector>
 
 # include "dims.h"
 # include "character.h"
 # include "dungeon.h"
+# include "dave.h"
 
 typedef enum eq_slot {
   eq_slot_weapon,
@@ -46,6 +48,7 @@ class pc : public character {
   uint32_t pick_up(dungeon_t *d);
   terrain_type_t known_terrain[DUNGEON_Y][DUNGEON_X];
   uint8_t visible[DUNGEON_Y][DUNGEON_X];
+  void update_dave_positions(dungeon *d, pair_t startPosition);
 };
 
 void pc_delete(pc *pc);

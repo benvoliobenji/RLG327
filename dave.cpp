@@ -37,13 +37,13 @@ int dave::give_reward()
 	return this->gold;
 }
 
-void dave::set_next_pos(pair_t next_pos) {
-	this->next_pos[dim_x] = next_pos[dim_x];
-	this->next_pos[dim_y] = next_pos[dim_y];
+void dave::follow() {
+	this->following = true;
 }
 
-void dave::follow() {
-	this->following = 1;
+bool dave::is_following()
+{
+	return this->following;
 }
 
 void gen_dave(dungeon *d) {
