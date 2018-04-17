@@ -39,6 +39,7 @@ object::~object()
 void gen_object(dungeon_t *d)
 {
   object *o;
+  object *o_store;
   uint32_t room;
   pair_t p;
   std::vector<object_description> &v = d->object_descriptions;
@@ -60,7 +61,9 @@ void gen_object(dungeon_t *d)
 
   o = new object(v[i], p, d->objmap[p[dim_y]][p[dim_x]]);
 
-  d->store.push_back(o);
+  o_store = new object(v[i], p, d->objmap[p[dim_y]][p[dim_x]]);
+
+  d->store.push_back(o_store);
 
   d->objmap[p[dim_y]][p[dim_x]] = o;
   
