@@ -38,6 +38,7 @@ pc::pc()
   }
 
   hp = 1000;
+  wallet = 0;
 }
 
 pc::~pc()

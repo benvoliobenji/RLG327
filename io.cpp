@@ -1450,6 +1450,150 @@ uint32_t io_expunge_in(dungeon_t *d)
   return 1;
 }
 
+void io_store(dungeon *d) {
+	int offset = 0;
+	char c = 0;
+
+	mvprintw(4, 20, "Welcome to the Store!");
+	mvprintw(5, 20, "Arrows to scroll, number buys the item, esc to leave");
+
+	while (c != 27)
+	{
+		for (int i = 0 + offset; i < (10 + offset < d->store.size() ? 10 + offset : d->store.size()); i++) {
+			mvprintw(6 + i, 20, "%d) %s: Cost->%d", i - offset, d->store[i].get_name(), d->store[i].get_value());
+		}
+
+		c = getch();
+
+		switch (c) {
+		case KEY_UP:
+			offset = offset-- < 0 ? 0 : offset--;
+			break;
+			
+		case KEY_DOWN:
+			offset = offset++ >= d->store.size() ? d->store.size() - 1 : offset++;
+			break;
+
+		case 27:
+			break;
+
+		case 0:
+			if (d->store[0 + offset]) {
+				if (d->PC->wallet >= d->store[0 + offset].get_value() && d->PC.has_open_inventory_slot()) {
+					d->PC->wallet -= d->store[0 + offset].get_value();
+					d->PC->in[d->PC->get_first_open_inventory_slot()] = d->store[0 + offset];
+					d->store.erase(d->store.begin() + (0 + offset));
+				}
+			}
+
+			break;
+
+		case 1:
+			if (d->store[1 + offset]) {
+				if (d->PC->wallet >= d->store[1 + offset].get_value() && d->PC.has_open_inventory_slot()) {
+					d->PC->wallet -= d->store[1 + offset].get_value();
+					d->PC->in[d->PC->get_first_open_inventory_slot()] = d->store[1 + offset];
+					d->store.erase(d->store.begin() + (1 + offset));
+				}
+			}
+
+			break;
+
+		case 2:
+			if (d->store[2 + offset]) {
+				if (d->PC->wallet >= d->store[2 + offset].get_value() && d->PC.has_open_inventory_slot()) {
+					d->PC->wallet -= d->store[2 + offset].get_value();
+					d->PC->in[d->PC->get_first_open_inventory_slot()] = d->store[2 + offset];
+					d->store.erase(d->store.begin() + (2 + offset));
+				}
+			}
+
+			break;
+
+		case 3:
+			if (d->store[3 + offset]) {
+				if (d->PC->wallet >= d->store[3 + offset].get_value() && d->PC.has_open_inventory_slot()) {
+					d->PC->wallet -= d->store[3 + offset].get_value();
+					d->PC->in[d->PC->get_first_open_inventory_slot()] = d->store[3 + offset];
+					d->store.erase(d->store.begin() + (3 + offset));
+				}
+			}
+
+			break;
+
+		case 4:
+			if (d->store[4 + offset]) {
+				if (d->PC->wallet >= d->store[4 + offset].get_value() && d->PC.has_open_inventory_slot()) {
+					d->PC->wallet -= d->store[4 + offset].get_value();
+					d->PC->in[d->PC->get_first_open_inventory_slot()] = d->store[4 + offset];
+					d->store.erase(d->store.begin() + (4 + offset));
+				}
+			}
+
+			break;
+
+		case 5:
+			if (d->store[5 + offset]) {
+				if (d->PC->wallet >= d->store[5 + offset].get_value() && d->PC.has_open_inventory_slot()) {
+					d->PC->wallet -= d->store[5 + offset].get_value();
+					d->PC->in[d->PC->get_first_open_inventory_slot()] = d->store[5 + offset];
+					d->store.erase(d->store.begin() + (5 + offset));
+				}
+			}
+
+			break;
+
+		case 6:
+			if (d->store[6 + offset]) {
+				if (d->PC->wallet >= d->store[6 + offset].get_value() && d->PC.has_open_inventory_slot()) {
+					d->PC->wallet -= d->store[6 + offset].get_value();
+					d->PC->in[d->PC->get_first_open_inventory_slot()] = d->store[6 + offset];
+					d->store.erase(d->store.begin() + (6 + offset));
+				}
+			}
+
+			break;
+
+		case 7:
+			if (d->store[7 + offset]) {
+				if (d->PC->wallet >= d->store[7 + offset].get_value() && d->PC.has_open_inventory_slot()) {
+					d->PC->wallet -= d->store[7 + offset].get_value();
+					d->PC->in[d->PC->get_first_open_inventory_slot()] = d->store[7 + offset];
+					d->store.erase(d->store.begin() + (7 + offset));
+				}
+			}
+
+			break;
+
+		case 8:
+			if (d->store[8 + offset]) {
+				if (d->PC->wallet >= d->store[8 + offset].get_value() && d->PC.has_open_inventory_slot()) {
+					d->PC->wallet -= d->store[8 + offset].get_value();
+					d->PC->in[d->PC->get_first_open_inventory_slot()] = d->store[8 + offset];
+					d->store.erase(d->store.begin() + (8 + offset));
+				}
+			}
+
+			break;
+
+		case 9:
+			if (d->store[9 + offset]) {
+				if (d->PC->wallet >= d->store[9 + offset].get_value() && d->PC.has_open_inventory_slot()) {
+					d->PC->wallet -= d->store[9 + offset].get_value();
+					d->PC->in[d->PC->get_first_open_inventory_slot()] = d->store[9 + offset];
+					d->store.erase(d->store.begin() + (9 + offset));
+				}
+			}
+
+			break;
+		}
+
+		refresh();
+	}
+
+	return;
+}
+
 void io_handle_input(dungeon *d)
 {
   uint32_t fail_code;

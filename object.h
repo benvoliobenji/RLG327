@@ -52,6 +52,7 @@ class object {
   inline object *get_next() { return next; }
   inline void set_next(object *n) { next = n; }
   const char *get_description() { return description.c_str(); }
+  inline int32_t get_value() { return value; }
 };
 
 void gen_objects(dungeon_t *d);

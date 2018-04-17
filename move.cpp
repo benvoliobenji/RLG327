@@ -487,6 +487,13 @@ uint32_t move_pc(dungeon *d, uint32_t dir)
   }
 
   if (was_stairs) {
+	  if (d->PC->dave_following.size() != 0) {
+		  for (int i = 0; i < d->PC->dave_following.size(); i++) {
+			  d->PC->wallet += dave_following[i]->give_reward();
+		  }
+
+		  d->PC->dave_following.clear();
+	}
     return 0;
   }
 

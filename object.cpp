@@ -60,6 +60,8 @@ void gen_object(dungeon_t *d)
 
   o = new object(v[i], p, d->objmap[p[dim_y]][p[dim_x]]);
 
+  d->store.push_back(o);
+
   d->objmap[p[dim_y]][p[dim_x]] = o;
   
 }

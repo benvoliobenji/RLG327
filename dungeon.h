@@ -95,6 +95,7 @@ class dungeon {
   uint32_t quit;
   std::vector<monster_description> monster_descriptions;
   std::vector<object_description> object_descriptions;
+  std::vector<object *> store;
 };
 
 void init_dungeon(dungeon *d);

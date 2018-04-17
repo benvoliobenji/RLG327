@@ -30,10 +30,9 @@ extern const char *eq_slot_name[num_eq_slots];
 class pc : public character {
  private:
   void recalculate_speed();
-  uint32_t has_open_inventory_slot();
-  int32_t get_first_open_inventory_slot();
   object *from_pile(dungeon_t *d, pair_t pos);
  public:
+	 int wallet;
   pc();
   ~pc();
   object *eq[num_eq_slots];
@@ -41,6 +40,8 @@ class pc : public character {
 
   std::vector<dave *> dave_following;
 
+  uint32_t has_open_inventory_slot();
+  int32_t get_first_open_inventory_slot();
   uint32_t wear_in(uint32_t slot);
   uint32_t remove_eq(uint32_t slot);
   uint32_t drop_in(dungeon_t *d, uint32_t slot);
