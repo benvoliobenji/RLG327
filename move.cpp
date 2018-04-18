@@ -93,27 +93,27 @@ void do_combat(dungeon_t *d, character *atk, character *def)
 
 
   if (character_is_alive(defender)) {
-    if (atk != d->PC && defender == d->PC) {
-		if (d->PC->dave_following.size() == 0) {
-			damage = atk->damage->roll();
-			io_queue_message("%s%s %s your %s for %d.", is_unique(atk) ? "" : "The ",
-				atk->name, attacks[rand() % (sizeof(attacks) /
-					sizeof(attacks[0]))],
-				organs[rand() % (sizeof(organs) /
-					sizeof(organs[0]))], damage);
-		}
-		else {
-			damage = atk->damage->roll();
-
-      io_queue_message("Dave heroically");
-      io_queue_message("jumps in front of you");
-      io_queue_message("to block %d damage!", damage);
-			defender = d->PC->dave_following.back();
-    }
+    if (atk != d->PC && (defender == d->PC)) {
+      if (d->PC->dave_following.size() == 0) {
+	damage = atk->damage->roll();
+	io_queue_message("%s%s %s your %s for %d.", is_unique(atk) ? "" : "The ",
+			 atk->name, attacks[rand() % (sizeof(attacks) /
+						      sizeof(attacks[0]))],
+			 organs[rand() % (sizeof(organs) /
+					  sizeof(organs[0]))], damage);
+      }
+      else {
+	damage = atk->damage->roll();
+	
+	io_queue_message("Dave heroically");
+	io_queue_message("jumps in front of you");
+	io_queue_message("to block %d damage!", damage);
+	defender = d->PC->dave_following.back();
+      }
     }
     else if (atk != d->PC && defender != d->PC) {
-      io_queue_message("Dave is taking %d damage!", damage);
       damage = atk->damage->roll();
+      io_queue_message("Dave is taking %d damage!", damage);
     }else {
       for (i = damage = 0; i < num_eq_slots; i++) {
         if (i == eq_slot_weapon && !d->PC->eq[i]) {
@@ -125,7 +125,7 @@ void do_combat(dungeon_t *d, character *atk, character *def)
       io_queue_message("You hit %s%s for %d.", is_unique(def) ? "" : "the ",
                        def->name, damage);
     }
-
+    
     if (damage >= defender->hp) {
       if (atk != d->PC && defender == d->PC) {
         io_queue_message("You die.");
@@ -138,9 +138,9 @@ void do_combat(dungeon_t *d, character *atk, character *def)
         io_queue_message("");
       }
       else if(atk != d->PC && defender != d->PC) {
-        (dave *) exploding_dave = (dave *) defender;
-        io_queue_message("Dave takes a killing blow,"
-        io_queue_message("setting off a massive explosion!");
+        dave *exploding_dave = (dave *) defender;
+        io_queue_message("Dave takes a killing blow,");
+	io_queue_message("setting off a massive explosion!");
         exploding_dave->explode(d);
       }
       else {
@@ -151,15 +151,15 @@ void do_combat(dungeon_t *d, character *atk, character *def)
       character_increment_dkills(atk);
       character_increment_ikills(atk, (character_get_dkills(def) +
                                        character_get_ikills(def)));
-      if (defender != d->PC && defender->get_name() != "Dave") {
+      if (defender != d->PC && (defender->name != (char *) "Dave")) {
         d->num_monsters--;
       }
-      else if(pc_is_alive(d) && defender->get_name() == "Dave") {
+      else if(pc_is_alive(d) && (defender->name == (char *) "Dave")) {
         int i = 0;
         //Accounting for the deaths of multiple Daves
-        for(i < d->PC->dave_following.size()) {
+        while(i < (int) d->PC->dave_following.size()) {
           if(character_is_alive(d->PC->dave_following[i]) == 0) {
-            d->PC->dave_following[i].erase(d->PC->dave_following.begin() + i);
+            d->PC->dave_following.erase(d->PC->dave_following.begin() + i);
             i = 0;
           }
           else {
@@ -196,29 +196,29 @@ void move_character(dungeon_t *d, character *c, pair_t next)
   if (charpair(next) &&
       ((next[dim_y] != c->position[dim_y]) ||
        (next[dim_x] != c->position[dim_x]))) {
-	  if (c == d->PC && d->character_map[next[dim_y]][next[dim_x]]->name == "Dave") {
-		  dave *dungeon_dave = (dave *)d->character_map[next[dim_y]][next[dim_x]];
+    if (c == d->PC && (d->character_map[next[dim_y]][next[dim_x]]->name == (char *)"Dave")) {
+	    dave *dungeon_dave = (dave *)d->character_map[next[dim_y]][next[dim_x]];
 
-		  //Adding a new Dave to the party
-		  if (!dungeon_dave->is_following()) {
-			  dungeon_dave->follow();
-			  d->PC->dave_following.push_back(dungeon_dave);
-		  }
+	    //Adding a new Dave to the party
+	    if (!dungeon_dave->is_following()) {
+	      dungeon_dave->follow();
+	      d->PC->dave_following.push_back(dungeon_dave);
+	    }
 
-		  prev[dim_y] = c->position[dim_y];
-		  prev[dim_x] = c->position[dim_x];
+	    prev[dim_y] = c->position[dim_y];
+	    prev[dim_x] = c->position[dim_x];
 
-		  d->character_map[c->position[dim_y]][c->position[dim_x]] = NULL;
-		  c->position[dim_y] = next[dim_y];
-		  c->position[dim_x] = next[dim_x];
-		  d->character_map[c->position[dim_y]][c->position[dim_x]] = c;
-	}
-	  else if ((charpair(next) == d->PC) ||
-		  c == d->PC) {
-		  do_combat(d, c, charpair(next));
-	  }
-	else if (d->character_map[next[dim_y]][next[dim_x]]->name == "Dave" && c != d->PC) {
-		do_combat(d, c, charpair(next));
+	    d->character_map[c->position[dim_y]][c->position[dim_x]] = NULL;
+	    c->position[dim_y] = next[dim_y];
+	    c->position[dim_x] = next[dim_x];
+	    d->character_map[c->position[dim_y]][c->position[dim_x]] = c;
+    }
+    else if ((charpair(next) == d->PC) ||
+	     c == d->PC) {
+      do_combat(d, c, charpair(next));
+    }
+    else if (d->character_map[next[dim_y]][next[dim_x]]->name == (char *) "Dave" && c != d->PC) {
+      do_combat(d, c, charpair(next));
     } else {
       /* Easiest way for a monster to displace another monster is *
        * to swap them.  This could lead to some strangeness where *
@@ -295,9 +295,9 @@ void move_character(dungeon_t *d, character *c, pair_t next)
     pc_reset_visibility((pc *) c);
     pc_observe_terrain((pc *) c, d);
 
-	if (d->PC->dave_following.size() != 0) {
-		d->PC->update_dave_positions(d, prev);
-	}
+    if (d->PC->dave_following.size() != 0) {
+      d->PC->update_dave_positions(d, prev);
+    }
   }
 }
 
@@ -487,13 +487,13 @@ uint32_t move_pc(dungeon *d, uint32_t dir)
   }
 
   if (was_stairs) {
-	  if (d->PC->dave_following.size() != 0) {
-		  for (int i = 0; i < d->PC->dave_following.size(); i++) {
-			  d->PC->wallet += dave_following[i]->give_reward();
-		  }
-
-		  d->PC->dave_following.clear();
-	}
+    if (d->PC->dave_following.size() != 0) {
+      for (int i = 0; i < (int)d->PC->dave_following.size(); i++) {
+	d->PC->wallet += d->PC->dave_following[i]->give_reward();
+      }
+      
+      d->PC->dave_following.clear();
+    }
     return 0;
   }
 

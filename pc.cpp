@@ -467,14 +467,14 @@ void pc::update_dave_positions(dungeon *d, pair_t startPosition) {
 	prev_position[dim_y] = startPosition[dim_y];
 	prev_position[dim_x] = startPosition[dim_x];
 
-	for (int i = 0; i < this->dave_following.size(); i++) {
+	for (int i = 0; i < (int) this->dave_following.size(); i++) {
 		pair_t new_prev_position;
 
 		new_prev_position[dim_y] = this->dave_following[i]->position[dim_y];
 		new_prev_position[dim_x] = this->dave_following[i]->position[dim_x];
 
-		this->dave_following[i].position[dim_y] = prev_position[dim_y];
-		this->dave_following[i].position[dim_x] = prev_position[dim_x];
+		this->dave_following[i]->position[dim_y] = prev_position[dim_y];
+		this->dave_following[i]->position[dim_x] = prev_position[dim_x];
 
 		d->character_map[prev_position[dim_y]][prev_position[dim_x]] = this->dave_following[i];
 
