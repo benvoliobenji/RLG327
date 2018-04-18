@@ -677,7 +677,7 @@ uint32_t io_teleport_pc(dungeon *d)
 
   if (charpair(dest) && charpair(dest) != d->PC) {
     io_queue_message("Teleport failed.  Destination occupied.");
-  } else {  
+  } else {
     d->character_map[d->PC->position[dim_y]][d->PC->position[dim_x]] = NULL;
     d->character_map[dest[dim_y]][dest[dim_x]] = d->PC;
 
@@ -1091,7 +1091,7 @@ static uint32_t io_display_obj_info(object *o)
   refresh();
   getch();
 
-  return 0;  
+  return 0;
 }
 
 static uint32_t io_inspect_eq(dungeon_t *d);
@@ -1333,12 +1333,12 @@ static uint32_t io_inspect_monster(dungeon_t *d)
   mvprintw(n + 4, 0, "Hit any key to continue. ");
 
   refresh();
-  
+
   getch();
 
   io_display(d);
 
-  return 0;  
+  return 0;
 }
 
 static uint32_t io_inspect_eq(dungeon_t *d)
@@ -1459,8 +1459,9 @@ void io_store(dungeon *d) {
 
 	while (c != 27)
 	{
+    mvprintw(6, 20, "You have %d", d->PC->wallet);
 		for (int i = 0 + offset; i < (10 + offset < d->store.size() ? 10 + offset : d->store.size()); i++) {
-			mvprintw(6 + i, 20, "%d) %s: Cost->%d", i - offset, d->store[i].get_name(), d->store[i].get_value());
+			mvprintw(7 + i, 20, "%d) %s: Cost->%d", i - offset, d->store[i].get_name(), d->store[i].get_value());
 		}
 
 		c = getch();
@@ -1469,7 +1470,7 @@ void io_store(dungeon *d) {
 		case KEY_UP:
 			offset = offset-- < 0 ? 0 : offset--;
 			break;
-			
+
 		case KEY_DOWN:
 			offset = offset++ >= d->store.size() ? d->store.size() - 1 : offset++;
 			break;
@@ -1764,6 +1765,12 @@ void io_handle_input(dungeon *d)
       io_queue_message("Have fun!  And happy printing!");
       fail_code = 0;
       break;
+
+      case 's':
+        io_store(d);
+        fail_code = 1;
+        break;
+
     default:
       /* Also not in the spec.  It's not always easy to figure out what *
        * key code corresponds with a given keystroke.  Print out any    *
