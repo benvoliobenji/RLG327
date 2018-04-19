@@ -4,34 +4,40 @@
 #include "pc.h"
 
 dave::dave() {
-	dice *explosion = new dice((uint32_t) 50, (uint32_t) 30, (uint32_t) 20);
-	int reward;
-
-	if (explosion->roll() < 100) {
-		reward = rand() % 100;
-	}
-	else if (explosion->roll() < 250) {
-		reward = rand() % 1000;
-	}
-	else {
-		reward = rand() % 10000;
-	}
-
-	this->explosives = explosion;
-	this->gold = reward;
-	this->following = false;
-	this->symbol = 'D';
-	this->speed = PC_SPEED;
-	this->alive = 1;
-	this->color.push_back(COLOR_BLUE);
-	this->hp = 20;
-	this->damage = new dice((uint32_t) 0, (uint32_t) 2, (uint32_t) 10);
-	this->name = "Dave";
+  //Changed this from a dice roll to an int to better balance rewards
+  //Max explosion damage is a collosal 1250 damage
+  dice *explosion = new dice((uint32_t) 50, (uint32_t) 60, (uint32_t) 20);
+  int reward;
+  int explosive = explosion->roll();
+  
+  if (explosive < 250) {
+    reward = rand() % 100 + 50;
+  }
+  else if (explosive < 500) {
+    reward = rand() % 300 + 100;
+  }
+  else if (explosive < 750) {
+    reward = rand() % 1000 + 250;
+  }
+  else {
+    reward = rand() % 10000 + 500;
+  }
+  
+  this->explosives = explosive;
+  this->gold = reward;
+  this->following = false;
+  this->symbol = 'D';
+  this->speed = PC_SPEED;
+  this->alive = 1;
+  this->color.push_back(COLOR_BLUE);
+  this->hp = 50;
+  this->damage = new dice((uint32_t) 0, (uint32_t) 2, (uint32_t) 10);
+  this->name = "Dave";
 }
 
 void dave::explode(dungeon *d)
 {
-  int damage = this->explosives->roll();
+  int damage = this->explosives;
 
   io_queue_message("The explosion does a whopping %d damage!", damage);
 
@@ -79,6 +85,14 @@ void dave::follow() {
 bool dave::is_following()
 {
 	return this->following;
+}
+
+int dave::show_reward() {
+  return this->gold;
+}
+
+int dave::show_explosives() {
+  return this->explosives;
 }
 
 void gen_dave(dungeon *d) {

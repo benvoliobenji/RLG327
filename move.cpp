@@ -198,9 +198,10 @@ void move_character(dungeon_t *d, character *c, pair_t next)
        (next[dim_x] != c->position[dim_x]))) {
     if (c == d->PC && (d->character_map[next[dim_y]][next[dim_x]]->symbol == 'D')) {
 	    dave *dungeon_dave = (dave *)d->character_map[next[dim_y]][next[dim_x]];
-
 	    //Adding a new Dave to the party
 	    if (!dungeon_dave->is_following()) {
+	      io_queue_message("You just recruited a new Dave with a bounty of %d", dungeon_dave->show_reward());
+	      io_queue_message("and explosives of %d", dungeon_dave->show_explosives());
 	      dungeon_dave->follow();
 	      d->PC->dave_following.push_back(dungeon_dave);
 	    }

@@ -9,7 +9,7 @@
 class dave : public character {
 private:
 	int gold;
-	dice *explosives;
+	int explosives;
 	bool following;
 
 public:
@@ -18,6 +18,8 @@ public:
 	int give_reward();
 	void follow();
 	bool is_following();
+	int show_reward();
+	int show_explosives();
 };
 
 void gen_dave(dungeon *d);
