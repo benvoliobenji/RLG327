@@ -46,3 +46,12 @@
 4/07/2018: Changed io.cpp to display and work with the new commands for inventory and equipment
 4/08/2018: Started bugfixing
 4/09/2018: Finished bugfixing for assignment1.09
+4/15/2018: Started dave.h and dave.cpp
+4/16/2018: Incorporated Dave into combat as well as a vector within PC to follow Dave
+4/16/2018: Updated and finished combat, including explosion damage
+4/17/2018: Added the rewards system to sucessfully rescuing Daves
+4/17/2018: Implemented a store to the I/O that the PC can use their rewards on
+4/18/2018: Finished store implementation
+4/18/2018: Major bugfixes
+4/19/2018: Finished minor bugfixes to both Dave and the store
+4/19/2018: Balance changes to explosion damage vs. rewards

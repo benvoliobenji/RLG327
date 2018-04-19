@@ -1,14 +1,14 @@
-For this assignment, I added two vectors for pc to deal with the inventory and the equipment.
-When I constructed the PC, I filled the vectors with NULL object pointers to set the size of
-the vectors since those shouldn't change. I decided to use vectors over arrays this time
-because I could use the .size() method instead of having ints all over the place. Outside of
-that I added the methods to pick up, put on, take off, drop, and delete items in the inventory
-and equipment. I also changed io in order to display menus for all of the different options.
-Each option for wear, take off, etc. brings up its own menu and doesn't run off of displaying
-the inventory or the equipment menu. The only thing I warn is that the display doesn't fully
-revert after looking at a monster description and not fully backing out of the cursor mode. It
-works just fine, it's just how the dungeon is being rendered after deleting the window that
-the description is printed on. The final touch ups I did was changing how the combat system works
-so that the NPC's don't fight and they deal damage based on differences in dice rolls to the
-PC. The PC also uses his/her's equiped objects to modify their damage output. Finally, I
-changed the win conditions for each side.
+This assignment comes with two parts that are both intertwined. The first part was an idea
+I had when we were given the opprotunity to choose our own projects. I saw that there wasn't
+much incentive to travel up and down stairs, as well as little to risk vs. reward in the game.
+So, to alleviate those concerns, I created a new character, Dave. A group of explorers went
+into the dungeon before you, a group of Daves that were seeking out a beautiful treasure in
+the depths of the dungeon. They discovered the treasure, but the boss of the dungeon kidnapped
+all of the Daves and implanted explosives within thier bodies. You must now rescue the Daves
+from the dungeon by walking over them, adding them to your band of Daves. If you make it to
+the stairs and ascend/descend the stairs, you will have freed the Daves from their prison,
+and in their joy, they give you the gold that they acquired. The risk with recruiting Daves
+is that if they die, they set off a massive explosion, damaging everyone in a 2 block radius.
+The second portion of the assignment was to implement a store, which is extremely
+straightforward. Using the rewards for getting Daves to safety, you can spend it at the store
+to get items without picking them up off of the dungeon floor.
