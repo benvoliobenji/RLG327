@@ -37,7 +37,8 @@ pc::pc()
     in[i] = 0;
   }
 
-  hp = 1000;
+  //Change to 1000
+  hp = 300;
   wallet = 0;
 }
 
@@ -463,22 +464,25 @@ object *pc::from_pile(dungeon_t *d, pair_t pos)
 
 //This should show the Dave's following the PC
 void pc::update_dave_positions(dungeon *d, pair_t startPosition) {
-	pair_t prev_position;
-	prev_position[dim_y] = startPosition[dim_y];
-	prev_position[dim_x] = startPosition[dim_x];
+  pair_t prev_position;
+  prev_position[dim_y] = startPosition[dim_y];
+  prev_position[dim_x] = startPosition[dim_x];
+  
+  for (int i = 0; i < (int) this->dave_following.size(); i++) {
+    pair_t new_prev_position;
+    
+    new_prev_position[dim_y] = this->dave_following[i]->position[dim_y];
+    new_prev_position[dim_x] = this->dave_following[i]->position[dim_x];
+    
+    this->dave_following[i]->position[dim_y] = prev_position[dim_y];
+    this->dave_following[i]->position[dim_x] = prev_position[dim_x];
+    
+    d->character_map[prev_position[dim_y]][prev_position[dim_x]] = this->dave_following[i];
 
-	for (int i = 0; i < (int) this->dave_following.size(); i++) {
-		pair_t new_prev_position;
-
-		new_prev_position[dim_y] = this->dave_following[i]->position[dim_y];
-		new_prev_position[dim_x] = this->dave_following[i]->position[dim_x];
-
-		this->dave_following[i]->position[dim_y] = prev_position[dim_y];
-		this->dave_following[i]->position[dim_x] = prev_position[dim_x];
-
-		d->character_map[prev_position[dim_y]][prev_position[dim_x]] = this->dave_following[i];
-
-		prev_position[dim_y] = new_prev_position[dim_y];
-		prev_position[dim_x] = new_prev_position[dim_x];
-	}
+    if(d->PC->position[dim_y] != new_prev_position[dim_y] || d->PC->position[dim_x] != new_prev_position[dim_x]) {
+      d->character_map[new_prev_position[dim_y]][new_prev_position[dim_x]] = NULL;
+      }
+    prev_position[dim_y] = new_prev_position[dim_y];
+    prev_position[dim_x] = new_prev_position[dim_x];
+  }
 }

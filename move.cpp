@@ -105,16 +105,14 @@ void do_combat(dungeon_t *d, character *atk, character *def)
       else {
 	damage = atk->damage->roll();
 	
-	io_queue_message("Dave heroically");
-	io_queue_message("jumps in front of you");
-	io_queue_message("to block %d damage!", damage);
+	io_queue_message("Dave heroically jumps in front of you to block %d damage!", damage);
 	defender = d->PC->dave_following.back();
       }
     }
     else if (atk != d->PC && defender != d->PC) {
       damage = atk->damage->roll();
       io_queue_message("Dave is taking %d damage!", damage);
-    }else {
+    }else if(atk == d->PC && defender->symbol != 'D') {
       for (i = damage = 0; i < num_eq_slots; i++) {
         if (i == eq_slot_weapon && !d->PC->eq[i]) {
           damage += atk->damage->roll();
@@ -139,8 +137,7 @@ void do_combat(dungeon_t *d, character *atk, character *def)
       }
       else if(atk != d->PC && defender != d->PC) {
         dave *exploding_dave = (dave *) defender;
-        io_queue_message("Dave takes a killing blow,");
-	io_queue_message("setting off a massive explosion!");
+        io_queue_message("Dave takes a killing blow, setting off a massive explosion!");
         exploding_dave->explode(d);
       }
       else {
@@ -151,10 +148,10 @@ void do_combat(dungeon_t *d, character *atk, character *def)
       character_increment_dkills(atk);
       character_increment_ikills(atk, (character_get_dkills(def) +
                                        character_get_ikills(def)));
-      if (defender != d->PC && (defender->name != (char *) "Dave")) {
+      if (defender != d->PC && (defender->symbol != 'D')) {
         d->num_monsters--;
       }
-      else if(pc_is_alive(d) && (defender->name == (char *) "Dave")) {
+      else if(pc_is_alive(d) && (defender->symbol == 'D')) {
         int i = 0;
         //Accounting for the deaths of multiple Daves
         while(i < (int) d->PC->dave_following.size()) {
@@ -193,10 +190,13 @@ void move_character(dungeon_t *d, character *c, pair_t next)
   };
   uint32_t s, i;
 
+  prev[dim_y] = c->position[dim_y];
+  prev[dim_x] = c->position[dim_x];
+
   if (charpair(next) &&
       ((next[dim_y] != c->position[dim_y]) ||
        (next[dim_x] != c->position[dim_x]))) {
-    if (c == d->PC && (d->character_map[next[dim_y]][next[dim_x]]->name == (char *)"Dave")) {
+    if (c == d->PC && (d->character_map[next[dim_y]][next[dim_x]]->symbol == 'D')) {
 	    dave *dungeon_dave = (dave *)d->character_map[next[dim_y]][next[dim_x]];
 
 	    //Adding a new Dave to the party
@@ -217,7 +217,7 @@ void move_character(dungeon_t *d, character *c, pair_t next)
 	     c == d->PC) {
       do_combat(d, c, charpair(next));
     }
-    else if (d->character_map[next[dim_y]][next[dim_x]]->name == (char *) "Dave" && c != d->PC) {
+    else if (d->character_map[next[dim_y]][next[dim_x]]->symbol == 'D' && c != d->PC) {
       do_combat(d, c, charpair(next));
     } else {
       /* Easiest way for a monster to displace another monster is *
@@ -295,7 +295,7 @@ void move_character(dungeon_t *d, character *c, pair_t next)
     pc_reset_visibility((pc *) c);
     pc_observe_terrain((pc *) c, d);
 
-    if (d->PC->dave_following.size() != 0) {
+    if (d->PC->dave_following.size() != 0 && (prev[dim_y] != c->position[dim_y] || prev[dim_x] != c->position[dim_x])) {
       d->PC->update_dave_positions(d, prev);
     }
   }

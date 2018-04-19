@@ -20,4 +20,6 @@ public:
 	bool is_following();
 };
 
+void gen_dave(dungeon *d);
+
 #endif

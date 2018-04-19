@@ -11,6 +11,7 @@
 #include "move.h"
 #include "io.h"
 #include "object.h"
+#include "dave.h"
 
 const char *victory =
   "\n                                       o\n"
@@ -90,6 +91,18 @@ int main(int argc, char *argv[])
   char *pgm_file;
 
   memset(&d, 0, sizeof (d));
+  srand(seed);
+
+  //parse_descriptions(&d);
+  //init_dungeon(&d);
+  //gen_dungeon(&d);
+
+  //config_pc(&d);
+  //gen_monsters(&d);
+  //gen_objects(&d);
+  //gen_dave(&d);
+
+  //return 0;
 
   /* Default behavior: Seed with the time, generate a new dungeon, *
    * and don't write to disk.                                      */
@@ -242,6 +255,7 @@ int main(int argc, char *argv[])
   config_pc(&d);
   gen_monsters(&d);
   gen_objects(&d);
+  gen_dave(&d);
   pc_observe_terrain(d.PC, &d);
 
   io_display(&d);

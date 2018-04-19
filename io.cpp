@@ -299,7 +299,7 @@ static character *io_nearest_visible_monster(dungeon *d)
   /* Get a linear list of monsters */
   for (count = 0, y = 1; y < DUNGEON_Y - 1; y++) {
     for (x = 1; x < DUNGEON_X - 1; x++) {
-      if (d->character_map[y][x] && d->character_map[y][x] != d->PC) {
+      if (d->character_map[y][x] && d->character_map[y][x] != d->PC && (d->character_map[y][x]->symbol != 'D')) {
         c[count++] = d->character_map[y][x];
         assert(count <= d->num_monsters);
       }
@@ -345,7 +345,7 @@ void io_display(dungeon *d)
           can_see(d,
                   character_get_pos(d->PC),
                   character_get_pos(d->character_map[pos[dim_y]]
-                                                    [pos[dim_x]]), 1, 0)) {
+				    [pos[dim_x]]), 1, 0) && d->character_map[pos[dim_y]][pos[dim_x]]->symbol != 'D') {
 
         visible_monsters++;
         attron(COLOR_PAIR((color = d->character_map[pos[dim_y]]
@@ -354,7 +354,21 @@ void io_display(dungeon *d)
                 character_get_symbol(d->character_map[pos[dim_y]]
                                                      [pos[dim_x]]));
         attroff(COLOR_PAIR(color));
-      } else if (d->objmap[pos[dim_y]]
+      } 
+      else if(d->character_map[pos[dim_y]]
+                          [pos[dim_x]] &&
+          can_see(d,
+                  character_get_pos(d->PC),
+                  character_get_pos(d->character_map[pos[dim_y]]
+				    [pos[dim_x]]), 1, 0) && d->character_map[pos[dim_y]][pos[dim_x]]->symbol == 'D') {
+        attron(COLOR_PAIR((color = d->character_map[pos[dim_y]]
+                                                   [pos[dim_x]]->get_color())));
+        mvaddch(pos[dim_y] + 1, pos[dim_x],
+                character_get_symbol(d->character_map[pos[dim_y]]
+                                                     [pos[dim_x]]));
+        attroff(COLOR_PAIR(color));
+      }
+      else if (d->objmap[pos[dim_y]]
                           [pos[dim_x]] &&
                  (d->objmap[pos[dim_y]]
                            [pos[dim_x]]->have_seen() ||

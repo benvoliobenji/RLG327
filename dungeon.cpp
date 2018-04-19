@@ -14,6 +14,7 @@
 #include "npc.h"
 #include "io.h"
 #include "object.h"
+#include "dave.h"
 
 #define DUMP_HARDNESS_IMAGES 0
 
@@ -1000,4 +1001,5 @@ void new_dungeon(dungeon_t *d)
 
   gen_monsters(d);
   gen_objects(d);
+  gen_dave(d);
 }
