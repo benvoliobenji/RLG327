@@ -38,7 +38,7 @@ pc::pc()
   }
 
   //Change to 1000
-  hp = 300;
+  hp = 1000;
   wallet = 0;
 }
 
@@ -100,6 +100,8 @@ void config_pc(dungeon_t *d)
   d->PC->color.push_back(COLOR_WHITE);
   d->PC->damage = &pc_dice;
   d->PC->name = "Isabella Garcia-Shapiro";
+  //For bugfixing
+  d->PC->wallet = 500;
 
   d->character_map[character_get_y(d->PC)][character_get_x(d->PC)] = d->PC;
 

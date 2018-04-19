@@ -1466,21 +1466,22 @@ uint32_t io_expunge_in(dungeon_t *d)
 
 void io_store(dungeon *d) {
   int offset = 0;
-  char c = 0;
+  //char c = 0;
+  bool exit = false;
   
-  mvprintw(4, 20, "Welcome to the Store!");
-  mvprintw(5, 20, "Arrows to scroll, number buys the item, esc to leave");
-  
-  while (c != 27)
+  while (!exit)
     {
+      clear();
+      mvprintw(4, 20, "Welcome to the Store!");
+      mvprintw(5, 20, "Arrows to scroll, number buys the item, esc to leave");
       mvprintw(6, 20, "You have %d", d->PC->wallet);
       for (int i = 0 + offset; i < (10 + offset < (int) d->store.size() ? 10 + offset : (int) d->store.size()); i++) {
-	mvprintw(7 + i, 20, "%d) %s: Cost->%d", i - offset, d->store[i]->get_name(), d->store[i]->get_value());
+	mvprintw((7 + i - offset), 20, "%d) %s: Cost->%d", i - offset, d->store[i]->get_name(), d->store[i]->get_value());
       }
       
-      c = getch();
+      //c = getch();
       
-      switch (c) {
+      switch (getch()) {
       case KEY_UP:
 	offset = offset - 1 < 0 ? 0 : offset - 1;
 	break;
@@ -1490,9 +1491,10 @@ void io_store(dungeon *d) {
 	break;
 	
       case 27:
+	exit = true;
 	break;
 	
-      case 0:
+      case '0':
 	if (d->store[0 + offset]) {
 	  if (d->PC->wallet >= d->store[0 + offset]->get_value() && d->PC->has_open_inventory_slot()) {
 	    d->PC->wallet -= d->store[0 + offset]->get_value();
@@ -1500,10 +1502,10 @@ void io_store(dungeon *d) {
 	    d->store.erase(d->store.begin() + (0 + offset));
 	  }
 	}
-	
+	exit = true;
 	break;
 	
-      case 1:
+      case '1':
 	if (d->store[1 + offset]) {
 	  if (d->PC->wallet >= d->store[1 + offset]->get_value() && d->PC->has_open_inventory_slot()) {
 	    d->PC->wallet -= d->store[1 + offset]->get_value();
@@ -1511,10 +1513,10 @@ void io_store(dungeon *d) {
 	    d->store.erase(d->store.begin() + (1 + offset));
 	  }
 	}
-	
+	exit = true;
 	break;
 
-      case 2:
+      case '2':
 	if (d->store[2 + offset]) {
 	  if (d->PC->wallet >= d->store[2 + offset]->get_value() && d->PC->has_open_inventory_slot()) {
 	    d->PC->wallet -= d->store[2 + offset]->get_value();
@@ -1522,10 +1524,10 @@ void io_store(dungeon *d) {
 	    d->store.erase(d->store.begin() + (2 + offset));
 	  }
 	}
-	
+	exit = true;
 	break;
 	
-      case 3:
+      case '3':
 	if (d->store[3 + offset]) {
 	  if (d->PC->wallet >= d->store[3 + offset]->get_value() && d->PC->has_open_inventory_slot()) {
 	    d->PC->wallet -= d->store[3 + offset]->get_value();
@@ -1533,10 +1535,10 @@ void io_store(dungeon *d) {
 	    d->store.erase(d->store.begin() + (3 + offset));
 	  }
 	}
-	
+	exit = true;
 	break;
 	
-      case 4:
+      case '4':
 	if (d->store[4 + offset]) {
 	  if (d->PC->wallet >= d->store[4 + offset]->get_value() && d->PC->has_open_inventory_slot()) {
 	    d->PC->wallet -= d->store[4 + offset]->get_value();
@@ -1544,10 +1546,10 @@ void io_store(dungeon *d) {
 	    d->store.erase(d->store.begin() + (4 + offset));
 	  }
 	}
-	
+	exit = true;
 	break;
 	
-      case 5:
+      case '5':
 	if (d->store[5 + offset]) {
 	  if (d->PC->wallet >= d->store[5 + offset]->get_value() && d->PC->has_open_inventory_slot()) {
 	    d->PC->wallet -= d->store[5 + offset]->get_value();
@@ -1555,10 +1557,10 @@ void io_store(dungeon *d) {
 	    d->store.erase(d->store.begin() + (5 + offset));
 	  }
 	}
-	
+	exit = true;
 	break;
 	
-      case 6:
+      case '6':
 	if (d->store[6 + offset]) {
 	  if (d->PC->wallet >= d->store[6 + offset]->get_value() && d->PC->has_open_inventory_slot()) {
 	    d->PC->wallet -= d->store[6 + offset]->get_value();
@@ -1566,10 +1568,10 @@ void io_store(dungeon *d) {
 	    d->store.erase(d->store.begin() + (6 + offset));
 	  }
 	}
-	
+	exit = true;
 	break;
 	
-      case 7:
+      case '7':
 	if (d->store[7 + offset]) {
 	  if (d->PC->wallet >= d->store[7 + offset]->get_value() && d->PC->has_open_inventory_slot()) {
 	    d->PC->wallet -= d->store[7 + offset]->get_value();
@@ -1577,10 +1579,10 @@ void io_store(dungeon *d) {
 	    d->store.erase(d->store.begin() + (7 + offset));
 	  }
 	}
-	
+	exit = true;
 	break;
 	
-      case 8:
+      case '8':
 	if (d->store[8 + offset]) {
 	  if (d->PC->wallet >= d->store[8 + offset]->get_value() && d->PC->has_open_inventory_slot()) {
 	    d->PC->wallet -= d->store[8 + offset]->get_value();
@@ -1588,10 +1590,10 @@ void io_store(dungeon *d) {
 	    d->store.erase(d->store.begin() + (8 + offset));
 	  }
 	}
-	
+	exit = true;
 	break;
 	
-      case 9:
+      case '9':
 	if (d->store[9 + offset]) {
 	  if (d->PC->wallet >= d->store[9 + offset]->get_value() && d->PC->has_open_inventory_slot()) {
 	    d->PC->wallet -= d->store[9 + offset]->get_value();
@@ -1599,12 +1601,14 @@ void io_store(dungeon *d) {
 	    d->store.erase(d->store.begin() + (9 + offset));
 	  }
 	}
-	
+	exit = true;
 	break;
       }
       
       refresh();
     }
+
+  io_display(d);
   
   return;
 }
